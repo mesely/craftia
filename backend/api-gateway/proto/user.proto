@@ -4,7 +4,7 @@ package user;
 
 service UserService {
   rpc CreateUser (CreateUserRequest) returns (UserResponse);
-  rpc GetUser (GetUserRequest) returns (UserResponse); // GetUser arıyoruz
+  rpc GetUser (GetUserRequest) returns (UserResponse);
   rpc UpdateUser (UpdateUserRequest) returns (UserResponse);
   rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse);
 }
@@ -33,6 +33,10 @@ message UpdateUserRequest {
   Address address = 4;
 }
 
+message DeleteUserRequest {
+  string id = 1;
+}
+
 message UserResponse {
   string id = 1;
   string name = 2;
@@ -43,7 +47,4 @@ message UserResponse {
 
 message DeleteUserResponse {
   bool success = 1;
-}
-message DeleteUserRequest {
-  string id = 1;
 }

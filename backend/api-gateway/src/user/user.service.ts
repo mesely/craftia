@@ -1,35 +1,37 @@
 import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+
+interface UserGrpcService {
+  createUser(data: any): Observable<any>;
+  getUser(data: { id: string }): Observable<any>;
+  updateUser(data: any): Observable<any>;
+  deleteUser(data: { id: string }): Observable<any>;
+}
 
 @Injectable()
 export class UserService implements OnModuleInit {
-  private userServiceClient: any;
+  private userServiceClient: UserGrpcService;
 
   constructor(@Inject('USER_PACKAGE') private client: ClientGrpc) {}
 
   onModuleInit() {
-    // Proto içindeki UserService ismiyle eşleşmeli
-    this.userServiceClient = this.client.getService<any>('UserService');
+    this.userServiceClient = this.client.getService<UserGrpcService>('UserService');
   }
 
   createUser(data: any) {
     return this.userServiceClient.createUser(data);
   }
 
-  findAll() {
-    return this.userServiceClient.findAll({});
+  getUser(data: { id: string }) {
+    return this.userServiceClient.getUser(data);
   }
 
-  findOne(id: string) {
-    return this.userServiceClient.findOne({ id });
+  updateUser(data: any) {
+    return this.userServiceClient.updateUser(data);
   }
 
-  updateUser(id: string, data: any) {
-    return this.userServiceClient.updateUser({ id, ...data });
-  }
-
-  deleteUser(id: string) {
-    return this.userServiceClient.deleteUser({ id });
+  deleteUser(data: { id: string }) {
+    return this.userServiceClient.deleteUser(data);
   }
 }

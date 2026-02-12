@@ -10,23 +10,18 @@ export class UserController {
     return this.userService.createUser(data);
   }
 
-  @Get()
-  findAll() {
-    return this.userService.findAll();
-  }
-
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
+    return this.userService.getUser({ id });
   }
 
   @Put(':id')
   updateUser(@Param('id') id: string, @Body() data: any) {
-    return this.userService.updateUser(id, data);
+    return this.userService.updateUser({ id, ...data });
   }
 
   @Delete(':id')
   deleteUser(@Param('id') id: string) {
-    return this.userService.deleteUser(id);
+    return this.userService.deleteUser({ id });
   }
 }

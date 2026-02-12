@@ -1,74 +1,45 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MongoClient, ObjectId, Collection } from 'mongodb';
-import { CreateUserDto, UpdateUserDto, IUser } from './user.interface';
-
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
-export class UserService implements OnModuleInit {
-  private client: MongoClient;
-  private collection: Collection<any>;
+export class UserService {
+  // : any[] ekleyerek TypeScript'in "never" hatasını bitiriyoruz
+  private users: any[] = [];
 
-  async onModuleInit() {
-    try {
-      // Atlas bağlantı dizesi (morinyo1907 şifresiyle)
-      const url = process.env.DATABASE_URL || 'mongodb+srv://selmanyilmaz:morinyo1907@cs306cluster.h6hnm1n.mongodb.net/usta_db?retryWrites=true&w=majority';
-      this.client = new MongoClient(url);
-      await this.client.connect();
-      
-      const db = this.client.db('usta_db');
-      this.collection = db.collection('users');
-      
-      console.log('✅ User Service: MongoDB Atlas bağlantısı başarılı!');
-    } catch (error) {
-      console.error('❌ User Service: MongoDB bağlantı hatası:', error);
-    }
-  }
-
-  async create(data: CreateUserDto) {
+  create(data: any) {
     const newUser = {
+      id: Math.random().toString(36).substr(2, 9),
       ...data,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
     };
-    const res = await this.collection.insertOne(newUser);
-    return { id: res.insertedId.toString(), ...newUser };
+    this.users.push(newUser);
+    return newUser;
   }
 
-  async findAll() {
-    const docs = await this.collection.find({}).toArray();
-    return docs.map(doc => ({
-      id: doc._id.toString(),
-      ...doc,
-      _id: undefined,
-    }));
+  findOne(id: string) {
+    const user = this.users.find((u) => u.id === id);
+    if (!user) {
+      throw new RpcException('Kullanıcı bulunamadı');
+    }
+    return user;
   }
 
-  async findOne(id: string) {
-    if (!ObjectId.isValid(id)) return null;
-    const doc = await this.collection.findOne({ _id: new ObjectId(id) });
-    if (!doc) return null;
-    return { id: doc._id.toString(), ...doc, _id: undefined };
+  update(id: string, data: any) {
+    const index = this.users.findIndex((u) => u.id === id);
+    if (index === -1) {
+      throw new RpcException('Güncellenecek kullanıcı bulunamadı');
+    }
+    // Mevcut kullanıcıyı yeni gelen verilerle harmanlıyoruz
+    this.users[index] = { ...this.users[index], ...data };
+    return this.users[index];
   }
 
-  async update(id: string, data: UpdateUserDto) {
-    if (!ObjectId.isValid(id)) return null;
-    const { id: _, ...updateData } = data;
-    const updateBody = {
-      ...updateData,
-      updatedAt: new Date(),
-    };
-    await this.collection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: updateBody }
-    );
-    return this.findOne(id);
-  }
-
-  async delete(id: string) {
-    if (!ObjectId.isValid(id)) return null;
-    const doc = await this.findOne(id);
-    if (!doc) return null;
-    await this.collection.deleteOne({ _id: new ObjectId(id) });
-    return doc;
+  remove(id: string) {
+    const index = this.users.findIndex((u) => u.id === id);
+    if (index === -1) {
+      throw new RpcException('Silinecek kullanıcı bulunamadı');
+    }
+    this.users.splice(index, 1);
+    return { success: true };
   }
 }
