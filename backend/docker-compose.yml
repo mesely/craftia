@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "3000:3000"
+  provider-service:
+    build: ./provider-service
+    ports:
+      - "50051:50051"
+  user-service:
+    build: ./user-service
+    ports:
+      - "50052:50052"

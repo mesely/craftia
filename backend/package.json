@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@nestjs/config": "^4.0.3",
+    "@nestjs/microservices": "^11.1.13",
+    "dotenv": "^17.2.4",
+    "mongodb": "^7.1.0"
+  }
+}
