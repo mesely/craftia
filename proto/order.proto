@@ -1,4 +1,5 @@
 syntax = "proto3";
+
 package order;
 
 service OrderService {
@@ -9,7 +10,15 @@ service OrderService {
   rpc FindNearby (NearbyRequest) returns (OrderList);
 }
 
-message CreateOrderRequest { string userId = 1; string categoryId = 2; string cityId = 3; string description = 4; double longitude = 5; double latitude = 6; }
+message CreateOrderRequest {
+  string userId = 1;
+  string categoryId = 2;
+  string cityId = 3;
+  string description = 4;
+  double longitude = 5;
+  double latitude = 6;
+}
+
 message GetOrderRequest { string id = 1; }
 message UserOrdersRequest { string userId = 1; }
 message UpdateStatusRequest { string id = 1; string status = 2; }
@@ -26,4 +35,7 @@ message Order {
   double latitude = 8;
   string createdAt = 9;
 }
-message OrderList { repeated Order orders = 1; }
+
+message OrderList {
+  repeated Order orders = 1;
+}

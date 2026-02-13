@@ -1,27 +1,27 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
-import { UserService } from './user.service';
+import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { UserGatewayService } from './user.service';
 
-@Controller('users')
-export class UserController {
-  constructor(private readonly userService: UserService) {}
+@Controller('api/v1/users')
+export class UserGatewayController {
+  constructor(private readonly userService: UserGatewayService) {}
 
   @Post()
-  createUser(@Body() data: any) {
+  create(@Body() data: any) {
     return this.userService.createUser(data);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.userService.getUser({ id });
+    return this.userService.getUser(id);
   }
 
-  @Put(':id')
-  updateUser(@Param('id') id: string, @Body() data: any) {
-    return this.userService.updateUser({ id, ...data });
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.userService.updateUser(id, data);
   }
 
   @Delete(':id')
-  deleteUser(@Param('id') id: string) {
-    return this.userService.deleteUser({ id });
+  delete(@Param('id') id: string) {
+    return this.userService.deleteUser(id);
   }
 }
