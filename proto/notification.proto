@@ -1,0 +1,13 @@
+syntax = "proto3";
+package notification;
+service NotificationService {
+  rpc SendEmail (SendEmailRequest) returns (NotificationResponse);
+  rpc SendPush (SendPushRequest) returns (NotificationResponse);
+  rpc GetHistory (HistoryRequest) returns (NotificationList);
+}
+message SendEmailRequest { string to = 1; string subject = 2; string body = 3; }
+message SendPushRequest { string userId = 1; string title = 2; string body = 3; }
+message HistoryRequest { string userId = 1; }
+message NotificationResponse { bool success = 1; string messageId = 2; }
+message NotificationLog { string id = 1; string type = 2; string recipient = 3; string title = 4; string body = 5; string sentAt = 6; }
+message NotificationList { repeated NotificationLog logs = 1; }
