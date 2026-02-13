@@ -23,7 +23,6 @@ export default function BecomeProviderView() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   
-  // Form Verileri
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -38,11 +37,39 @@ export default function BecomeProviderView() {
     e.preventDefault();
     setLoading(true);
 
-    // Backend Simülasyonu
-    setTimeout(() => {
+    try {
+      // API Gateway üzerinden Provider oluşturma isteği
+      const response = await fetch('http://localhost:3000/api/v1/providers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          businessName: formData.businessName,
+          phoneNumber: formData.phone,
+          mainType: formData.category, // Backend mainType alanı
+          subType: 'manual_reg', // Manuel kayıt etiketi
+          city: 'İstanbul', // Varsayılan veya seçimden gelecek
+          district: 'Merkez',
+          lat: 41.0082,
+          lng: 28.9784
+        }),
+      });
+
+      if (response.ok) {
+        setSuccess(true);
+      } else {
+        const error = await response.json();
+        alert(`Hata: ${error.message || 'Kayıt başarısız.'}`);
+      }
+    } catch (err) {
+      console.error("Bağlantı Hatası:", err);
+      alert("Backend'e bağlanılamadı. Docker konteynerlerini kontrol edin.");
+    } finally {
       setLoading(false);
-      setSuccess(true); // Başarılı ekranını tetikle
-    }, 2000);
+    }
   };
 
   return (
@@ -51,7 +78,6 @@ export default function BecomeProviderView() {
       animate={{ opacity: 1, x: 0 }}
       className="p-4 space-y-5 pb-24 overflow-x-hidden"
     >
-      {/* --- ÜST TANITIM KARTI --- */}
       <div className={`relative overflow-hidden ${theme.bg} p-6 rounded-[35px] shadow-lg text-center text-white`}>
         <div className="relative z-10">
           <div className="bg-white/20 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-2 backdrop-blur-md">
@@ -65,7 +91,6 @@ export default function BecomeProviderView() {
 
       <AnimatePresence mode="wait">
         {success ? (
-          // --- BAŞARILI KAYIT EKRANI ---
           <motion.div 
             key="success"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -78,15 +103,12 @@ export default function BecomeProviderView() {
             <div>
               <h3 className="text-lg font-black text-emerald-800 uppercase">Başvuru Alındı!</h3>
               <p className="text-[10px] font-bold text-emerald-600 mt-2 leading-relaxed">
-                Usta profiliniz incelemeye alınmıştır. En kısa sürede sizinle iletişime geçeceğiz.
+                Usta profiliniz başarıyla oluşturuldu. Giriş yaparak hemen başlayabilirsiniz.
               </p>
             </div>
           </motion.div>
         ) : (
-          // --- KAYIT FORMU ---
           <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            
-            {/* Avantajlar */}
             <div className="grid grid-cols-2 gap-2 mb-5">
               <AdvantageItem icon={ShieldCheck} label="Onaylı Profil" theme={theme} />
               <AdvantageItem icon={RocketLaunch} label="Hızlı İş Alımı" theme={theme} />
@@ -99,38 +121,33 @@ export default function BecomeProviderView() {
               </div>
               
               <form onSubmit={handleSubmit} className="space-y-3">
-                {/* Ad & Soyad */}
                 <div className="grid grid-cols-2 gap-2">
                   <SidebarInput placeholder="Ad" icon={<User />} value={formData.firstName} onChange={(v: string)=>setFormData({...formData, firstName:v})} theme={theme} />
                   <SidebarInput placeholder="Soyad" value={formData.lastName} onChange={(v: string)=>setFormData({...formData, lastName:v})} theme={theme} />
                 </div>
 
-                {/* İşletme Adı */}
                 <SidebarInput placeholder="İşletme Adı (Opsiyonel)" icon={<Storefront />} value={formData.businessName} onChange={(v: string)=>setFormData({...formData, businessName:v})} theme={theme} />
 
-                {/* Kategori Seçimi */}
                 <div className="relative">
                   <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${theme.main}`}><Wrench size={18} weight="bold" /></span>
                   <select 
+                    required
                     className="w-full bg-white/50 border border-white/60 p-3.5 pl-12 rounded-[20px] text-xs font-bold text-slate-700 outline-none appearance-none cursor-pointer focus:bg-white transition-all"
                     value={formData.category}
                     onChange={(e) => setFormData({...formData, category: e.target.value})}
                   >
                     <option value="">Uzmanlık Alanı Seç...</option>
                     <option value="TECHNICAL">Teknik Servis</option>
-                    <option value="CLIMATE">İklimlendirme (Klima/Kombi)</option>
+                    <option value="CLIMATE">İklimlendirme</option>
                     <option value="CONSTRUCTION">Yapı & Dekorasyon</option>
                     <option value="TECH">Teknoloji & Tamir</option>
                   </select>
                   <CaretDown size={14} weight="bold" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 </div>
 
-                {/* İletişim */}
-                <SidebarInput placeholder="Telefon (05xx)" icon={<Phone />} value={formData.phone} onChange={(v: string)=>setFormData({...formData, phone:v})} theme={theme} />
+                <SidebarInput placeholder="Telefon" icon={<Phone />} value={formData.phone} onChange={(v: string)=>setFormData({...formData, phone:v})} theme={theme} />
                 <SidebarInput placeholder="E-posta" icon={<Envelope />} value={formData.email} onChange={(v: string)=>setFormData({...formData, email:v})} theme={theme} />
-                
-                {/* Şifre */}
-                <SidebarInput placeholder="Şifre Oluştur" type="password" icon={<LockKey />} value={formData.password} onChange={(v: string)=>setFormData({...formData, password:v})} theme={theme} />
+                <SidebarInput placeholder="Şifre" type="password" icon={<LockKey />} value={formData.password} onChange={(v: string)=>setFormData({...formData, password:v})} theme={theme} />
 
                 <button 
                   type="submit"
@@ -142,28 +159,12 @@ export default function BecomeProviderView() {
                 </button>
               </form>
             </div>
-
-            {/* Yasal Uyarı */}
-            <div className={`mt-4 p-4 rounded-[25px] border border-dashed ${theme.border} ${theme.light}`}>
-              <div className="flex gap-2">
-                <CheckCircle size={16} weight="fill" className={theme.main} />
-                <p className="text-[8px] font-bold text-slate-600 leading-relaxed uppercase tracking-tighter">
-                  Başvurarak <span className="underline cursor-pointer">Hizmet Veren Sözleşmesini</span> kabul etmiş sayılırsınız.
-                </p>
-              </div>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="text-center opacity-30">
-        <p className="text-[8px] font-black uppercase tracking-[0.3em]">v1.0.2 // Provider Operations</p>
-      </div>
     </motion.div>
   );
 }
-
-// --- YARDIMCI BİLEŞENLER ---
 
 function AdvantageItem({ icon: Icon, label, theme }: any) {
   return (
@@ -179,6 +180,7 @@ function SidebarInput({ placeholder, icon, value, onChange, type="text", theme }
     <div className="relative">
       {icon && <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${theme.main}`}>{React.cloneElement(icon, { size: 18, weight: 'bold' })}</span>}
       <input 
+        required
         type={type}
         placeholder={placeholder}
         value={value}

@@ -43,11 +43,11 @@ export default function UstaDetailWidget({ usta, isOpen, onClose }: UstaDetailWi
                 </button>
 
                 <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-white rounded-[35px] flex items-center justify-center text-3xl font-black text-indigo-900 mx-auto mb-4 shadow-inner border border-white/50">
-                  {usta.first_name?.charAt(0)}{usta.last_name?.charAt(0)}
+                  {usta.businessName?.charAt(0) || usta.firstName?.charAt(0) || 'U'}
                 </div>
                 
                 <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-1">
-                  {usta.first_name} {usta.last_name}
+                  {usta.businessName || `${usta.firstName} ${usta.lastName}`}
                 </h2>
                 
                 <div className="flex justify-center gap-2 mb-4">
@@ -55,7 +55,7 @@ export default function UstaDetailWidget({ usta, isOpen, onClose }: UstaDetailWi
                     <SealCheck size={14} weight="fill" /> Onaylı Hesap
                   </span>
                   <span className="px-3 py-1 bg-amber-100/50 text-amber-700 text-[10px] font-bold uppercase rounded-lg tracking-wider border border-amber-100 flex items-center gap-1">
-                    <Star size={14} weight="fill" /> 4.9 Puan
+                    <Star size={14} weight="fill" /> {usta.rating || '4.9'} Puan
                   </span>
                 </div>
               </div>
@@ -67,7 +67,7 @@ export default function UstaDetailWidget({ usta, isOpen, onClose }: UstaDetailWi
                   <div>
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Hizmet Bölgesi</span>
                     <p className="text-sm font-bold text-slate-700 leading-snug">
-                      {usta.address?.district || 'Merkez'}, {usta.address?.city || 'İstanbul'} (0.8 KM)
+                      {usta.district || 'Merkez'}, {usta.city || 'Şehir'}
                     </p>
                   </div>
                 </div>
@@ -77,9 +77,9 @@ export default function UstaDetailWidget({ usta, isOpen, onClose }: UstaDetailWi
                   <div>
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Uzmanlık</span>
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {['Elektrik', 'Montaj'].map(tag => (
-                        <span key={tag} className="text-[10px] font-bold bg-white px-2 py-1 rounded-md text-slate-600 border border-slate-100">#{tag}</span>
-                      ))}
+                      <span className="text-[10px] font-bold bg-white px-2 py-1 rounded-md text-slate-600 border border-slate-100">
+                        #{usta.mainType || 'Teknik Destek'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -87,12 +87,18 @@ export default function UstaDetailWidget({ usta, isOpen, onClose }: UstaDetailWi
 
               {/* Alt Butonlar */}
               <div className="p-8 flex gap-3 mt-2">
-                <button className="flex-1 py-4 bg-indigo-600 text-white rounded-[24px] font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-200 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <a 
+                  href={`tel:${usta.phoneNumber}`}
+                  className="flex-1 py-4 bg-indigo-600 text-white rounded-[24px] font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-200 active:scale-95 transition-transform flex items-center justify-center gap-2"
+                >
                   <Phone size={18} weight="fill" /> Ara
-                </button>
-                <button className="flex-1 py-4 bg-emerald-500 text-white rounded-[24px] font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-200 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                </a>
+                <a 
+                  href={`https://wa.me/${usta.phoneNumber?.replace(/\D/g, '')}`}
+                  className="flex-1 py-4 bg-emerald-500 text-white rounded-[24px] font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-200 active:scale-95 transition-transform flex items-center justify-center gap-2"
+                >
                   <WhatsappLogo size={18} weight="fill" /> Mesaj
-                </button>
+                </a>
               </div>
 
             </motion.div>
