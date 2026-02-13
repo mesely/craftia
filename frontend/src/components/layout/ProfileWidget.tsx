@@ -6,8 +6,8 @@ import { X, UserCircle, Gear, SignOut, CaretLeft } from '@phosphor-icons/react';
 import { useCategory } from '@/context/CategoryContext';
 
 // Sidebar bileşenlerini doğru yoldan import ettiğinden emin ol
-import LoginView from '../sidebar/LoginView';
-import RegisterView from '../sidebar/RegisterView';
+import LoginView from '../Sidebar/LoginView';
+import RegisterView from '../Sidebar/RegisterView';
 
 interface ProfileWidgetProps {
   isOpen: boolean;
