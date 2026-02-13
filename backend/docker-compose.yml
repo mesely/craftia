@@ -1,14 +1,116 @@
-version: '3.8'
 services:
+  # --- 1. VERİTABANI ---
+  mongodb:
+    image: mongo:6.0
+    container_name: usta_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # --- 2. API GATEWAY ---
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: usta-api-gateway
     ports:
       - "3000:3000"
-  provider-service:
-    build: ./provider-service
-    ports:
-      - "50051:50051"
+    environment:
+      - PORT=3000
+      - USER_SERVICE_URL=user-service:50052
+      - PROVIDER_SERVICE_URL=provider-service:50051 # 🚨 50051 ile eşitledik
+      - ORDER_SERVICE_URL=order-service:50054
+      - REVIEW_SERVICE_URL=review-service:50055
+      - NOTIFICATION_SERVICE_URL=notification-service:50056
+    volumes:
+      - ./api-gateway:/usr/src/app
+      - /usr/src/app/node_modules
+      - ../proto:/usr/src/app/proto
+    depends_on:
+      - user-service
+      - provider-service
+      - order-service
+      - review-service
+      - notification-service
+
+  # --- 3. USER SERVICE ---
   user-service:
     build: ./user-service
+    container_name: usta-user-service
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/usta_db
+      - DATABASE_URL=mongodb://mongodb:27017/usta_db
+    volumes:
+      - ./user-service:/usr/src/app
+      - /usr/src/app/node_modules
+      - ../proto:/usr/src/app/proto
     ports:
       - "50052:50052"
+    depends_on:
+      - mongodb
+
+  # --- 4. PROVIDER SERVICE ---
+  provider-service:
+    build: ./provider-service
+    container_name: usta-provider-service
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/usta_db
+      - DATABASE_URL=mongodb://mongodb:27017/usta_db # Prisma için gerekebilir
+      - GOOGLE_PLACES_API_KEY=${GOOGLE_PLACES_API_KEY}
+    volumes:
+      - ./provider-service:/usr/src/app
+      - /usr/src/app/node_modules
+      - ../proto:/usr/src/app/proto
+    ports:
+      - "50051:50051" # 🚨 Port 50051
+    depends_on:
+      - mongodb
+
+  # --- 5. ORDER SERVICE ---
+  order-service:
+    build: ./order-service
+    container_name: usta-order-service
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/usta_db
+    volumes:
+      - ./order-service:/usr/src/app
+      - /usr/src/app/node_modules
+      - ../proto:/usr/src/app/proto
+    ports:
+      - "50054:50054"
+    depends_on:
+      - mongodb
+
+  # --- 6. REVIEW SERVICE ---
+  review-service:
+    build: ./review-service
+    container_name: usta-review-service
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/usta_db
+    volumes:
+      - ./review-service:/usr/src/app
+      - /usr/src/app/node_modules
+      - ../proto:/usr/src/app/proto
+    ports:
+      - "50055:50055"
+    depends_on:
+      - mongodb
+
+  # --- 7. NOTIFICATION SERVICE ---
+  notification-service:
+    build: ./notification-service
+    container_name: usta-notification-service
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/usta_db
+    volumes:
+      - ./notification-service:/usr/src/app
+      - /usr/src/app/node_modules
+      - ../proto:/usr/src/app/proto
+    ports:
+      - "50056:50056"
+    depends_on:
+      - mongodb
+
+volumes:
+  mongo_data:

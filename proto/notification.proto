@@ -1,13 +1,40 @@
 syntax = "proto3";
+
 package notification;
+
 service NotificationService {
+  // --- Mevcut Gönderim Metodları ---
   rpc SendEmail (SendEmailRequest) returns (NotificationResponse);
   rpc SendPush (SendPushRequest) returns (NotificationResponse);
+  
+  // --- Full CRUD Metodları ---
   rpc GetHistory (HistoryRequest) returns (NotificationList);
+  rpc FindOne (NotificationIdRequest) returns (NotificationLog);
+  rpc UpdateNotification (UpdateNotificationRequest) returns (NotificationLog);
+  rpc DeleteNotification (NotificationIdRequest) returns (DeleteResponse);
 }
+
 message SendEmailRequest { string to = 1; string subject = 2; string body = 3; }
 message SendPushRequest { string userId = 1; string title = 2; string body = 3; }
 message HistoryRequest { string userId = 1; }
+message NotificationIdRequest { string id = 1; }
+
+message UpdateNotificationRequest {
+  string id = 1;
+  string title = 2;
+  string body = 3;
+}
+
 message NotificationResponse { bool success = 1; string messageId = 2; }
-message NotificationLog { string id = 1; string type = 2; string recipient = 3; string title = 4; string body = 5; string sentAt = 6; }
+
+message NotificationLog {
+  string id = 1;
+  string type = 2;
+  string recipient = 3;
+  string title = 4;
+  string body = 5;
+  string sentAt = 6;
+}
+
 message NotificationList { repeated NotificationLog logs = 1; }
+message DeleteResponse { bool success = 1; }

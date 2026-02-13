@@ -1,35 +1,52 @@
 import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class ProviderService implements OnModuleInit {
-  private providerServiceClient: any;
+export class ProviderGatewayService implements OnModuleInit {
+  private providerService: any;
 
-  // AppModule'da tanımladığımız 'PROVIDER_PACKAGE' ismini buraya Inject ediyoruz
   constructor(@Inject('PROVIDER_PACKAGE') private client: ClientGrpc) {}
 
   onModuleInit() {
-    // provider.proto içindeki 'service ProviderService' tanımıyla aynı olmalı
-    this.providerServiceClient = this.client.getService<any>('ProviderService');
+    // Mikroservisteki 'ProviderService' tanımına bağlanıyoruz
+    this.providerService = this.client.getService<any>('ProviderService');
   }
 
-  createProvider(data: any) {
-    return this.providerServiceClient.createProvider(data);
+  create(data: any) {
+    return this.providerService.create(data);
   }
 
   findAll() {
-    return this.providerServiceClient.findAll({});
+    return this.providerService.findAll({});
   }
 
   findOne(id: string) {
-    return this.providerServiceClient.findOne({ id });
+    return this.providerService.findOne({ id });
   }
 
-  updateProvider(id: string, data: any) {
-    return this.providerServiceClient.updateProvider({ id, ...data });
+  update(id: string, data: any) {
+    return this.providerService.update({ id, ...data });
   }
 
-  deleteProvider(id: string) {
-    return this.providerServiceClient.deleteProvider({ id });
+  delete(id: string) {
+    return this.providerService.delete({ id });
+  }
+
+  getCities() {
+    return this.providerService.getCities({});
+  }
+
+  getDistricts(city: string) {
+    return this.providerService.getDistricts({ city });
+  }
+
+  getCategories() {
+    return this.providerService.getCategories({});
+  }
+
+  // 🔥 Google Crawler'ı tetikleyen metod
+  async startCrawl() {
+    return await firstValueFrom(this.providerService.startGoogleCrawl({}));
   }
 }

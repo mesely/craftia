@@ -1,3 +1,5 @@
+import { Observable } from 'rxjs';
+
 export interface IAddress {
   city: string;
   district: string;
@@ -6,7 +8,7 @@ export interface IAddress {
 }
 
 export interface IUser {
-  id?: string; // MongoDB'den gelince string'e çevireceğiz
+  id?: string; 
   firstName: string;
   lastName: string;
   email: string;
@@ -17,7 +19,10 @@ export interface IUser {
   updatedAt?: Date;
 }
 
-// gRPC'den gelen Create isteği için (ID henüz yok)
+export interface IUserList {
+  users: IUser[];
+}
+
 export interface CreateUserDto {
   firstName: string;
   lastName: string;
@@ -27,7 +32,19 @@ export interface CreateUserDto {
   profilePictureUrl?: string;
 }
 
-// gRPC'den gelen Update isteği için (ID zorunlu)
 export interface UpdateUserDto extends CreateUserDto {
   id: string;
+}
+
+export interface UserIdRequest {
+  id: string;
+}
+
+// --- gRPC Client Servis Tanımı ---
+export interface UserGrpcService {
+  createUser(data: CreateUserDto): Observable<IUser>;
+  findAll(data: any): Observable<IUserList>;
+  findOne(data: UserIdRequest): Observable<IUser>;
+  updateUser(data: UpdateUserDto): Observable<IUser>;
+  deleteUser(data: UserIdRequest): Observable<{ success: boolean }>;
 }

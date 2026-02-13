@@ -1,19 +1,58 @@
 syntax = "proto3";
 
-package provider; // Burası LOG'daki hatanın sebebi, tam bu kelimeyi arıyor.
+package provider;
 
 service ProviderService {
-  rpc GetLocationData (LocationRequest) returns (LocationResponse);
+  rpc Create (CreateProviderRequest) returns (ProviderResponse);
+  rpc FindAll (Empty) returns (ProviderList);
+  rpc FindOne (IdRequest) returns (ProviderResponse);
+  rpc Update (UpdateProviderRequest) returns (ProviderResponse);
+  rpc Delete (IdRequest) returns (DeleteResponse);
+
+  rpc GetCities (Empty) returns (CityList);
+  rpc GetDistricts (CityRequest) returns (DistrictList);
+  rpc GetCategories (Empty) returns (CategoryList);
+
+  // 🔥 Crawler
+  rpc StartGoogleCrawl (Empty) returns (CrawlStats);
 }
 
-message LocationRequest {
-  string countryId = 1;
-  string cityId = 2;
-  string districtId = 3;
+message Empty {}
+
+message IdRequest { string id = 1; }
+message CityRequest { string city = 1; }
+
+message CreateProviderRequest {
+  string businessName = 1;
+  string phoneNumber = 2;
+  string city = 3;
+  string district = 4;
+  string address = 5;
+  double lat = 6;
+  double lng = 7;
 }
 
-message LocationResponse {
-  string countryName = 1;
-  string cityName = 2;
-  string districtName = 3;
+message UpdateProviderRequest {
+  string id = 1;
+  string businessName = 2;
+  string phoneNumber = 3;
 }
+
+message ProviderResponse {
+  string id = 1;
+  string businessName = 2;
+  string phoneNumber = 3;
+  string city = 4;
+  string district = 5;
+  string address = 6;
+  double lat = 7;
+  double lng = 8;
+}
+
+message ProviderList { repeated ProviderResponse providers = 1; }
+message DeleteResponse { bool success = 1; }
+message CityList { repeated Item items = 1; }
+message DistrictList { repeated Item items = 1; }
+message CategoryList { repeated Item items = 1; }
+message Item { string id = 1; string name = 2; }
+message CrawlStats { int32 totalFound = 1; int32 newlySaved = 2; int32 skipped = 3; }

@@ -1,15 +1,42 @@
 syntax = "proto3";
+
 package review;
+
 service ReviewService {
   rpc CreateReview (CreateReviewRequest) returns (ReviewResponse);
   rpc GetProviderReviews (ProviderIdRequest) returns (ReviewList);
   rpc GetUserReviews (UserIdRequest) returns (ReviewList);
   rpc DeleteReview (ReviewIdRequest) returns (DeleteResponse);
 }
+
 message ProviderIdRequest { string providerId = 1; }
 message UserIdRequest { string userId = 1; }
 message ReviewIdRequest { string id = 1; }
-message CreateReviewRequest { string orderId = 1; string userId = 2; string providerId = 3; double rating = 4; string comment = 5; repeated string tags = 6; }
-message ReviewResponse { string id = 1; string orderId = 2; string userId = 3; string providerId = 4; double rating = 5; string comment = 6; repeated string tags = 7; string createdAt = 8; }
-message ReviewList { repeated ReviewResponse reviews = 1; }
-message DeleteResponse { bool success = 1; }
+
+message CreateReviewRequest {
+  string orderId = 1;
+  string userId = 2;
+  string providerId = 3;
+  double rating = 4;
+  string comment = 5;
+  repeated string tags = 6;
+}
+
+message ReviewResponse {
+  string id = 1;
+  string orderId = 2;
+  string userId = 3;
+  string providerId = 4;
+  double rating = 5;
+  string comment = 6;
+  repeated string tags = 7;
+  string createdAt = 8;
+}
+
+message ReviewList {
+  repeated ReviewResponse reviews = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+}

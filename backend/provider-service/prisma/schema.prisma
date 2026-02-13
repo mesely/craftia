@@ -1,0 +1,45 @@
+// backend/provider-service/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  email     String    @unique
+  password  String
+  role      String    @default("PROVIDER")
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  provider  Provider?
+}
+
+model Provider {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  user           User     @relation(fields: [userId], references: [id])
+  userId         String   @unique @db.ObjectId
+  
+  businessName   String
+  phoneNumber    String
+  city           String
+  district       String
+  address        String?
+  website        String?
+  
+  mainType       String
+  subType        String
+  
+  lat            Float
+  lng            Float
+  
+  openingFee     Float    @default(400)
+  pricePerUnit   Float    @default(45)
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
