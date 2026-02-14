@@ -22,8 +22,8 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'user',
-          protoPath: join(__dirname, '../proto/user.proto'),
-          url: '0.0.0.0:50052',
+          protoPath: join(process.cwd(), 'proto/user.proto'),
+          url: 'user-service:50052', // Docker servis ismi
         },
       },
       {
@@ -31,8 +31,8 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'provider',
-          protoPath: join(__dirname, '../proto/provider.proto'),
-          url: '0.0.0.0:50051',
+          protoPath: join(process.cwd(), 'proto/provider.proto'),
+          url: 'provider-service:50051', // Docker servis ismi
         },
       },
       {
@@ -40,8 +40,8 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'order',
-          protoPath: join(__dirname, '../proto/order.proto'),
-          url: '0.0.0.0:50054',
+          protoPath: join(process.cwd(), 'proto/order.proto'),
+          url: 'order-service:50054', // Docker servis ismi
         },
       },
       {
@@ -49,8 +49,8 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'review',
-          protoPath: join(__dirname, '../proto/review.proto'),
-          url: '0.0.0.0:50055',
+          protoPath: join(process.cwd(), 'proto/review.proto'),
+          url: 'review-service:50055', // Docker servis ismi
         },
       },
       {
@@ -58,8 +58,8 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'notification',
-          protoPath: join(__dirname, '../proto/notification.proto'),
-          url: '0.0.0.0:50056',
+          protoPath: join(process.cwd(), 'proto/notification.proto'),
+          url: 'notification-service:50056', // Docker servis ismi
         },
       },
     ]),
