@@ -13,3 +13,4 @@ export interface CrawlStats {
   newlySaved: number;
   skipped: number;
 }
+

@@ -1,3 +1,4 @@
+
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -8,7 +9,9 @@ import * as bcrypt from 'bcryptjs';
 export class ProviderService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ProviderService.name);
   private readonly apiKey = process.env.GOOGLE_PLACES_API_KEY;
-private readonly TURKEY_DATA = [
+
+  // --- TURKEY_DATA LİSTESİ BURAYA (Senin listen gelecek) ---
+  private readonly TURKEY_DATA = [
   { il: 'Adana', ilce: 'Aladağ' }, { il: 'Adana', ilce: 'Ceyhan' }, { il: 'Adana', ilce: 'Feke' },
   { il: 'Adana', ilce: 'Karaisalı' }, { il: 'Adana', ilce: 'Karataş' }, { il: 'Adana', ilce: 'Kozan' },
   { il: 'Adana', ilce: 'Pozantı' }, { il: 'Adana', ilce: 'Saimbeyli' }, { il: 'Adana', ilce: 'Sarıçam' },
@@ -336,16 +339,13 @@ private readonly TURKEY_DATA = [
   { il: 'Şırnak', ilce: 'Silopi' }, { il: 'Şırnak', ilce: 'Uludere' }, { il: 'Şırnak', ilce: 'İdil' }, { il: 'Şırnak', ilce: 'Şırnak Merkez' }
 ];
 
- 
-
   constructor(private readonly httpService: HttpService) {
     super();
   }
 
-  // --- PRISMA BAĞLANTILARI ---
   async onModuleInit() {
     await this.$connect();
-    this.logger.log('✅ Veritabanı bağlantısı başarılı.');
+    this.logger.log('✅ [Usta Service] Veritabanı bağlantısı başarılı.');
   }
 
   async onModuleDestroy() {
@@ -353,187 +353,126 @@ private readonly TURKEY_DATA = [
   }
 
   // --- CRUD İŞLEMLERİ ---
-
-  async create(data: any): Promise<any> {
-    return await this.provider.create({ data });
+  async create(data: any) { return await this.provider.create({ data }); }
+  async findAll() { return await this.provider.findMany({ include: { user: true } }); }
+  async findOne(id: string) { return await this.provider.findUnique({ where: { id }, include: { user: true } }); }
+  async update(id: string, data: any) { return await this.provider.update({ where: { id }, data }); }
+  async delete(id: string) {
+    try { await this.provider.delete({ where: { id } }); return { success: true }; }
+    catch (e) { return { success: false }; }
   }
 
-  async findAll(): Promise<any[]> {
-    return await this.provider.findMany({
-      include: { user: true }
-    });
+  // --- KATEGORİ VE FİLTRELEME ---
+  async getCities() {
+    const uniqueCities = await this.provider.findMany({ distinct: ['city'], select: { city: true } });
+    return uniqueCities.map((item, index) => ({ id: String(index + 1), name: item.city }));
   }
 
-  async findOne(id: string): Promise<any> {
-    return await this.provider.findUnique({
-      where: { id },
-      include: { user: true }
-    });
+  async getDistricts(city: string) {
+    const districts = await this.provider.findMany({ where: { city }, distinct: ['district'], select: { district: true } });
+    return districts.map((item, index) => ({ id: String(index + 1), name: item.district }));
   }
 
-  async update(id: string, data: any): Promise<any> {
-    return await this.provider.update({
-      where: { id },
-      data
-    });
-  }
-
-  async delete(id: string): Promise<{ success: boolean }> {
-    try {
-      await this.provider.delete({ where: { id } });
-      return { success: true };
-    } catch (e: any) {
-      this.logger.error(`Silme hatası: ${e.message}`);
-      return { success: false };
-    }
-  }
-
-  // --- FİLTRELEME YARDIMCILARI ---
-
-  async getCities(): Promise<any[]> {
-    const uniqueCities = await this.provider.findMany({
-      distinct: ['city'],
-      select: { city: true }
-    });
-    return uniqueCities.map((item, index) => ({
-      id: String(index + 1),
-      name: item.city
-    }));
-  }
-
-  async getDistricts(cityId: string): Promise<any[]> {
-    const districts = await this.provider.findMany({
-      where: { city: cityId },
-      distinct: ['district'],
-      select: { district: true }
-    });
-    return districts.map((item, index) => ({
-      id: String(index + 1),
-      name: item.district
-    }));
-  }
-
-  async getCategories(): Promise<any[]> {
+  async getCategories() {
     return [
-      { id: '1', name: 'Oto Kurtarıcı' },
-      { id: '2', name: 'Çekici' },
-      { id: '3', name: 'Evden Eve Nakliyat' }
+      { id: 'TECHNICAL', name: 'Teknik Servis' },
+      { id: 'CONSTRUCTION', name: 'Yapı & Dekorasyon' },
+      { id: 'CLIMATE', name: 'İklimlendirme' },
+      { id: 'TECH', name: 'Cihaz & Teknoloji' },
+      { id: 'LIFE', name: 'Yaşam & Bakım' }
     ];
   }
 
-  // --- 🔥 GOOGLE CRAWLER MOTORU ---
-
+  // --- 🔥 CRAWLER MOTORU ---
   async startTurkeyGeneralCrawl() {
-    this.logger.log('🚀 TÜRKİYE GENELİ GOOGLE TARAMASI BAŞLATILDI...');
-    const keywords = ['oto kurtarıcı', 'çekici', 'evden eve nakliyat'];
+    this.logger.log('🚀 USTA TARAMASI BAŞLATILDI...');
+    const keywords = [
+      'elektrikçi', 'su tesisatçısı', 'boyacı',
+      'laminantçı', 'camcı', 'marangoz', 'anahtarcı',
+      'klima servisi', 'kombi tamiri',
+      'beyaz eşya tamiri', 'televizyon tamiri', 'bilgisayar tamiri',
+      'temizlik şirketi', 'ilaçlama firması'
+    ];
+
     let stats = { totalFound: 0, newlySaved: 0, skipped: 0 };
 
     for (const region of this.TURKEY_DATA) {
       for (const keyword of keywords) {
         const query = `${keyword} ${region.ilce} ${region.il}`;
-        
         try {
           const results = await this.searchGooglePlaces(query);
           for (const place of results) {
             stats.totalFound++;
-            
             const details = await this.getPlaceDetails(place.place_id);
             if (!details?.formatted_phone_number) {
               stats.skipped++;
               continue;
             }
-
             const saved = await this.saveToPrisma(details, region.il, region.ilce, keyword);
-            if (saved) {
-              stats.newlySaved++;
-              this.logger.verbose(`✅ Kaydedildi: ${details.name}`);
-            } else {
-              stats.skipped++;
-            }
+            if (saved) stats.newlySaved++;
+            else stats.skipped++;
 
-            await new Promise(res => setTimeout(res, Number(process.env.CRAWL_DELAY) || 2000));
+            await new Promise(res => setTimeout(res, 1500));
           }
         } catch (err: any) {
           this.logger.error(`❌ Hata (${query}): ${err.message}`);
         }
       }
     }
-    this.logger.log(`✅ TARAMA BİTTİ. Toplam: ${stats.totalFound}, Yeni: ${stats.newlySaved}`);
     return stats;
   }
 
   private async searchGooglePlaces(query: string) {
     const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${this.apiKey}&language=tr`;
-    try {
-      const { data } = await firstValueFrom(this.httpService.get(url));
-      return data.results || [];
-    } catch (e: any) {
-      this.logger.error(`Google API Search Hatası: ${e.message}`);
-      return [];
-    }
+    const { data }: any = await firstValueFrom(this.httpService.get(url));
+    return data.results || [];
   }
 
   private async getPlaceDetails(placeId: string) {
     const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_phone_number,formatted_address,geometry,website,types&key=${this.apiKey}&language=tr`;
-    try {
-      const { data } = await firstValueFrom(this.httpService.get(url));
-      return data.result;
-    } catch (e: any) {
-      this.logger.error(`Google API Details Hatası: ${e.message}`);
-      return null;
-    }
+    const { data }: any = await firstValueFrom(this.httpService.get(url));
+    return data.result;
+  }
+
+  private mapKeywordToType(keyword: string) {
+    const k = keyword.toLowerCase();
+    if (k.match(/elektrik|tesisat|boya/)) return { main: 'TECHNICAL', sub: k.replace(/\s+/g, '_') };
+    if (k.match(/laminant|cam|marangoz|çatı|anahtar/)) return { main: 'CONSTRUCTION', sub: k.replace(/\s+/g, '_') };
+    if (k.match(/klima|kombi/)) return { main: 'CLIMATE', sub: k.replace(/\s+/g, '_') };
+    if (k.match(/beyaz eşya|televizyon|bilgisayar|telefon/)) return { main: 'TECH', sub: k.replace(/\s+/g, '_') };
+    if (k.match(/temizlik|ilaçlama|yemek|bakıcı|hayvan/)) return { main: 'LIFE', sub: k.replace(/\s+/g, '_') };
+    return { main: 'TECHNICAL', sub: 'genel' };
   }
 
   private async saveToPrisma(details: any, city: string, district: string, keyword: string): Promise<boolean> {
     const rawPhone = details.formatted_phone_number.replace(/\D/g, '').slice(-10);
-    if (rawPhone.length < 10) return false;
-
-    // Prisma Client generate edildiği için artık hata vermez
-    const exists = await this.provider.findFirst({
-      where: { phoneNumber: details.formatted_phone_number }
-    });
+    const exists = await this.provider.findFirst({ where: { phoneNumber: details.formatted_phone_number } });
     if (exists) return false;
 
     try {
       const passwordHash = await bcrypt.hash('Usta2026!', 10);
-      const email = `g_${rawPhone}@transporter.app`;
+      const email = `u_${rawPhone}@ustasistemi.com`;
+      const { main, sub } = this.mapKeywordToType(keyword);
 
       await this.$transaction(async (tx) => {
         const user = await tx.user.create({
-          data: {
-            email,
-            password: passwordHash,
-            role: 'PROVIDER',
-            isActive: true
-          }
+          data: { email, password: passwordHash, role: 'PROVIDER', isActive: true }
         });
-
-        const mainType = keyword.includes('nakliyat') ? 'NAKLIYE' : 'KURTARICI';
-        const subType = keyword.includes('nakliyat') ? 'evden_eve' : 'oto_kurtarma';
-
         await tx.provider.create({
           data: {
             userId: user.id,
             businessName: details.name,
             phoneNumber: details.formatted_phone_number,
-            city,
-            district,
-            address: details.formatted_address,
-            mainType,
-            subType,
+            city, district, address: details.formatted_address,
+            mainType: main, subType: sub,
             lat: details.geometry.location.lat,
             lng: details.geometry.location.lng,
             website: details.website || '',
-            openingFee: 400,
-            pricePerUnit: 45
+            openingFee: 500, pricePerUnit: 100
           }
         });
       });
-
       return true;
-    } catch (e: any) {
-      this.logger.error(`DB Kayıt Hatası: ${e.message}`);
-      return false;
-    }
+    } catch (e) { return false; }
   }
 }
