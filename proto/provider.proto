@@ -56,3 +56,4 @@ message DistrictList { repeated Item items = 1; }
 message CategoryList { repeated Item items = 1; }
 message Item { string id = 1; string name = 2; }
 message CrawlStats { int32 totalFound = 1; int32 newlySaved = 2; int32 skipped = 3; }
+

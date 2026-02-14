@@ -8,7 +8,7 @@ async function bootstrap() {
     transport: Transport.GRPC,
     options: {
       package: 'notification',
-      protoPath: join(__dirname, 'proto/notification.proto'),
+      protoPath: join(process.cwd() , 'dist/proto/notification.proto'),
       url: '0.0.0.0:50056',
     },
   });

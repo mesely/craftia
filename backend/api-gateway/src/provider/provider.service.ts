@@ -49,4 +49,7 @@ export class ProviderGatewayService implements OnModuleInit {
   async startCrawl() {
     return await firstValueFrom(this.providerService.startGoogleCrawl({}));
   }
+
+
 }
+

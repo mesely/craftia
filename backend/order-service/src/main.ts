@@ -8,7 +8,7 @@ async function bootstrap() {
     transport: Transport.GRPC,
     options: {
       package: 'order',
-      protoPath: join(__dirname, 'proto/order.proto'),
+      protoPath: join(process.cwd() , 'dist/proto/order.proto'),
       url: '0.0.0.0:50054', // Order Service Port
     },
   });

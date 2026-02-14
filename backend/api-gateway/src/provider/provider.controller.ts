@@ -50,3 +50,5 @@ export class ProviderGatewayController {
     return this.providerService.delete(id);
   }
 }
+
+
