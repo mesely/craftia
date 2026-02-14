@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ReviewController } from './review/review.controller';
 import { ReviewService } from './review/review.service';
@@ -8,7 +8,13 @@ import { Review, ReviewSchema } from './review/schemas/review.schema';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    MongooseModule.forRoot(process.env.MONGO_URI || 'mongodb://localhost:27017/usta_db'),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGO_URI'),
+      }),
+      inject: [ConfigService],
+    }),
     MongooseModule.forFeature([{ name: Review.name, schema: ReviewSchema }]),
   ],
   controllers: [ReviewController],
