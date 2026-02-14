@@ -1,7 +1,12 @@
 {
   "name": "provider-service",
   "version": "1.0.0",
-  "scripts": { "build": "nest build", "start:prod": "node dist/main" },
+  "scripts": {
+  "build": "nest build",
+  "start": "nest start",
+  "start:dev": "nest start --watch",
+  "start:prod": "node dist/main"
+},
   "dependencies": {
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",

@@ -4,7 +4,10 @@ package provider;
 
 service ProviderService {
   rpc Create (CreateProviderRequest) returns (ProviderResponse);
-  rpc FindAll (Empty) returns (ProviderList);
+  
+  // ✅ DÜZELTİLDİ: Artık Empty (Boş) değil, FindAllRequest (Filtreler) alıyor!
+  rpc FindAll (FindAllRequest) returns (ProviderListResponse);
+  
   rpc FindOne (IdRequest) returns (ProviderResponse);
   rpc Update (UpdateProviderRequest) returns (ProviderResponse);
   rpc Delete (IdRequest) returns (DeleteResponse);
@@ -13,33 +16,41 @@ service ProviderService {
   rpc GetDistricts (CityRequest) returns (DistrictList);
   rpc GetCategories (Empty) returns (CategoryList);
 
-  // 🔥 Crawler
   rpc StartGoogleCrawl (Empty) returns (CrawlStats);
 }
 
 message Empty {}
-
 message IdRequest { string id = 1; }
 message CityRequest { string city = 1; }
 
+// ✅ YENİ: Gateway'den gelen tüm filtreleri taşıyacak kargo kutusu
+message FindAllRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  string mainType = 3;
+  string subType = 4;
+  string city = 5;
+  string sort = 6;
+  double userLat = 7;
+  double userLng = 8;
+}
+
 message CreateProviderRequest {
-  string businessName = 1;
-  string phoneNumber = 2;
-  string city = 3;
-  string district = 4;
-  string address = 5;
-  double lat = 6;
-  double lng = 7;
+  string name = 1;
+  string phone = 2;
+  string businessName = 3;
+  string phoneNumber = 4;
+  string category = 5;
+  string city = 6;
+  string district = 7;
+  string address = 8;
+  double lat = 9;
+  double lng = 10;
 }
 
-message UpdateProviderRequest {
-  string id = 1;
-  string businessName = 2;
-  string phoneNumber = 3;
-}
-
+// ✅ DÜZELTİLDİ: Frontend'in ihtiyaç duyduğu tüm alanlar (Özellikle MongoDB _id'si id olarak)
 message ProviderResponse {
-  string id = 1;
+  string _id = 1; 
   string businessName = 2;
   string phoneNumber = 3;
   string city = 4;
@@ -47,9 +58,20 @@ message ProviderResponse {
   string address = 6;
   double lat = 7;
   double lng = 8;
+  string mainType = 9;
+  string subType = 10;
+  double rating = 11;
+  bool isPremium = 12;
 }
 
-message ProviderList { repeated ProviderResponse providers = 1; }
+// ✅ YENİ: Frontend'in Sayfalama (Pagination) için beklediği yanıt formatı
+message ProviderListResponse { 
+  repeated ProviderResponse providers = 1; 
+  int32 total = 2;
+  int32 page = 3;
+  int32 lastPage = 4;
+}
+
 message DeleteResponse { bool success = 1; }
 message CityList { repeated Item items = 1; }
 message DistrictList { repeated Item items = 1; }

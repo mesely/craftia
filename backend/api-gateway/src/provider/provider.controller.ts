@@ -10,9 +10,31 @@ export class ProviderGatewayController {
     return this.providerService.create(data);
   }
 
+  /**
+   * ✅ GÜNCELLENDİ: Tüm filtreler ve konum verileri yakalanıyor.
+   * Frontend (UstaList.tsx) üzerinden gelen url parametrelerini gRPC servisine paslar.
+   */
   @Get()
-  findAll() {
-    return this.providerService.findAll();
+  findAll(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('mainType') mainType?: string,
+    @Query('subType') subType?: string,
+    @Query('city') city?: string,
+    @Query('sort') sort?: string, // Frontend 'sort' olarak yolluyor
+    @Query('userLat') userLat?: number,
+    @Query('userLng') userLng?: number,
+  ) {
+    return this.providerService.findAll({
+      page: Number(page) || 1,
+      limit: Number(limit) || 10,
+      mainType,
+      subType,
+      city,
+      sort,
+      userLat: userLat ? Number(userLat) : undefined,
+      userLng: userLng ? Number(userLng) : undefined
+    });
   }
 
   @Get('cities')
@@ -50,5 +72,3 @@ export class ProviderGatewayController {
     return this.providerService.delete(id);
   }
 }
-
-

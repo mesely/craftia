@@ -22,8 +22,9 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'user',
+          // process.cwd() konteyner içindeki /usr/src/app dizinini işaret eder
           protoPath: join(process.cwd(), 'proto/user.proto'),
-          url: 'user-service:50052', // Docker servis ismi
+          url: 'usta-user-service:50052', // Docker-compose servis adı
         },
       },
       {
@@ -32,7 +33,7 @@ import { NotificationGatewayService } from './notification/notification.service'
         options: {
           package: 'provider',
           protoPath: join(process.cwd(), 'proto/provider.proto'),
-          url: 'provider-service:50051', // Docker servis ismi
+          url: 'usta-provider-service:50051', // Docker-compose servis adı
         },
       },
       {
@@ -41,7 +42,7 @@ import { NotificationGatewayService } from './notification/notification.service'
         options: {
           package: 'order',
           protoPath: join(process.cwd(), 'proto/order.proto'),
-          url: 'order-service:50054', // Docker servis ismi
+          url: 'usta-order-service:50054', // Docker-compose servis adı
         },
       },
       {
@@ -50,7 +51,7 @@ import { NotificationGatewayService } from './notification/notification.service'
         options: {
           package: 'review',
           protoPath: join(process.cwd(), 'proto/review.proto'),
-          url: 'review-service:50055', // Docker servis ismi
+          url: 'usta-review-service:50055', // Docker-compose servis adı
         },
       },
       {
@@ -59,7 +60,7 @@ import { NotificationGatewayService } from './notification/notification.service'
         options: {
           package: 'notification',
           protoPath: join(process.cwd(), 'proto/notification.proto'),
-          url: 'notification-service:50056', // Docker servis ismi
+          url: 'usta-notification-service:50056', // Docker-compose servis adı
         },
       },
     ]),

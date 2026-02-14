@@ -6,67 +6,55 @@ import { ProviderService } from './provider.service';
 export class ProviderController {
   constructor(private readonly providerService: ProviderService) {}
 
-  // 1. Yeni Usta Oluşturma
   @GrpcMethod('ProviderService', 'Create')
-  create(data: any) {
-    return this.providerService.create(data);
-  }
+  create(data: any) { return this.providerService.create(data); }
 
-  // 2. Tüm Ustaları Listeleme
+  // ✅ DÜZELTİLDİ: Proto'daki FindAllRequest ile birebir eşleşen payload'u alır ve Servise paslar.
   @GrpcMethod('ProviderService', 'FindAll')
-  async findAll() {
-    const providers = await this.providerService.findAll();
-    // Proto dosyasındaki 'ProviderList' formatına (repeated providers) çeviriyoruz
-    return { providers };
+  async findAll(data: { 
+    page?: number; 
+    limit?: number; 
+    mainType?: string;
+    subType?: string; 
+    city?: string; 
+    sort?: string;
+    userLat?: number;
+    userLng?: number;
+  }) { 
+    // Gateway'den gelen tüm filtreleri (data objesi) direkt ProviderService'e (payload olarak) yolluyoruz.
+    return await this.providerService.findAll(data);
   }
 
-  // 3. Tek Usta Bulma
   @GrpcMethod('ProviderService', 'FindOne')
-  findOne(data: { id: string }) {
-    return this.providerService.findOne(data.id);
-  }
+  findOne(data: { id: string }) { return this.providerService.findOne(data.id); }
 
-  // 4. Usta Güncelleme
   @GrpcMethod('ProviderService', 'Update')
   update(data: any) {
-    // Proto'dan gelen veride 'id' ayrıştırılır
     const { id, ...rest } = data;
     return this.providerService.update(id, rest);
   }
 
-  // 5. Usta Silme
   @GrpcMethod('ProviderService', 'Delete')
-  delete(data: { id: string }) {
-    return this.providerService.delete(data.id);
-  }
+  delete(data: { id: string }) { return this.providerService.delete(data.id); }
 
-  // --- Yardımcı Endpointler ---
-
-  // 6. Şehirleri Getir
   @GrpcMethod('ProviderService', 'GetCities')
   async getCities() {
     const items = await this.providerService.getCities();
-    // Proto dosyasındaki 'CityList' formatına (repeated items) çeviriyoruz
     return { items };
   }
 
-  // 7. İlçeleri Getir
   @GrpcMethod('ProviderService', 'GetDistricts')
   async getDistricts(data: { city: string }) {
     const items = await this.providerService.getDistricts(data.city);
-    // Proto dosyasındaki 'DistrictList' formatına (repeated items) çeviriyoruz
     return { items };
   }
 
-  // 8. Kategorileri Getir
   @GrpcMethod('ProviderService', 'GetCategories')
   async getCategories() {
     const items = await this.providerService.getCategories();
-    // Proto dosyasındaki 'CategoryList' formatına (repeated items) çeviriyoruz
     return { items };
   }
 
-  // 🔥 9. Google Crawler Başlat
   @GrpcMethod('ProviderService', 'StartGoogleCrawl')
   async startGoogleCrawl() {
     return await this.providerService.startTurkeyGeneralCrawl();

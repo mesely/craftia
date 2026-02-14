@@ -9,7 +9,7 @@ import { User, UserSchema } from './user/schemas/user.schema';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     // Eğer .env yoksa varsayılan local adresi kullanır
-    MongooseModule.forRoot(process.env.DATABASE_URL || 'mongodb://localhost:27017/usta_db'),
+    MongooseModule.forRoot(process.env.MONGO_URI),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [UserController],

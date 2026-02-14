@@ -1,36 +1,59 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import AdvancedFilters from '@/components/features/AdvancedFilters';
 import UstaList from '@/components/features/UstaList';
 
 export default function Home() {
+  // --- MERKEZİ FİLTRE DURUMU (Source of Truth) ---
+  const [filters, setFilters] = useState({
+    city: 'İzmir',
+    subType: 'all',
+    sortMode: 'nearest',
+    distance: 10,
+  });
+
+  // --- KULLANICI KONUMU ---
+  const [userCoords, setUserCoords] = useState({ lat: 38.4237, lng: 27.1428 });
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (err) => console.warn("Konum izni alınamadı, varsayılan İzmir kullanılıyor.")
+      );
+    }
+  }, []);
+
+  // Filtreler değiştikçe tetiklenecek fonksiyon
+  const handleFilterChange = (newFilters: any) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
   return (
     <MainLayout>
-      {/* Container: relative
-        Bu kapsayıcı, içindeki fixed elemanların sayfaya göre hizalanmasını sağlar.
-      */}
       <div className="relative w-full">
         
-        {/* 1. FIXED FILTER BAR (ÇAKILI FİLTRE)
-            - fixed: Asla kımıldamaz, Header gibi sabit kalır.
-            - top-[88px]: MainLayout'taki Header'ın (88px) tam bittiği yerden başlar.
-            - left-0 right-0: Ekranın solundan sağına tam oturur.
-            - z-40: Listenin üstünde kalır, Header'ın (z-60) altında kalır.
+        {/* 1. FIXED FILTER BAR
+            Buraya merkezi state'i ve değiştirme fonksiyonunu gönderiyoruz.
         */}
         <div className="fixed top-[88px] left-0 right-0 z-40 w-full">
-            <AdvancedFilters />
+            <AdvancedFilters 
+              currentFilters={filters} 
+              onFilterChange={handleFilterChange} 
+            />
         </div>
 
         {/* 2. USTA LİSTESİ 
-            - pt-[100px]: Üstten 100px boşluk bırakıyoruz.
-              Neden? Çünkü Filtre Barı (yaklaşık 84px) artık "fixed" olduğu için yer kaplamıyor.
-              Listeyi elle aşağı itmezsek filtrenin altında kalır.
-            - pb-36: Alt menü (BottomNav) için güvenli boşluk.
+            Liste, buradaki 'filters' ve 'userCoords' değiştikçe Atlas'tan 
+            yeni verileri çekmek üzere hazır bekleyecek.
         */}
-        <div className="pt-[100px] pb-36 px-0">
-           <UstaList />
+        <div className="pt-[110px] pb-36 px-0">
+           <UstaList 
+             filters={filters} 
+             userCoords={userCoords} 
+           />
         </div>
 
       </div>

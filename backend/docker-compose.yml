@@ -1,11 +1,7 @@
 services:
-  mongodb:
-    image: mongo:6.0
-    container_name: usta_mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
+  # Yerel MongoDB'yi siliyoruz/devre dışı bırakıyoruz çünkü artık Atlas (Bulut) kullanıyoruz.
+  # Eğer yerel DB konteynırı depends_on içinde kalırsa servisler Atlas'a bağlanmak yerine 
+  # yerel DB'nin açılmasını bekleyip hata verebilir.
 
   api-gateway:
     build: ./api-gateway
@@ -27,53 +23,44 @@ services:
     build: ./user-service
     container_name: usta-user-service
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/usta_db
+      - MONGO_URI=mongodb+srv://selmanyilmaz:morinyo1907@cs306cluster.h6hnm1n.mongodb.net/usta_db?retryWrites=true&w=majority
     ports:
       - "50052:50052"
-    depends_on:
-      - mongodb
 
   provider-service:
     build: ./provider-service
     container_name: usta-provider-service
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/usta_db
-      - DATABASE_URL=mongodb://mongodb:27017/usta_db
+      - MONGO_URI=mongodb+srv://selmanyilmaz:morinyo1907@cs306cluster.h6hnm1n.mongodb.net/usta_db?retryWrites=true&w=majority
+      - DATABASE_URL=mongodb+srv://selmanyilmaz:morinyo1907@cs306cluster.h6hnm1n.mongodb.net/usta_db?retryWrites=true&w=majority
       - GOOGLE_PLACES_API_KEY=${GOOGLE_PLACES_API_KEY}
     ports:
       - "50051:50051"
-    depends_on:
-      - mongodb
 
   order-service:
     build: ./order-service
     container_name: usta-order-service
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/usta_db
+      - MONGO_URI=mongodb+srv://selmanyilmaz:morinyo1907@cs306cluster.h6hnm1n.mongodb.net/usta_db?retryWrites=true&w=majority
     ports:
       - "50054:50054"
-    depends_on:
-      - mongodb
 
   review-service:
     build: ./review-service
     container_name: usta-review-service
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/usta_db
+      - MONGO_URI=mongodb+srv://selmanyilmaz:morinyo1907@cs306cluster.h6hnm1n.mongodb.net/usta_db?retryWrites=true&w=majority
     ports:
       - "50055:50055"
-    depends_on:
-      - mongodb
 
   notification-service:
     build: ./notification-service
     container_name: usta-notification-service
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/usta_db
+      - MONGO_URI=mongodb+srv://selmanyilmaz:morinyo1907@cs306cluster.h6hnm1n.mongodb.net/usta_db?retryWrites=true&w=majority
     ports:
       - "50056:50056"
-    depends_on:
-      - mongodb
 
+# Artık yerel volume ihtiyacımız kalmadı ama hata vermemesi için bırakabilirsin.
 volumes:
   mongo_data:
