@@ -4,6 +4,8 @@ node_modules/
 dist/
 build/
 .env
+frontend/ios/
 *.log
 .DS_Store
 frontend/public/*.png
+frontend/ios/

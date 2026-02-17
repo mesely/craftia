@@ -22,7 +22,6 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'user',
-          // __dirname kullanımı hem lokalde hem canlıda daha güvenlidir
           protoPath: join(__dirname, '../proto/user.proto'),
           url: process.env.USER_SERVICE_URL || 'usta-user-service:50052',
         },
@@ -80,4 +79,4 @@ import { NotificationGatewayService } from './notification/notification.service'
     NotificationGatewayService,
   ],
 })
-export class AppModule {}
+export class AppModule { }

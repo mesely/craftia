@@ -27,62 +27,78 @@ export class ProviderService implements OnModuleInit {
   // ✅ GÜNCELLENMİŞ FINDALL: gRPC/Controller'dan gelen Payload (Object) mimarisine uyarlandı.
   // Eskiden parametreler tek tek geliyordu, bu yüzden filtreler DB'ye ulaşmıyordu.
   async findAll(payload: any) {
-    // 1. Sayfalama Ayarları
-    const page = Number(payload.page) || 1;
-    const limit = Number(payload.limit) || 10;
-    const skip = (page - 1) * limit;
-    
-    // 2. Dinamik Filtre (Query) Oluşturma
-    const query: any = {};
-    
-    // Ana Kategori (mainType) Filtresi
-    if (payload.mainType && payload.mainType !== 'all' && payload.mainType !== 'undefined' && payload.mainType !== '') {
-      query.mainType = payload.mainType;
-    }
+  const page = Number(payload.page) || 1;
+  const limit = Number(payload.limit) || 10;
+  const skip = (page - 1) * limit;
+  const userLat = parseFloat(payload.userLat);
+  const userLng = parseFloat(payload.userLng);
+  const sortMode = payload.sortMode || payload.sort;
 
-    // Alt Kategori (subType) Filtresi
-    if (payload.subType && payload.subType !== 'all' && payload.subType !== 'undefined' && payload.subType !== '') {
-      query.subType = payload.subType;
-    }
+  // 1. Pipeline Başlangıcı
+  const pipeline: any[] = [];
 
-    // Şehir (city) Filtresi
-    if (payload.city && payload.city !== 'all' && payload.city !== 'undefined' && payload.city !== '') {
-      // "adana" veya "Adana" fark etmeksizin eşleşmesi için Regex (büyük/küçük harf duyarsız)
-      query.city = { $regex: new RegExp('^' + payload.city + '$', 'i') }; 
-    }
-
-    // 3. Sıralama Mantığı
-    // Her zaman isPremium: -1 (Premiumlar en üstte)
-    let sortOptions: any = { isPremium: -1 }; 
-
-    if (payload.sort === 'rating') {
-      sortOptions.rating = -1; // Puanı yüksek olanlar
-    } else if (payload.sort === 'oldest') {
-      sortOptions.createdAt = 1; // En eskiler
-    } else {
-      sortOptions.createdAt = -1; // En yeniler (Varsayılan)
-    }
-
-    // 4. Veritabanı Sorgusu
-    const providers = await this.providerModel
-      .find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limit)
-      .lean() 
-      .exec();
-
-    const total = await this.providerModel.countDocuments(query);
-
-    return {
-      providers,
-      total,
-      page,
-      lastPage: Math.ceil(total / limit),
-    };
+  // 2. MESAFE HESABI (Eğer konum varsa ve mod 'nearest' ise)
+  if (!isNaN(userLat) && !isNaN(userLng) && sortMode === 'nearest') {
+    pipeline.push({
+      $addFields: {
+        distance: {
+          $sqrt: {
+            $add: [
+              { $pow: [{ $subtract: ['$lat', userLat] }, 2] },
+              { $pow: [{ $subtract: ['$lng', userLng] }, 2] }
+            ]
+          }
+        }
+      }
+    });
+  } else {
+    // Mesafe modu değilse distance alanını 0 verelim ki hata çıkmasın
+    pipeline.push({ $addFields: { distance: 0 } });
   }
 
-  // --- DİĞER METODLAR AYNI ---
+  // 3. FİLTRELER (Match)
+  const matchQuery: any = {};
+  if (payload.mainType && payload.mainType !== 'all') {
+    matchQuery.mainType = payload.mainType;
+  }
+  if (payload.subType && payload.subType !== 'all') {
+    matchQuery.subType = payload.subType;
+  }
+  if (payload.city && payload.city !== 'all') {
+    matchQuery.city = { $regex: new RegExp('^' + payload.city + '$', 'i') };
+  }
+  pipeline.push({ $match: matchQuery });
+
+  // 4. SIRALAMA (Önce Premium, Sonra Seçilen Mod)
+  // En önemli kural: isPremium hep -1 (en üstte)
+  const sortOptions: any = { isPremium: -1 };
+
+  if (sortMode === 'nearest' && !isNaN(userLat)) {
+    sortOptions.distance = 1; // En yakın mesafe
+  } else if (sortMode === 'rating') {
+    sortOptions.rating = -1;
+  } else {
+    sortOptions.createdAt = -1; // En yeni
+  }
+  pipeline.push({ $sort: sortOptions });
+
+  // 5. SAYFALAMA
+  pipeline.push({ $skip: skip });
+  pipeline.push({ $limit: limit });
+
+  // 6. ÇALIŞTIR
+  const providers = await this.providerModel.aggregate(pipeline).exec();
+  const total = await this.providerModel.countDocuments(matchQuery);
+
+  return {
+    providers,
+    total,
+    page,
+    lastPage: Math.ceil(total / limit),
+  };
+}
+
+  // --- DİĞER METODLAR AYNI --
   async create(data: any) {
     const latValue = data.lat ? parseFloat(data.lat.toString()) : 0;
     const lngValue = data.lng ? parseFloat(data.lng.toString()) : 0;
