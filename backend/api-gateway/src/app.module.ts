@@ -22,9 +22,8 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'user',
-          // Hem yerelde hem konteynerda proto klasörünü bulması için __dirname + relative path en sağlamıdır
-          protoPath: join(__dirname, '../../proto/user.proto'),
-          // HF'de yan odadaki servise gitmek için 127.0.0.1 kullanılır
+          // 🔥 EN SAĞLAM YOL: dist içinden bir üst klasöre (backend) çıkıp proto'ya girmek
+          protoPath: join(__dirname, '..', '..', 'proto/user.proto'),
           url: process.env.USER_SERVICE_URL || '127.0.0.1:50052',
         },
       },
@@ -33,7 +32,7 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'provider',
-          protoPath: join(__dirname, '../../proto/provider.proto'),
+          protoPath: join(__dirname, '..', '..', 'proto/provider.proto'),
           url: process.env.PROVIDER_SERVICE_URL || '127.0.0.1:50051',
         },
       },
@@ -42,7 +41,7 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'order',
-          protoPath: join(__dirname, '../../proto/order.proto'),
+          protoPath: join(__dirname, '..', '..', 'proto/order.proto'),
           url: process.env.ORDER_SERVICE_URL || '127.0.0.1:50054',
         },
       },
@@ -51,7 +50,7 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'review',
-          protoPath: join(__dirname, '../../proto/review.proto'),
+          protoPath: join(__dirname, '..', '..', 'proto/review.proto'),
           url: process.env.REVIEW_SERVICE_URL || '127.0.0.1:50055',
         },
       },
@@ -60,7 +59,7 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'notification',
-          protoPath: join(__dirname, '../../proto/notification.proto'),
+          protoPath: join(__dirname, '..', '..', 'proto/notification.proto'),
           url: process.env.NOTIFICATION_SERVICE_URL || '127.0.0.1:50056',
         },
       },
