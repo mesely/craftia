@@ -23,28 +23,33 @@ interface AdvancedFiltersProps {
 const THEME_MAP: any = {
   TECHNICAL: { main: 'text-blue-600', accent: 'bg-blue-600', border: 'border-blue-200' },
   CONSTRUCTION: { main: 'text-purple-600', accent: 'bg-purple-600', border: 'border-purple-200' },
-  CLIMATE: { main: 'text-orange-600', accent: 'bg-orange-600', border: 'border-orange-200' },
   TECH: { main: 'text-indigo-600', accent: 'bg-indigo-600', border: 'border-indigo-200' },
   LIFE: { main: 'text-emerald-600', accent: 'bg-emerald-600', border: 'border-emerald-200' }
 };
 
-// ✅ Backend DB anahtar kelimeleriyle %100 uyumlu liste
+// SADECE VERİTABANINDA OLAN ANA VE ALT KATEGORİLER
 const SUBTYPE_MAP: any = {
   TECHNICAL: [
     { label: "Tümü", value: "all" },
     { label: "Elektrikçi", value: "elektrikçi" },
-    { label: "Su Tesisatçısı", value: "su tesisatçısı" }
+    { label: "Su Tesisatçısı", value: "su tesisatçısı" },
+    { label: "Klima & Kombi", value: "klima ve kombi servisi" }
   ],
   CONSTRUCTION: [
     { label: "Tümü", value: "all" },
-    { label: "Boyacı", value: "boyacı" }
+    { label: "Boyacı", value: "boyacı" },
+    { label: "Dekorasyon", value: "dekorasyon" },
+    { label: "Marangoz", value: "marangoz" }
   ],
-  CLIMATE: [
+  TECH: [
     { label: "Tümü", value: "all" },
-    { label: "Kombi Tamiri", value: "kombi tamiri" }
+    { label: "Beyaz Eşya", value: "beyaz eşya tamiri" },
+    { label: "Elektronik", value: "elektronik tamiri" }
   ],
-  TECH: [{ label: "Tümü", value: "all" }],
-  LIFE: [{ label: "Tümü", value: "all" }]
+  LIFE: [
+    { label: "Tümü", value: "all" },
+    { label: "Ev Temizliği", value: "ev temizliği" }
+  ]
 };
 
 const CITIES = ["İzmir", "İstanbul", "Ankara", "Adana", "Bursa", "Antalya"];

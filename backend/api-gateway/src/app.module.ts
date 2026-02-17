@@ -22,9 +22,9 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'user',
-          // process.cwd() konteyner içindeki /usr/src/app dizinini işaret eder
-          protoPath: join(process.cwd(), 'proto/user.proto'),
-          url: 'usta-user-service:50052', // Docker-compose servis adı
+          // __dirname kullanımı hem lokalde hem canlıda daha güvenlidir
+          protoPath: join(__dirname, '../proto/user.proto'),
+          url: process.env.USER_SERVICE_URL || 'usta-user-service:50052',
         },
       },
       {
@@ -32,8 +32,8 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'provider',
-          protoPath: join(process.cwd(), 'proto/provider.proto'),
-          url: 'usta-provider-service:50051', // Docker-compose servis adı
+          protoPath: join(__dirname, '../proto/provider.proto'),
+          url: process.env.PROVIDER_SERVICE_URL || 'usta-provider-service:50051',
         },
       },
       {
@@ -41,8 +41,8 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'order',
-          protoPath: join(process.cwd(), 'proto/order.proto'),
-          url: 'usta-order-service:50054', // Docker-compose servis adı
+          protoPath: join(__dirname, '../proto/order.proto'),
+          url: process.env.ORDER_SERVICE_URL || 'usta-order-service:50054',
         },
       },
       {
@@ -50,8 +50,8 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'review',
-          protoPath: join(process.cwd(), 'proto/review.proto'),
-          url: 'usta-review-service:50055', // Docker-compose servis adı
+          protoPath: join(__dirname, '../proto/review.proto'),
+          url: process.env.REVIEW_SERVICE_URL || 'usta-review-service:50055',
         },
       },
       {
@@ -59,8 +59,8 @@ import { NotificationGatewayService } from './notification/notification.service'
         transport: Transport.GRPC,
         options: {
           package: 'notification',
-          protoPath: join(process.cwd(), 'proto/notification.proto'),
-          url: 'usta-notification-service:50056', // Docker-compose servis adı
+          protoPath: join(__dirname, '../proto/notification.proto'),
+          url: process.env.NOTIFICATION_SERVICE_URL || 'usta-notification-service:50056',
         },
       },
     ]),

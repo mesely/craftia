@@ -4,12 +4,10 @@ package provider;
 
 service ProviderService {
   rpc Create (CreateProviderRequest) returns (ProviderResponse);
-  
-  // ✅ DÜZELTİLDİ: Artık Empty (Boş) değil, FindAllRequest (Filtreler) alıyor!
   rpc FindAll (FindAllRequest) returns (ProviderListResponse);
-  
+  rpc FindNearby (NearbyRequest) returns (ProviderListResponse);
   rpc FindOne (IdRequest) returns (ProviderResponse);
-  rpc Update (UpdateProviderRequest) returns (ProviderResponse);
+  rpc Update (UpdateProviderRequest) returns (ProviderResponse); 
   rpc Delete (IdRequest) returns (DeleteResponse);
 
   rpc GetCities (Empty) returns (CityList);
@@ -17,13 +15,19 @@ service ProviderService {
   rpc GetCategories (Empty) returns (CategoryList);
 
   rpc StartGoogleCrawl (Empty) returns (CrawlStats);
+  rpc StartTurkeyGeneralCrawl (Empty) returns (CrawlStats);
 }
 
 message Empty {}
 message IdRequest { string id = 1; }
 message CityRequest { string city = 1; }
 
-// ✅ YENİ: Gateway'den gelen tüm filtreleri taşıyacak kargo kutusu
+message NearbyRequest {
+  double lat = 1;
+  double lng = 2;
+  double radius = 3;
+}
+
 message FindAllRequest {
   int32 page = 1;
   int32 limit = 2;
@@ -33,6 +37,7 @@ message FindAllRequest {
   string sort = 6;
   double userLat = 7;
   double userLng = 8;
+  string sortMode = 9;
 }
 
 message CreateProviderRequest {
@@ -48,7 +53,19 @@ message CreateProviderRequest {
   double lng = 10;
 }
 
-// ✅ DÜZELTİLDİ: Frontend'in ihtiyaç duyduğu tüm alanlar (Özellikle MongoDB _id'si id olarak)
+// 💥 HATA VEREN EKSİK KISIM BURAYDI
+message UpdateProviderRequest {
+  string id = 1;
+  string businessName = 2;
+  string phoneNumber = 3;
+  string category = 4;
+  string city = 5;
+  string district = 6;
+  string address = 7;
+  double lat = 8;
+  double lng = 9;
+}
+
 message ProviderResponse {
   string _id = 1; 
   string businessName = 2;
@@ -62,9 +79,9 @@ message ProviderResponse {
   string subType = 10;
   double rating = 11;
   bool isPremium = 12;
+  double distance = 13;
 }
 
-// ✅ YENİ: Frontend'in Sayfalama (Pagination) için beklediği yanıt formatı
 message ProviderListResponse { 
   repeated ProviderResponse providers = 1; 
   int32 total = 2;

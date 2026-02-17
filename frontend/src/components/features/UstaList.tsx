@@ -51,7 +51,7 @@ export default function UstaList({ filters, userCoords }: UstaListProps) {
     setError(null);
 
     try {
-      const url = new URL('http://localhost:3000/api/v1/providers');
+      const url = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/providers`);
       url.searchParams.append('page', page.toString());
       url.searchParams.append('limit', '10');
       if (activeCategory) url.searchParams.append('mainType', activeCategory);
