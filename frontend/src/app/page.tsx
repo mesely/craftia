@@ -47,7 +47,7 @@ export default function Home() {
         {/* 1. FIXED FILTER BAR 
             Sticky/Fixed yapısı ile her zaman ulaşılabilir.
         */}
-        <div className="fixed top-[88px] left-0 right-0 z-40 w-full">
+        <div className="fixed top-[60px] left-0 right-0 z-40 w-full">
             <AdvancedFilters 
               currentFilters={filters} 
               onFilterChange={handleFilterChange} 
@@ -58,7 +58,7 @@ export default function Home() {
             Artık 'nearest' (yakındakiler) motoru backend'de hazır olduğu için 
             buradaki userCoords tıkır tıkır çalışacak.
         */}
-        <div className="pt-[110px] pb-36 px-0">
+        <div className="pt-[90px] pb-36 px-0">
            <UstaList 
              filters={filters} 
              userCoords={userCoords} 

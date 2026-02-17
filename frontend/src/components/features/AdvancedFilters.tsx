@@ -4,12 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Star, MapPin, X, SlidersHorizontal, SortAscending, 
-  CaretDown, Funnel 
+  X, SlidersHorizontal, CaretDown, MapPin 
 } from '@phosphor-icons/react';
 import { useCategory } from '@/context/CategoryContext';
 
-// ✅ TypeScript Arabirimi: page.tsx'den gelen verileri karşılar
 interface AdvancedFiltersProps {
   currentFilters: {
     city: string;
@@ -27,12 +25,11 @@ const THEME_MAP: any = {
   LIFE: { main: 'text-emerald-600', accent: 'bg-emerald-600', border: 'border-emerald-200' }
 };
 
-// SADECE VERİTABANINDA OLAN ANA VE ALT KATEGORİLER
 const SUBTYPE_MAP: any = {
   TECHNICAL: [
     { label: "Tümü", value: "all" },
-    { label: "Elektrikçi", value: "elektrikçi" },
-    { label: "Su Tesisatçısı", value: "su tesisatçısı" },
+    { label: "Elektrik", value: "elektrikçi" },
+    { label: "Su Tesisat", value: "su tesisatçısı" },
     { label: "Klima & Kombi", value: "klima ve kombi servisi" }
   ],
   CONSTRUCTION: [
@@ -57,7 +54,6 @@ const CITIES = ["İzmir", "İstanbul", "Ankara", "Adana", "Bursa", "Antalya"];
 export default function AdvancedFilters({ currentFilters, onFilterChange }: AdvancedFiltersProps) {
   const { activeCategory } = useCategory();
   const theme = THEME_MAP[activeCategory] || THEME_MAP.TECHNICAL;
-  
   const [mounted, setMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
@@ -68,27 +64,28 @@ export default function AdvancedFilters({ currentFilters, onFilterChange }: Adva
 
   return (
     <>
-      <div className="w-full bg-white/10 backdrop-blur-3xl border-b border-white/10 shadow-sm py-3 overflow-hidden">
-        {/* TEK SATIR KONTEYNER: Yatay kaydırma aktif, alt satıra geçmez */}
-        <div className="max-w-7xl mx-auto px-4 flex items-center gap-3 overflow-x-auto no-scrollbar flex-nowrap">
+      <div className="w-full bg-white/5 backdrop-blur-3xl border-b border-white/10 flex flex-col gap-2.5 py-3">
+        
+        {/* 1. ÜST SATIR: İL + SIRALAMA + AYAR */}
+        <div className="w-full px-4 flex items-center gap-2 overflow-hidden">
           
-          {/* 1. Hızlı İl Seçimi */}
-          <div className="flex items-center gap-1.5 bg-white/20 border border-white/30 px-3 h-[42px] rounded-[18px] shrink-0">
+          {/* Şehir Seçimi */}
+          <div className="flex items-center gap-1 bg-white/20 border border-white/30 pl-2 pr-1.5 h-[38px] rounded-[16px] shrink-0 shadow-sm">
             <MapPin size={16} weight="fill" className={theme.main} />
             <select 
               value={currentFilters.city}
               onChange={(e) => onFilterChange({ city: e.target.value })}
-              className="bg-transparent text-[11px] font-black text-slate-700 uppercase outline-none cursor-pointer appearance-none"
+              className="bg-transparent text-[11px] font-black text-slate-800 uppercase outline-none appearance-none cursor-pointer"
             >
-              {CITIES.map(city => <option key={city} value={city} className="text-slate-800">{city}</option>)}
+              {CITIES.map(city => <option key={city} value={city}>{city}</option>)}
             </select>
             <CaretDown size={10} weight="bold" className="text-slate-400" />
           </div>
 
-          {/* 2. Sıralama Switcher */}
-          <div className="flex bg-slate-800/10 rounded-[18px] p-0.5 h-[42px] w-[130px] relative shrink-0">
+          {/* Yakın/Puan Switcher */}
+          <div className="flex bg-slate-800/10 rounded-[16px] p-0.5 h-[38px] w-[110px] relative shrink-0">
             <motion.div 
-              className={`absolute top-0.5 bottom-0.5 rounded-[16px] shadow-sm ${theme.accent}`}
+              className={`absolute top-0.5 bottom-0.5 rounded-[14px] shadow-sm ${theme.accent}`}
               animate={{ x: currentFilters.sortMode === 'nearest' ? '0%' : '100%' }}
               style={{ width: '48%' }}
             />
@@ -106,77 +103,53 @@ export default function AdvancedFilters({ currentFilters, onFilterChange }: Adva
             </button>
           </div>
 
-          {/* 3. Dikey Ayraç */}
-          <div className="w-[1px] h-6 bg-white/20 shrink-0 mx-1" />
-
-          {/* 4. Alt Kategoriler (Yatay Çipler) */}
-          <div className="flex items-center gap-2 flex-nowrap shrink-0">
-            {subtypes.map((sub: any) => (
-              <button 
-                key={sub.value}
-                onClick={() => onFilterChange({ subType: sub.value })}
-                className={`px-4 h-[38px] rounded-full text-[10px] font-black uppercase whitespace-nowrap transition-all border shrink-0 ${
-                  currentFilters.subType === sub.value 
-                  ? `${theme.accent} text-white border-transparent shadow-md` 
-                  : 'bg-white/20 text-slate-500 border-white/30 hover:bg-white/40'
-                }`}
-              >
-                {sub.label}
-              </button>
-            ))}
-          </div>
-
-          {/* 5. Gelişmiş Filtre Butonu (En Sağda) */}
+          {/* Gelişmiş Filtre İkonu (DİNAMİK YAPILDI) */}
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="h-[42px] w-[42px] rounded-[18px] bg-slate-800 text-white flex items-center justify-center shadow-lg shrink-0 ml-auto"
+            className={`h-[38px] w-[38px] rounded-[16px] ${theme.accent} text-white flex items-center justify-center shadow-lg active:scale-95 transition-transform shrink-0 ml-auto`}
           >
             <SlidersHorizontal size={18} weight="bold" />
           </button>
         </div>
+
+        {/* 2. ALT SATIR: KATEGORİLER */}
+        <div className="w-full px-4 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          {subtypes.map((sub: any) => (
+            <button 
+              key={sub.value}
+              onClick={() => onFilterChange({ subType: sub.value })}
+              className={`px-5 h-[36px] rounded-full text-[10px] font-black uppercase whitespace-nowrap transition-all border shrink-0 ${
+                currentFilters.subType === sub.value 
+                ? `${theme.accent} text-white border-transparent shadow-md scale-105` 
+                : 'bg-white/20 text-slate-600 border-white/30 hover:bg-white/40'
+              }`}
+            >
+              {sub.label}
+            </button>
+          ))}
+        </div>
+
       </div>
 
-      {/* --- MODAL (Gelişmiş Kriterler) --- */}
+      {/* --- MODAL --- */}
       <AnimatePresence>
         {isModalOpen && createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-              onClick={() => setIsModalOpen(false)} 
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" 
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} 
-              className="relative w-full max-w-sm bg-white/90 backdrop-blur-2xl rounded-[40px] p-8 shadow-2xl"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative w-full max-w-sm bg-white/95 backdrop-blur-3xl rounded-[40px] p-8 shadow-2xl">
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Kriterler</h3>
-                <button onClick={() => setIsModalOpen(false)} className="p-2 bg-slate-100 rounded-full text-slate-400">
-                  <X size={20} weight="bold"/>
-                </button>
+                <button onClick={() => setIsModalOpen(false)} className="p-2 bg-slate-100 rounded-full text-slate-400"><X size={20} weight="bold"/></button>
               </div>
-
-              <div className="space-y-8">
-                {/* Mesafe Slider */}
-                <div className="space-y-4">
-                  <div className="flex justify-between text-[10px] font-black text-slate-500 uppercase">
+              <div className="space-y-10">
+                <div className="space-y-5">
+                  <div className="flex justify-between text-[11px] font-black text-slate-500 uppercase">
                     <span>Arama Mesafesi</span>
-                    <span className={theme.main}>{currentFilters.distance} KM</span>
+                    <span className={`px-3 py-1 rounded-lg text-white ${theme.accent}`}>{currentFilters.distance} KM</span>
                   </div>
-                  <input 
-                    type="range" min="1" max="50" 
-                    value={currentFilters.distance} 
-                    onChange={(e) => onFilterChange({ distance: parseInt(e.target.value) })} 
-                    className="w-full accent-slate-800 h-1 bg-slate-100 rounded-full appearance-none cursor-pointer" 
-                  />
+                  <input type="range" min="1" max="50" value={currentFilters.distance} onChange={(e) => onFilterChange({ distance: parseInt(e.target.value) })} className="w-full h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-slate-800" />
                 </div>
-
-                <button 
-                  onClick={() => setIsModalOpen(false)} 
-                  className={`w-full py-5 rounded-[25px] text-white font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 ${theme.accent}`}
-                >
-                  Filtreleri Uygula
-                </button>
+                <button onClick={() => setIsModalOpen(false)} className={`w-full py-5 rounded-[25px] text-white font-black text-sm uppercase tracking-widest shadow-2xl transition-all active:scale-95 ${theme.accent}`}>Uygula</button>
               </div>
             </motion.div>
           </div>,
