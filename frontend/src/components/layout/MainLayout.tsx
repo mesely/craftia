@@ -1,15 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { 
-  List, UserCircle, Wrench, PaintRoller, 
+  Gear, UserCircle, Wrench, PaintRoller, 
   Thermometer, Monitor, Sparkle 
 } from '@phosphor-icons/react';
 
 import MeshBackground from './MeshBackground';
-import Sidebar from './Sidebar';
-import ProfileWidget from './ProfileWidget';
 import { useCategory, CategoryType } from '@/context/CategoryContext';
 
 const THEME_COLORS: Record<CategoryType, string> = {
@@ -30,16 +29,10 @@ const NAV_ITEMS = [
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const { activeCategory, setActiveCategory } = useCategory();
+  const router = useRouter();
   
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [isProfileWidgetOpen, setProfileWidgetOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const user = { name: 'Ahmet Yılmaz' };
-
-  const openAccountSettings = () => {
-    setProfileWidgetOpen(false);
-    setTimeout(() => setSidebarOpen(true), 200);
-  };
+  // Örn: Gelecekte auth state'den gelecek
+  const isLoggedIn = false; 
 
   return (
     <div className="relative min-h-screen w-full font-sans text-slate-800 overflow-x-hidden selection:bg-indigo-100">
@@ -47,39 +40,27 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       {/* 1. ARKA PLAN */}
       <MeshBackground category={activeCategory} />
       
-      {/* 2. MENÜLER */}
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
-        onOpenComplaint={() => {}} 
-      />
-      <ProfileWidget 
-        isOpen={isProfileWidgetOpen} 
-        onClose={() => setProfileWidgetOpen(false)} 
-        isLoggedIn={isLoggedIn}
-        user={user}
-        onLogout={() => setIsLoggedIn(false)}
-        onOpenSidebarAccount={openAccountSettings}
-      />
-
-      {/* 3. HEADER (Üst Bar) 
-          h-[88px] sabittir. Sticky filtre buna göre ayarlanacak.
+      {/* 2. HEADER (Üst Bar) 
+          Artık Sidebar yerine doğrudan /settings sayfasına yönlendiriyor.
       */}
-      <header className="fixed top-0 left-0 right-0 z-[60] h-[88px] pt-[env(safe-area-inset-top)] px-6 flex items-center justify-between bg-white/20 backdrop-blur-3xl border-b border-white/20 shadow-sm transition-all duration-300">
+      <header className="fixed top-0 left-0 right-0 z-[60] h-[88px] pt-[env(safe-area-inset-top)] px-6 flex items-center justify-between bg-white/20 backdrop-blur-3xl border-b border-white/20 shadow-sm">
+        
+        {/* AYARLAR BUTONU (Eski Hamburger Menü Yerine) */}
         <button 
-          onClick={() => setSidebarOpen(true)} 
-          className="p-3 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full border border-white/30 shadow-sm active:scale-90 transition-all group"
+          onClick={() => router.push('/settings')} 
+          className="p-3 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-2xl border border-white/30 shadow-sm active:scale-90 transition-all group outline-none"
         >
-          <List size={26} weight="bold" className="text-slate-700 group-hover:text-slate-900" />
+          <Gear size={26} weight="duotone" className="text-slate-700 group-hover:text-slate-900 transition-transform group-hover:rotate-90 duration-500" />
         </button>
         
         <div className="text-[20px] font-black tracking-[0.3em] uppercase text-slate-800/90 select-none drop-shadow-sm">
           USTA
         </div>
         
+        {/* PROFİL BUTONU (Eskiden Widget Açardı, Şimdi Profil Sayfasına Veya Girişe Gider) */}
         <button 
-          onClick={() => setProfileWidgetOpen(true)}
-          className={`p-1.5 rounded-full transition-all active:scale-90 hover:bg-white/30 ${isLoggedIn ? 'bg-white/20 backdrop-blur-md border border-white/30 shadow-sm' : ''}`}
+          onClick={() => router.push(isLoggedIn ? '/profile' : '/settings')}
+          className={`p-1.5 rounded-full transition-all active:scale-90 hover:bg-white/30 outline-none ${isLoggedIn ? 'bg-white/20 backdrop-blur-md border border-white/30 shadow-sm' : ''}`}
         >
           <UserCircle 
             size={36} 
@@ -89,20 +70,16 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </button>
       </header>
 
-      {/* 4. ANA İÇERİK ALANI 
-          - DÜZELTME: pt-[88px] yapıldı. (Eskiden 110px idi, boşluk yapıyordu).
-          - Header yüksekliği (88px) ile birebir aynı olduğu için boşluk kalmaz.
-          - px-0 ve w-full: Tam genişlik sağlar.
-      */}
+      {/* 3. ANA İÇERİK ALANI */}
       <main className="pt-[88px] pb-32 px-0 min-h-screen relative z-10 w-full">
         <div className="w-full">
           {children}
         </div>
       </main>
 
-      {/* 5. BOTTOM NAVIGATION */}
+      {/* 4. BOTTOM NAVIGATION */}
       <div className="fixed bottom-6 left-0 right-0 z-[50] flex justify-center w-full pointer-events-none pb-[env(safe-area-inset-bottom)]">
-        <nav className="pointer-events-auto flex items-center justify-between w-[98%] max-w-none h-[100px] bg-white/30 backdrop-blur-3xl border border-white/50 rounded-[35px] shadow-[0_20px_60px_rgba(0,0,0,0.1)] px-4 sm:px-8 ring-1 ring-white/40">
+        <nav className="pointer-events-auto flex items-center justify-between w-[98%] max-w-none h-[90px] bg-white/30 backdrop-blur-3xl border border-white/50 rounded-[35px] shadow-[0_20px_60px_rgba(0,0,0,0.1)] px-4 sm:px-8 ring-1 ring-white/40">
           {NAV_ITEMS.map((item) => {
             const isActive = activeCategory === item.id as CategoryType;
             return (
