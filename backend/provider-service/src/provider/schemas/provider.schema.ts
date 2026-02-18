@@ -63,8 +63,8 @@ export class Provider {
   @Prop([String])
   portfolioImages: string[]; // Birden fazla iş fotoğrafı URL'leri
 
-  @Prop({ type: Map, of: Number }) 
-  priceList: Map<string, number>; // Sözlük formatı: {"Ampul Takma": 100, "Boya": 5000}
+  @Prop({ type: Map, of: String }) 
+  priceList: Map<string, string>; // Sözlük formatı: {"Ampul Takma": "100-200", "Boya": "5000-6000"}
 }
 
 export const ProviderSchema = SchemaFactory.createForClass(Provider);
@@ -74,7 +74,7 @@ ProviderSchema.index({ isPremium: -1, createdAt: -1 });
 
 export interface IProvider {
   id?: string;
-  _id?: any; 
+  _id?: any; // MongoDB'den gelen orijinal ID
   user?: any;
   businessName: string;
   phoneNumber: string;
@@ -88,15 +88,22 @@ export interface IProvider {
   lng: number;
   openingFee?: number;
   pricePerUnit?: number;
+  
   rating?: number;
   isPremium?: boolean;
   aiVerified?: boolean;
   lastAiAudit?: Date;
   createdAt?: Date;
   updatedAt?: Date;
-  
-  // ✅ YENİ ALANLAR (Typescript)
+
+  // ✅ YENİ EKLENEN RESİM VE FİYAT ALANLARI
   profileImage?: string;
   portfolioImages?: string[];
-  priceList?: Record<string, number> | Map<string, number>; 
+  priceList?: Record<string, string> | Map<string, string>; 
+}
+
+export interface CrawlStats {
+  totalFound: number;
+  newlySaved: number;
+  skipped: number;
 }

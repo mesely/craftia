@@ -54,7 +54,7 @@ message CreateProviderRequest {
   // ✅ YENİ EKLENENLER
   string profileImage = 11;
   repeated string portfolioImages = 12; // Liste/Array şeklinde
-  map<string, double> priceList = 13;   // Dictionary/Map şeklinde fiyat listesi
+  map<string, string> priceList = 13;   // Dictionary/Map şeklinde fiyat listesi
 }
 
 message UpdateProviderRequest {
@@ -70,7 +70,7 @@ message UpdateProviderRequest {
   // ✅ YENİ EKLENENLER
   string profileImage = 10;
   repeated string portfolioImages = 11;
-  map<string, double> priceList = 12;
+  map<string, string> priceList = 12;
 }
 
 message ProviderResponse {
@@ -90,7 +90,7 @@ message ProviderResponse {
   // ✅ YENİ EKLENENLER
   string profileImage = 14;
   repeated string portfolioImages = 15;
-  map<string, double> priceList = 16;
+  map<string, string> priceList = 16;
 }
 
 message ProviderListResponse { 

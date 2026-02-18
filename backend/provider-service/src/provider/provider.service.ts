@@ -87,7 +87,6 @@ export class ProviderService implements OnModuleInit {
     };
   }
 
-  // ✅ GÜNCELLENEN KISIM BURASI
   async create(data: any) {
     const latValue = data.lat ? parseFloat(data.lat.toString()) : 0;
     const lngValue = data.lng ? parseFloat(data.lng.toString()) : 0;
@@ -106,13 +105,12 @@ export class ProviderService implements OnModuleInit {
       // YENİ ALANLARI KAYDET
       profileImage: data.profileImage || '',
       portfolioImages: data.portfolioImages || [],
-      priceList: data.priceList || {}, // Sözlük (Map) buraya yerleşiyor
+      priceList: data.priceList || {},
     });
   }
 
   async findOne(id: string) { return await this.providerModel.findById(id).populate('user').lean().exec(); }
   
-  // Güncelleme işlemi objeyi direkt kabul ettiği için priceList ve imagelar otomatik güncellenecek
   async update(id: string, data: any) { return await this.providerModel.findByIdAndUpdate(id, data, { new: true }).exec(); }
   
   async delete(id: string) { const res = await this.providerModel.findByIdAndDelete(id).exec(); return { success: !!res }; }
@@ -132,10 +130,50 @@ export class ProviderService implements OnModuleInit {
   }
 
   async startTurkeyGeneralCrawl() {
-    // ... Crawler kodu aynı ... (Burası değişmedi)
+    this.logger.log('🚀 [CRAWLER] Operasyon Başlatıldı...');
+    const keywords = ['elektrikçi', 'su tesisatçısı', 'kombi tamiri', 'boyacı'];
+    for (const region of TURKEY_DATA) {
+      for (const keyword of keywords) {
+        try {
+          const query = `${keyword} ${region.ilce} ${region.il}`;
+          const response = await firstValueFrom(
+            this.httpService.post(this.GOOGLE_NEW_API_URL, 
+              { textQuery: query, languageCode: 'tr' },
+              { headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': this.apiKey, 'X-Goog-FieldMask': 'places.displayName,places.nationalPhoneNumber,places.formattedAddress,places.location' }}
+            )
+          );
+          const results = response.data.places || [];
+          for (const place of results) {
+            if (!place.nationalPhoneNumber) continue;
+            await this.saveToMongoNew(place, region.il, region.ilce, keyword);
+          }
+        } catch (e) { this.logger.error(`❌ Hata: ${e.message}`); }
+      }
+      await new Promise(r => setTimeout(r, 300));
+    }
+    return { success: true };
   }
 
   private async saveToMongoNew(place: any, city: string, district: string, keyword: string) {
-    // ... Crawler save mantığı aynı ... (Burası değişmedi)
+    try {
+      const exists = await this.providerModel.findOne({ phoneNumber: place.nationalPhoneNumber });
+      if (exists) return false;
+      const newUser = await this.userModel.create({
+        email: `u_${Date.now()}@usta.com`,
+        password: await bcrypt.hash('Usta2026!', 10),
+        role: 'PROVIDER'
+      });
+      await this.providerModel.create({
+        user: newUser._id,
+        businessName: place.displayName?.text || 'İsimsiz Usta',
+        phoneNumber: place.nationalPhoneNumber,
+        city, district, address: place.formattedAddress,
+        lat: place.location?.latitude || 0,
+        lng: place.location?.longitude || 0,
+        mainType: 'TECHNICAL',
+        subType: keyword
+      });
+      return true;
+    } catch (e) { return false; }
   }
 }

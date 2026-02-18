@@ -27,7 +27,7 @@ export interface IProvider {
   // ✅ YENİ EKLENEN RESİM VE FİYAT ALANLARI
   profileImage?: string;
   portfolioImages?: string[];
-  priceList?: Record<string, number> | Map<string, number>; 
+  priceList?: Record<string, string> | Map<string, string>; 
 }
 
 // Bu aynen kalıyor, dokunmuyoruz
