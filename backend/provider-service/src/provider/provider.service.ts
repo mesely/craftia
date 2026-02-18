@@ -120,24 +120,28 @@ export class ProviderService implements OnModuleInit {
   // ✅ GÜNCELLEME METODU (Sorunları çözen kısım)
   // provider.service.ts içindeki update metodu
 async update(id: string, data: any) {
-  // _id ve id alanlarını temizle
   const { _id, id: _, ...rest } = data;
 
-  // Gelen verileri eşle ve isPremium'u kesinleştir
-  const updatePayload = {
+  const updatePayload: any = {
     ...rest,
     mainType: data.mainType || data.category,
-    // Veri string "true" gelse bile boolean true yapar
     isPremium: data.isPremium === true || String(data.isPremium) === 'true'
   };
 
+  // ✅ location'ı da güncelle
+  if (data.lat && data.lng) {
+    updatePayload.location = {
+      type: 'Point',
+      coordinates: [parseFloat(data.lng), parseFloat(data.lat)] // GeoJSON: önce lng
+    };
+  }
+
   return await this.providerModel.findByIdAndUpdate(
     id,
-    { $set: updatePayload }, // $set kullanımı şart
+    { $set: updatePayload },
     { new: true, runValidators: true }
   ).exec();
 }
-
 async delete(id: string) {
   const res = await this.providerModel.findByIdAndDelete(id).exec();
   return { success: !!res };
