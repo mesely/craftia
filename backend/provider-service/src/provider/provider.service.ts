@@ -120,23 +120,21 @@ export class ProviderService implements OnModuleInit {
   // ✅ GÜNCELLEME METODU (Sorunları çözen kısım)
   // provider.service.ts içindeki update metodu
 async update(id: string, data: any) {
-  // 1. _id'yi payload'dan temizle
+  // _id ve id alanlarını temizle
   const { _id, id: _, ...rest } = data;
 
-  // 2. Veriyi sanitize et
+  // Gelen verileri eşle ve isPremium'u kesinleştir
   const updatePayload = {
     ...rest,
-    // Gateway'den category gelirse mainType'a eşle
-    mainType: data.category || data.mainType,
-    // isPremium'u kesinlikle boolean'a zorla
-    isPremium: String(data.isPremium) === 'true'
+    mainType: data.mainType || data.category,
+    // Veri string "true" gelse bile boolean true yapar
+    isPremium: data.isPremium === true || String(data.isPremium) === 'true'
   };
 
-  // 3. Veritabanını güncelle
   return await this.providerModel.findByIdAndUpdate(
     id,
-    { $set: updatePayload },
-    { new: true } // Güncellenmiş halini dön
+    { $set: updatePayload }, // $set kullanımı şart
+    { new: true, runValidators: true }
   ).exec();
 }
 
