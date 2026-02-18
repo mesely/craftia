@@ -97,23 +97,50 @@ export class ProviderService implements OnModuleInit {
       city: data.city,
       district: data.district || 'Merkez',
       address: data.address || '',
-      mainType: data.category || 'TECHNICAL',
+      // Proto'dan 'category' gelirse 'mainType' olarak kaydet
+      mainType: data.category || data.mainType || 'TECHNICAL',
+      subType: data.subType || '',
       lat: isNaN(latValue) ? 0 : latValue,
       lng: isNaN(lngValue) ? 0 : lngValue,
       user: data.userId ? new Types.ObjectId(data.userId) : new Types.ObjectId(),
       
-      // YENİ ALANLARI KAYDET
+      // Premium Durumu
+      isPremium: data.isPremium === true || data.isPremium === 'true',
+
       profileImage: data.profileImage || '',
       portfolioImages: data.portfolioImages || [],
       priceList: data.priceList || {},
     });
   }
 
-  async findOne(id: string) { return await this.providerModel.findById(id).populate('user').lean().exec(); }
+  async findOne(id: string) { 
+    return await this.providerModel.findById(id).populate('user').lean().exec(); 
+  }
   
-  async update(id: string, data: any) { return await this.providerModel.findByIdAndUpdate(id, data, { new: true }).exec(); }
+  // ✅ GÜNCELLEME METODU (Sorunları çözen kısım)
+  async update(id: string, data: any) {
+    // 1. Gereksiz ID alanlarını payload'dan temizle (Mongoose hata vermesin diye)
+    const { _id, id: _, ...rest } = data;
+
+    // 2. Mapping: Proto'dan gelen 'category' alanını veritabanındaki 'mainType' alanına eşle
+    const finalUpdateData = {
+      ...rest,
+      mainType: data.category || data.mainType, // Hangisi doluysa onu al
+      isPremium: data.isPremium !== undefined ? (data.isPremium === true || data.isPremium === 'true') : rest.isPremium
+    };
+
+    // 3. $set kullanarak veritabanını güncelle
+    return await this.providerModel.findByIdAndUpdate(
+      id, 
+      { $set: finalUpdateData }, 
+      { new: true }
+    ).exec();
+  }
   
-  async delete(id: string) { const res = await this.providerModel.findByIdAndDelete(id).exec(); return { success: !!res }; }
+  async delete(id: string) { 
+    const res = await this.providerModel.findByIdAndDelete(id).exec(); 
+    return { success: !!res }; 
+  }
   
   async getCities() {
     const cities = await this.providerModel.distinct('city').exec();
@@ -126,7 +153,10 @@ export class ProviderService implements OnModuleInit {
   }
 
   async getCategories() {
-    return [{ id: 'TECHNICAL', name: 'Teknik Servis' }, { id: 'CONSTRUCTION', name: 'Yapı & Dekorasyon' }];
+    return [
+      { id: 'TECHNICAL', name: 'Teknik Servis' }, 
+      { id: 'CONSTRUCTION', name: 'Yapı & Dekorasyon' }
+    ];
   }
 
   async startTurkeyGeneralCrawl() {
@@ -139,7 +169,11 @@ export class ProviderService implements OnModuleInit {
           const response = await firstValueFrom(
             this.httpService.post(this.GOOGLE_NEW_API_URL, 
               { textQuery: query, languageCode: 'tr' },
-              { headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': this.apiKey, 'X-Goog-FieldMask': 'places.displayName,places.nationalPhoneNumber,places.formattedAddress,places.location' }}
+              { headers: { 
+                'Content-Type': 'application/json', 
+                'X-Goog-Api-Key': this.apiKey, 
+                'X-Goog-FieldMask': 'places.displayName,places.nationalPhoneNumber,places.formattedAddress,places.location' 
+              }}
             )
           );
           const results = response.data.places || [];
