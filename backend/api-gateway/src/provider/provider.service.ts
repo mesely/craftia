@@ -1,7 +1,6 @@
 import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-// import { join } from 'path'; // Eğer proto path için lazımsa kalsın, yoksa silebilirsin.
 
 @Injectable()
 export class ProviderGatewayService implements OnModuleInit {
@@ -42,9 +41,7 @@ export class ProviderGatewayService implements OnModuleInit {
     return await firstValueFrom(this.providerClient.startTurkeyGeneralCrawl({}));
   }
 
-  // ✅ YENİ EKLENEN: Usta Oluşturma Metodu
   async create(data: any) {
-    // Frontend'den gelen veriyi gRPC payload'una (CreateProviderRequest) dönüştür
     const payload = {
       name: data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : data.name || '',
       businessName: data.businessName || '',
@@ -56,13 +53,37 @@ export class ProviderGatewayService implements OnModuleInit {
       lat: parseFloat(data.lat) || 0,
       lng: parseFloat(data.lng) || 0,
       
-      // YENİ RESİM VE FİYAT ALANLARI
       profileImage: data.profileImage || '',
       portfolioImages: data.portfolioImages || [],
       priceList: data.priceList || {}
     };
 
-    // Microservice'e ilet ve cevabı bekle
     return await firstValueFrom(this.providerClient.create(payload));
+  }
+
+  // ✅ YENİ EKLENEN: Usta Güncelleme Metodu
+  async update(data: any) {
+    const payload = {
+      id: data.id,
+      businessName: data.businessName || '',
+      phoneNumber: data.phoneNumber || data.phone || '',
+      category: data.mainType || data.category || '',
+      city: data.city || '',
+      district: data.district || '',
+      address: data.address || '',
+      lat: parseFloat(data.lat) || 0,
+      lng: parseFloat(data.lng) || 0,
+      
+      profileImage: data.profileImage || '',
+      portfolioImages: data.portfolioImages || [],
+      priceList: data.priceList || {}
+    };
+
+    return await firstValueFrom(this.providerClient.update(payload));
+  }
+
+  // ✅ YENİ EKLENEN: Usta Silme Metodu
+  async delete(id: string) {
+    return await firstValueFrom(this.providerClient.delete({ id }));
   }
 }

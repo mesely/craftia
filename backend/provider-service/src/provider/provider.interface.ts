@@ -1,4 +1,4 @@
-// İsmine 'I' ekledik (IProvider yaptık) ve yeni alanları ekledik
+// İsmine 'I' ekledik (IProvider yaptık) ve resim/fiyat alanlarını ekledik
 export interface IProvider {
   id?: string;
   _id?: any; // MongoDB'den gelen orijinal ID

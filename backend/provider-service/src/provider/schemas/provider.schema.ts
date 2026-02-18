@@ -72,6 +72,7 @@ export const ProviderSchema = SchemaFactory.createForClass(Provider);
 ProviderSchema.index({ city: 1, subType: 1 });
 ProviderSchema.index({ isPremium: -1, createdAt: -1 });
 
+// Sadece bir tane IProvider interface'i yeterli
 export interface IProvider {
   id?: string;
   _id?: any; // MongoDB'den gelen orijinal ID
