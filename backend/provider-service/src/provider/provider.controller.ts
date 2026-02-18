@@ -8,13 +8,27 @@ export class ProviderController {
 
   @GrpcMethod('ProviderService', 'FindAll')
   async findAll(data: any) {
-    // Gateway'den gelen 'data' artık FindAllRequest formatında
     return await this.providerService.findAll(data);
   }
 
   @GrpcMethod('ProviderService', 'FindOne')
   async findOne(data: { id: string }) {
     return await this.providerService.findOne(data.id);
+  }
+
+  @GrpcMethod('ProviderService', 'Create')
+  async create(data: any) {
+    return await this.providerService.create(data);
+  }
+
+  @GrpcMethod('ProviderService', 'Update')
+  async update(data: any) {
+    return await this.providerService.update(data.id, data);
+  }
+
+  @GrpcMethod('ProviderService', 'Delete')
+  async delete(data: { id: string }) {
+    return await this.providerService.delete(data.id);
   }
 
   @GrpcMethod('ProviderService', 'GetCities')

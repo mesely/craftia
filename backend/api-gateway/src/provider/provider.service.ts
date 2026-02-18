@@ -1,11 +1,11 @@
 import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs'; // ✅ Hata veren import buydu
-import { join } from 'path';
+import { firstValueFrom } from 'rxjs';
+// import { join } from 'path'; // Eğer proto path için lazımsa kalsın, yoksa silebilirsin.
 
 @Injectable()
 export class ProviderGatewayService implements OnModuleInit {
-  private providerClient: any; // ✅ Property hatasını bu satır çözer
+  private providerClient: any;
 
   constructor(@Inject('PROVIDER_PACKAGE') private client: ClientGrpc) {}
 
@@ -27,7 +27,6 @@ export class ProviderGatewayService implements OnModuleInit {
       sortMode: query.sortMode || ''
     };
 
-    // gRPC çağrısını yap ve Promise'e çevir
     return await firstValueFrom(this.providerClient.findAll(payload));
   }
 
@@ -41,5 +40,29 @@ export class ProviderGatewayService implements OnModuleInit {
 
   async startTurkeyGeneralCrawl() {
     return await firstValueFrom(this.providerClient.startTurkeyGeneralCrawl({}));
+  }
+
+  // ✅ YENİ EKLENEN: Usta Oluşturma Metodu
+  async create(data: any) {
+    // Frontend'den gelen veriyi gRPC payload'una (CreateProviderRequest) dönüştür
+    const payload = {
+      name: data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : data.name || '',
+      businessName: data.businessName || '',
+      phoneNumber: data.phoneNumber || data.phone || '',
+      category: data.mainType || data.category || '',
+      city: data.city || '',
+      district: data.district || '',
+      address: data.address || '',
+      lat: parseFloat(data.lat) || 0,
+      lng: parseFloat(data.lng) || 0,
+      
+      // YENİ RESİM VE FİYAT ALANLARI
+      profileImage: data.profileImage || '',
+      portfolioImages: data.portfolioImages || [],
+      priceList: data.priceList || {}
+    };
+
+    // Microservice'e ilet ve cevabı bekle
+    return await firstValueFrom(this.providerClient.create(payload));
   }
 }

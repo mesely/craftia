@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowsDownUp, Star, MapPinArea, Funnel } from '@phosphor-icons/react';
-import { motion } from 'framer-motion';
+import { Star, MapPinArea, Funnel } from '@phosphor-icons/react';
 
 interface FilterBarProps {
   activeFilter: string;
@@ -12,21 +11,21 @@ interface FilterBarProps {
 
 export default function FilterBar({ activeFilter, onFilterChange, onOpenAdvanced }: FilterBarProps) {
   const filters = [
-    { id: 'NEARBY', label: 'En Yakın', icon: <MapPinArea size={18} /> },
-    { id: 'RATING', label: 'En Yüksek Puan', icon: <Star size={18} /> },
+    { id: 'NEARBY', label: 'En Yakın', icon: <MapPinArea size={16} weight="duotone" /> },
+    { id: 'RATING', label: 'En Yüksek Puan', icon: <Star size={16} weight="duotone" /> },
   ];
 
   return (
-    <div className="w-full py-4 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar">
-      <div className="flex items-center gap-2">
+    <div className="w-full px-4 py-3 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar relative z-[30]">
+      <div className="flex items-center gap-2 shrink-0">
         {filters.map((filter) => (
           <button
             key={filter.id}
             onClick={() => onFilterChange(filter.id)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-300 whitespace-nowrap text-xs font-bold uppercase tracking-tight ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full border transition-all duration-300 whitespace-nowrap text-[10px] font-black uppercase tracking-tighter shadow-sm ${
               activeFilter === filter.id
-                ? 'bg-slate-900 text-white border-slate-900 shadow-lg'
-                : 'bg-white/30 backdrop-blur-md border-white/40 text-slate-700 hover:bg-white/50'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-105'
+                : 'bg-white/40 backdrop-blur-md border-white/50 text-slate-700 hover:bg-white/60'
             }`}
           >
             {filter.icon}
@@ -35,12 +34,11 @@ export default function FilterBar({ activeFilter, onFilterChange, onOpenAdvanced
         ))}
       </div>
 
-      {/* Gelişmiş Filtreleme Butonu */}
       <button 
         onClick={onOpenAdvanced}
-        className="flex items-center justify-center p-2.5 rounded-full bg-white/30 backdrop-blur-md border border-white/40 text-slate-700 hover:bg-white/50 transition-all active:scale-90"
+        className="flex items-center justify-center p-2.5 rounded-2xl bg-white/40 backdrop-blur-md border border-white/50 text-slate-700 hover:bg-white/60 transition-all active:scale-90 shadow-sm shrink-0"
       >
-        <Funnel size={20} weight="bold" />
+        <Funnel size={18} weight="bold" />
       </button>
     </div>
   );

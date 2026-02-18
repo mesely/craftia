@@ -1,4 +1,5 @@
-export interface Provider {
+// İsmine 'I' ekledik (IProvider yaptık) ve yeni alanları ekledik
+export interface IProvider {
   id?: string;
   _id?: any; // MongoDB'den gelen orijinal ID
   user?: any;
@@ -15,15 +16,21 @@ export interface Provider {
   openingFee?: number;
   pricePerUnit?: number;
   
-  // ✅ YENİ EKLENEN ALANLAR (Frontend ve AI için şart)
+  // Eski alanlar (Frontend ve AI için şart)
   rating?: number;
   isPremium?: boolean;
   aiVerified?: boolean;
   lastAiAudit?: Date;
   createdAt?: Date;
   updatedAt?: Date;
+
+  // ✅ YENİ EKLENEN RESİM VE FİYAT ALANLARI
+  profileImage?: string;
+  portfolioImages?: string[];
+  priceList?: Record<string, number> | Map<string, number>; 
 }
 
+// Bu aynen kalıyor, dokunmuyoruz
 export interface CrawlStats {
   totalFound: number;
   newlySaved: number;

@@ -42,23 +42,24 @@ export default function Home() {
 
   return (
     <MainLayout>
-      <div className="relative w-full">
+      <div className="relative w-full flex flex-col">
         
-        {/* 1. FIXED FILTER BAR 
-            Sticky/Fixed yapısı ile her zaman ulaşılabilir.
+        {/* 1. ADVANCED FILTERS 
+            NOT: 'fixed top-[60px]' kaldırıldı. 
+            Bileşen kendi içindeki 'sticky' yapısı ile Header'ın tam altına 
+            (çentik dahil) otomatik olarak yapışacak.
         */}
-        <div className="fixed top-[60px] left-0 right-0 z-40 w-full">
-            <AdvancedFilters 
-              currentFilters={filters} 
-              onFilterChange={handleFilterChange} 
-            />
-        </div>
+        <AdvancedFilters 
+          currentFilters={filters} 
+          onFilterChange={handleFilterChange} 
+        />
 
         {/* 2. USTA LİSTESİ 
-            Artık 'nearest' (yakındakiler) motoru backend'de hazır olduğu için 
-            buradaki userCoords tıkır tıkır çalışacak.
+            Filtreler artık akışın (flow) bir parçası olduğu için pt-[90px] 
+            fazlalığını kaldırıp, liste ile filtreler arasına makul bir 
+            nefes alma boşluğu (py-4) bıraktım.
         */}
-        <div className="pt-[90px] pb-36 px-0">
+        <div className="w-full py-4 pb-36 px-0">
            <UstaList 
              filters={filters} 
              userCoords={userCoords} 

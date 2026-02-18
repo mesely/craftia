@@ -51,9 +51,12 @@ message CreateProviderRequest {
   string address = 8;
   double lat = 9;
   double lng = 10;
+  // ✅ YENİ EKLENENLER
+  string profileImage = 11;
+  repeated string portfolioImages = 12; // Liste/Array şeklinde
+  map<string, double> priceList = 13;   // Dictionary/Map şeklinde fiyat listesi
 }
 
-// 💥 HATA VEREN EKSİK KISIM BURAYDI
 message UpdateProviderRequest {
   string id = 1;
   string businessName = 2;
@@ -64,6 +67,10 @@ message UpdateProviderRequest {
   string address = 7;
   double lat = 8;
   double lng = 9;
+  // ✅ YENİ EKLENENLER
+  string profileImage = 10;
+  repeated string portfolioImages = 11;
+  map<string, double> priceList = 12;
 }
 
 message ProviderResponse {
@@ -80,6 +87,10 @@ message ProviderResponse {
   double rating = 11;
   bool isPremium = 12;
   double distance = 13;
+  // ✅ YENİ EKLENENLER
+  string profileImage = 14;
+  repeated string portfolioImages = 15;
+  map<string, double> priceList = 16;
 }
 
 message ProviderListResponse { 
