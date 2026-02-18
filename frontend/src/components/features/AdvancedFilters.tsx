@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  X, SlidersHorizontal, CaretDown, MapPin, CircleNotch
+  X, SlidersHorizontal, CaretDown, MapPin, CircleNotch, CheckCircle
 } from '@phosphor-icons/react';
 import { useCategory, CategoryType } from '@/context/CategoryContext';
 
@@ -16,7 +16,6 @@ interface AdvancedFiltersProps {
     distance: number;
   };
   onFilterChange: (newFilters: any) => void;
-  // Yeni: GPS koordinatlarını parent'a iletmek için
   onLocationDetected?: (coords: { lat: number; lng: number }) => void;
 }
 
@@ -45,11 +44,11 @@ const SUBTYPE_MAP: Record<string, { label: string; value: string }[]> = {
     { label: 'Kamera',     value: 'Kamera & Alarm' },
   ],
   CONSTRUCTION: [
-    { label: 'Tümü',     value: 'all' },
-    { label: 'Boyacı',   value: 'Boyacı' },
-    { label: 'Alçıpan', value: 'Alçıpancı' },
-    { label: 'Parkeci', value: 'Parkeci' },
-    { label: 'Fayansçı',value: 'Fayansçı' },
+    { label: 'Tümü',      value: 'all' },
+    { label: 'Boyacı',    value: 'Boyacı' },
+    { label: 'Alçıpan',  value: 'Alçıpancı' },
+    { label: 'Parkeci',  value: 'Parkeci' },
+    { label: 'Fayansçı', value: 'Fayansçı' },
   ],
   CLIMATE: [
     { label: 'Tümü',  value: 'all' },
@@ -64,14 +63,13 @@ const SUBTYPE_MAP: Record<string, { label: string; value: string }[]> = {
     { label: 'Laptop/PC',  value: 'Laptop/PC' },
   ],
   LIFE: [
-    { label: 'Tümü',          value: 'all' },
-    { label: 'Ev Temizliği',  value: 'Ev Temizliği' },
-    { label: 'İlaçlama',      value: 'İlaçlama' },
-    { label: 'Koltuk Yıkama', value: 'Koltuk Yıkama' },
+    { label: 'Tümü',           value: 'all' },
+    { label: 'Ev Temizliği',   value: 'Ev Temizliği' },
+    { label: 'İlaçlama',       value: 'İlaçlama' },
+    { label: 'Koltuk Yıkama',  value: 'Koltuk Yıkama' },
   ],
 };
 
-// Tüm 81 il — alfabetik
 const TURKEY_CITIES = [
   'Adana','Adıyaman','Afyonkarahisar','Ağrı','Aksaray','Amasya','Ankara','Antalya',
   'Ardahan','Artvin','Aydın','Balıkesir','Bartın','Batman','Bayburt','Bilecik',
@@ -92,23 +90,52 @@ export default function AdvancedFilters({ currentFilters, onFilterChange, onLoca
   const [mounted, setMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [locating, setLocating] = useState(false);
+  // 'idle' | 'granted' | 'denied'
+  const [locStatus, setLocStatus] = useState<'idle' | 'granted' | 'denied'>('idle');
 
   useEffect(() => { setMounted(true); }, []);
 
-  // ── GPS: sayfa açılışında otomatik konum al, şehir seçimini etkilemez ──
-  useEffect(() => {
+  // ── Konum alma fonksiyonu — hem otomatik hem butondan çağrılır ──
+  const requestLocation = () => {
     if (!navigator.geolocation || !onLocationDetected) return;
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        // Koordinatları parent'a ilet (UstaList backend'e gönderir → yakına göre sıralar)
         onLocationDetected({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setLocating(false);
+        setLocStatus('granted');
       },
-      () => { setLocating(false); }, // Hata olursa sessizce geç
-      { timeout: 8000, enableHighAccuracy: false }
+      () => {
+        // İzin reddedildi veya hata — buton görünür kalır, kullanıcı tekrar deneyebilir
+        setLocating(false);
+        setLocStatus('denied');
+      },
+      { timeout: 10000, enableHighAccuracy: true }
     );
-  }, []);
+  };
+
+  // ── Otomatik deneme: sayfa açılınca dene, iOS'ta çoğunlukla çalışmaz
+  //    ama masaüstü/Android'de izin varsa anında alır.
+  //    İzin yoksa sessizce 'idle' kalır, kullanıcı butona basarak tetikler. ──
+  useEffect(() => {
+    if (!mounted) return;
+    // permissions API varsa önce kontrol et (iOS 16+ destekliyor)
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+        if (result.state === 'granted') {
+          // Zaten izin verilmiş → direkt al, popup çıkmaz
+          requestLocation();
+        }
+        // 'prompt' veya 'denied' → butona bırak, dokunmadan popup açma
+      }).catch(() => {
+        // permissions API desteklenmiyor → klasik deneme yap
+        requestLocation();
+      });
+    } else {
+      // permissions API yok (eski cihaz) → direkt dene
+      requestLocation();
+    }
+  }, [mounted]);
 
   if (!mounted) return null;
 
@@ -120,21 +147,33 @@ export default function AdvancedFilters({ currentFilters, onFilterChange, onLoca
       <div
         className={`sticky top-[calc(60px+env(safe-area-inset-top,0px))] z-[50] w-full ${THEME_BG[activeCategory] || 'bg-white/10'} backdrop-blur-3xl border-b flex flex-col gap-2.5 py-3 shadow-sm transition-all duration-500`}
       >
-        {/* 1. ÜST SATIR: İL + SIRALAMA + AYAR */}
+        {/* 1. ÜST SATIR */}
         <div className="w-full px-4 flex items-center gap-2 overflow-hidden">
 
-          {/* Şehir Seçimi — varsayılan "Tüm Türkiye" (boş value), 81 il */}
-          <div className="flex items-center gap-1 bg-white/40 border border-white/50 pl-2 pr-1.5 h-[38px] rounded-[16px] shrink-0 shadow-sm">
-            {locating
-              ? <CircleNotch size={14} weight="bold" className={`${theme.main} animate-spin`} />
-              : <MapPin size={16} weight="fill" className={theme.main} />
-            }
+          {/* Şehir + Konum Butonu */}
+          <div className="flex items-center gap-1 bg-white/40 border border-white/50 pl-1.5 pr-1.5 h-[38px] rounded-[16px] shrink-0 shadow-sm">
+            
+            {/* MapPin — tıklanabilir buton, iOS'ta kullanıcı etkileşimi gerekli */}
+            <button
+              onClick={requestLocation}
+              disabled={locating}
+              className="shrink-0 p-1 rounded-xl transition-all active:scale-90"
+              title="Konumumu Kullan"
+            >
+              {locating ? (
+                <CircleNotch size={15} weight="bold" className={`${theme.main} animate-spin`} />
+              ) : locStatus === 'granted' ? (
+                <CheckCircle size={15} weight="fill" className={theme.main} />
+              ) : (
+                <MapPin size={15} weight="fill" className={locStatus === 'denied' ? 'text-red-400' : theme.main} />
+              )}
+            </button>
+
             <select
               value={currentFilters.city}
               onChange={(e) => onFilterChange({ city: e.target.value })}
-              className="bg-transparent text-[11px] font-black text-slate-800 uppercase outline-none appearance-none cursor-pointer max-w-[100px]"
+              className="bg-transparent text-[11px] font-black text-slate-800 uppercase outline-none appearance-none cursor-pointer max-w-[90px]"
             >
-              {/* Boş değer = Tüm Türkiye, koordinat bazlı sıralar */}
               <option value="">TÜM TÜRKİYE</option>
               {TURKEY_CITIES.map(city => (
                 <option key={city} value={city}>{city}</option>
@@ -239,6 +278,22 @@ export default function AdvancedFilters({ currentFilters, onFilterChange, onLoca
                     <span>100 KM</span>
                   </div>
                 </div>
+
+                {/* Konuma Git butonu — modal içinden de tetiklenebilir */}
+                <button
+                  onClick={() => { requestLocation(); setIsModalOpen(false); }}
+                  disabled={locating}
+                  className="w-full py-4 rounded-[22px] bg-slate-100 text-slate-700 font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all"
+                >
+                  {locating ? (
+                    <CircleNotch size={16} className="animate-spin" />
+                  ) : locStatus === 'granted' ? (
+                    <CheckCircle size={16} weight="fill" className={theme.main} />
+                  ) : (
+                    <MapPin size={16} weight="fill" className={theme.main} />
+                  )}
+                  {locStatus === 'granted' ? 'Konum Alındı' : 'Konumumu Kullan'}
+                </button>
 
                 <button
                   onClick={() => setIsModalOpen(false)}
