@@ -118,29 +118,32 @@ export class ProviderService implements OnModuleInit {
   }
   
   // ✅ GÜNCELLEME METODU (Sorunları çözen kısım)
-  async update(id: string, data: any) {
-    // 1. Gereksiz ID alanlarını payload'dan temizle (Mongoose hata vermesin diye)
-    const { _id, id: _, ...rest } = data;
+  // provider.service.ts içindeki update metodu
+async update(id: string, data: any) {
+  // 1. _id'yi payload'dan temizle
+  const { _id, id: _, ...rest } = data;
 
-    // 2. Mapping: Proto'dan gelen 'category' alanını veritabanındaki 'mainType' alanına eşle
-    const finalUpdateData = {
-      ...rest,
-      mainType: data.category || data.mainType, // Hangisi doluysa onu al
-      isPremium: data.isPremium !== undefined ? (data.isPremium === true || data.isPremium === 'true') : rest.isPremium
-    };
+  // 2. Veriyi sanitize et
+  const updatePayload = {
+    ...rest,
+    // Gateway'den category gelirse mainType'a eşle
+    mainType: data.category || data.mainType,
+    // isPremium'u kesinlikle boolean'a zorla
+    isPremium: String(data.isPremium) === 'true'
+  };
 
-    // 3. $set kullanarak veritabanını güncelle
-    return await this.providerModel.findByIdAndUpdate(
-      id, 
-      { $set: finalUpdateData }, 
-      { new: true }
-    ).exec();
-  }
-  
-  async delete(id: string) { 
-    const res = await this.providerModel.findByIdAndDelete(id).exec(); 
-    return { success: !!res }; 
-  }
+  // 3. Veritabanını güncelle
+  return await this.providerModel.findByIdAndUpdate(
+    id,
+    { $set: updatePayload },
+    { new: true } // Güncellenmiş halini dön
+  ).exec();
+}
+
+async delete(id: string) {
+  const res = await this.providerModel.findByIdAndDelete(id).exec();
+  return { success: !!res };
+}
   
   async getCities() {
     const cities = await this.providerModel.distinct('city').exec();

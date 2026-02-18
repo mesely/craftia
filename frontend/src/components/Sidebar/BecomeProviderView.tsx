@@ -4,7 +4,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCategory } from '@/context/CategoryContext';
 import { 
-  Briefcase, ShieldCheck, RocketLaunch, CheckCircle, 
+  Briefcase, ShieldCheck, CheckCircle, 
   Info, User, Phone, Envelope, Storefront, Wrench, LockKey, CaretDown, 
   Image as ImageIcon, Plus, Trash, CurrencyCircleDollar, WarningCircle
 } from '@phosphor-icons/react';
@@ -17,7 +17,6 @@ const THEME_MAP: any = {
   LIFE: { bg: 'bg-emerald-600', main: 'text-emerald-600', border: 'border-emerald-100', light: 'bg-emerald-50/50' }
 };
 
-// SS'lerdeki Hazır Hizmet Listesi (Teknik / Elektrikçi için)
 const PREDEFINED_SERVICES: Record<string, string[]> = {
   TECHNICAL: [
     "Priz ve Anahtar Montajı (10 Adet)", "Elektrik Tesisatı Yenileme Paketi", 
@@ -41,11 +40,8 @@ export default function BecomeProviderView() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   
-  // Resim State'i
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profilePic, setProfilePic] = useState<File | null>(null);
-
-  // Fiyat Listesi State'i
   const [services, setServices] = useState([{ name: '', min: '', max: '', error: '' }]);
 
   const [formData, setFormData] = useState({
@@ -53,12 +49,10 @@ export default function BecomeProviderView() {
     category: '', phone: '', email: '', password: ''
   });
 
-  // Kategoriye göre datalist seçenekleri
   const suggestions = useMemo(() => {
     return PREDEFINED_SERVICES[formData.category] || PREDEFINED_SERVICES.TECHNICAL;
   }, [formData.category]);
 
-  // Cloudinary'ye Resim Yükleme
   const uploadToCloudinary = async (file: File) => {
     const data = new FormData();
     data.append('file', file);
@@ -75,7 +69,6 @@ export default function BecomeProviderView() {
     }
   };
 
-  // Dinamik Fiyat Algoritması ve Doğrulama
   const handleServiceChange = (index: number, field: 'name' | 'min' | 'max', value: string) => {
     const newServices = [...services];
     newServices[index][field] = value;
@@ -84,26 +77,17 @@ export default function BecomeProviderView() {
     const maxVal = parseFloat(newServices[index].max) || 0;
 
     if (minVal > 0 && maxVal > 0) {
-      let maxAllowed = 0;
-      if (minVal <= 2000) {
-        maxAllowed = minVal * 2; // %100 fark
-      } else if (minVal <= 10000) {
-        maxAllowed = minVal * 1.5; // %50 fark
-      } else {
-        maxAllowed = minVal * 1.3; // %30 fark
-      }
-
+      let maxAllowed = minVal <= 2000 ? minVal * 2 : minVal <= 10000 ? minVal * 1.5 : minVal * 1.3;
       if (maxVal < minVal) {
-        newServices[index].error = `Maksimum fiyat, minimum fiyattan küçük olamaz.`;
+        newServices[index].error = `Maksimum fiyat, minimumdan küçük olamaz.`;
       } else if (maxVal > maxAllowed) {
-        newServices[index].error = `Bu minimum fiyat için tavan fiyat ${Math.round(maxAllowed)} ₺'dir. Min fiyatı artırın veya Max fiyatı düşürün.`;
+        newServices[index].error = `Tavan fiyat ${Math.round(maxAllowed)} ₺'dir.`;
       } else {
         newServices[index].error = '';
       }
     } else {
       newServices[index].error = '';
     }
-
     setServices(newServices);
   };
 
@@ -112,10 +96,8 @@ export default function BecomeProviderView() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Hatalı fiyat kontrolü
     if (services.some(s => s.error !== '')) {
-      alert("Lütfen fiyat listesindeki kırmızı renkli uyarıları düzeltin.");
+      alert("Lütfen fiyat listesindeki kırmızı uyarıları düzeltin.");
       return;
     }
 
@@ -127,7 +109,6 @@ export default function BecomeProviderView() {
         profileImageUrl = await uploadToCloudinary(profilePic);
       }
 
-      // Backend için fiyatları "1500-3000" formatında string olarak sözlüğe çeviriyoruz
       const priceMap: Record<string, string> = {};
       services.forEach(s => {
         if (s.name.trim() && s.min && s.max) {
@@ -135,7 +116,8 @@ export default function BecomeProviderView() {
         }
       });
 
-      const response = await fetch('http://localhost:3000/api/v1/providers', {
+      // Canlı HF Space Backend URL
+      const response = await fetch('https://mesely-craftia.hf.space/api/v1/providers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -145,14 +127,17 @@ export default function BecomeProviderView() {
           password: formData.password,
           businessName: formData.businessName,
           phoneNumber: formData.phone,
-          mainType: formData.category,
-          subType: 'manual_reg',
+          mainType: formData.category, // Schema için
+          category: formData.category, // Proto uyumu için
+          subType: 'Elektrikçi', // Varsayılan veya seçimden gelebilir
           city: 'İstanbul',
           district: 'Merkez',
           lat: 41.0082,
           lng: 28.9784,
           profileImage: profileImageUrl,
-          priceList: priceMap // Sözlük formatı
+          portfolioImages: profileImageUrl ? [profileImageUrl] : [],
+          priceList: priceMap,
+          isPremium: false // Usta kendisini premium yapamaz
         }),
       });
 
@@ -163,7 +148,7 @@ export default function BecomeProviderView() {
         alert(`Hata: ${error.message || 'Kayıt başarısız.'}`);
       }
     } catch (err) {
-      alert("Backend'e bağlanılamadı.");
+      alert("Sunucuya bağlanılamadı.");
     } finally {
       setLoading(false);
     }
@@ -172,16 +157,14 @@ export default function BecomeProviderView() {
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-4 space-y-5 pb-24 overflow-x-hidden">
       
-      {/* Header Kısmı */}
       <div className={`relative overflow-hidden ${theme.bg} p-6 rounded-[35px] shadow-lg text-center text-white`}>
         <div className="relative z-10">
           <div className="bg-white/20 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-2 backdrop-blur-md">
             <Briefcase size={28} weight="duotone" />
           </div>
-          <h1 className="text-lg font-black tracking-tight uppercase">Usta Aramıza Katıl</h1>
-          <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">Kendi İşinin Patronu Ol</p>
+          <h1 className="text-lg font-black tracking-tight uppercase text-white">Usta Aramıza Katıl</h1>
+          <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest text-white">Kendi İşinin Patronu Ol</p>
         </div>
-        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 -rotate-45 translate-x-8 -translate-y-8 rounded-full blur-xl" />
       </div>
 
       <AnimatePresence mode="wait">
@@ -191,19 +174,19 @@ export default function BecomeProviderView() {
               <CheckCircle size={48} weight="duotone" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-emerald-800 uppercase">Başvuru Alındı!</h3>
-              <p className="text-[10px] font-bold text-emerald-600 mt-2 leading-relaxed">Usta profiliniz başarıyla oluşturuldu. Sisteme giriş yapabilirsiniz.</p>
+              <h3 className="text-lg font-black text-emerald-800 uppercase">Başvuru Başarılı!</h3>
+              <p className="text-[10px] font-bold text-emerald-600 mt-2">Profiliniz oluşturuldu. Hoş geldiniz!</p>
             </div>
           </motion.div>
         ) : (
           <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
             
-            {/* Profil Resmi Yükleme */}
+            {/* Fotoğraf Yükleme */}
             <div className="bg-white/40 backdrop-blur-xl border border-white/60 p-5 rounded-[35px] shadow-sm flex flex-col items-center justify-center gap-3">
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => setProfilePic(e.target.files?.[0] || null)} />
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className={`w-24 h-24 rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-all overflow-hidden ${profilePic ? 'border-transparent' : theme.border} ${theme.light}`}
+                className={`w-24 h-24 rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer overflow-hidden ${profilePic ? 'border-transparent' : theme.border} ${theme.light}`}
               >
                 {profilePic ? (
                   <img src={URL.createObjectURL(profilePic)} alt="Profil" className="w-full h-full object-cover" />
@@ -211,24 +194,21 @@ export default function BecomeProviderView() {
                   <ImageIcon size={32} weight="duotone" className={theme.main} />
                 )}
               </div>
-              <div className="text-center">
-                <p className="text-[11px] font-black uppercase text-slate-700">Profil Fotoğrafı</p>
-                <p className="text-[9px] font-bold text-slate-500 uppercase mt-0.5">{profilePic ? profilePic.name : 'Yüklemek için tıklayın'}</p>
-              </div>
+              <p className="text-[11px] font-black uppercase text-slate-700">Profil Fotoğrafı</p>
             </div>
 
-            {/* Temel Bilgiler Formu */}
+            {/* Bilgiler Formu */}
             <div className="bg-white/40 backdrop-blur-xl border border-white/60 p-5 rounded-[35px] shadow-sm relative">
               <div className="flex items-center gap-2 mb-4 px-1 opacity-60">
                   <Info size={14} weight="bold" />
-                  <span className="text-[9px] font-black uppercase tracking-widest">Temel Bilgiler</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest">Kayıt Bilgileri</span>
               </div>
               <form id="ustaForm" onSubmit={handleSubmit} className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
                   <SidebarInput placeholder="Ad" icon={<User />} value={formData.firstName} onChange={(v: string)=>setFormData({...formData, firstName:v})} theme={theme} />
                   <SidebarInput placeholder="Soyad" value={formData.lastName} onChange={(v: string)=>setFormData({...formData, lastName:v})} theme={theme} />
                 </div>
-                <SidebarInput placeholder="İşletme Adı (Opsiyonel)" icon={<Storefront />} value={formData.businessName} onChange={(v: string)=>setFormData({...formData, businessName:v})} theme={theme} />
+                <SidebarInput placeholder="İşletme Adı" icon={<Storefront />} value={formData.businessName} onChange={(v: string)=>setFormData({...formData, businessName:v})} theme={theme} />
                 
                 <div className="relative">
                   <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${theme.main}`}><Wrench size={18} weight="bold" /></span>
@@ -238,8 +218,8 @@ export default function BecomeProviderView() {
                     value={formData.category}
                     onChange={(e) => setFormData({...formData, category: e.target.value})}
                   >
-                    <option value="">Uzmanlık Alanı Seç...</option>
-                    <option value="TECHNICAL">Teknik Servis (Elektrik, Su vb.)</option>
+                    <option value="">Uzmanlık Kategorisi...</option>
+                    <option value="TECHNICAL">Teknik Servis</option>
                     <option value="CLIMATE">İklimlendirme</option>
                     <option value="CONSTRUCTION">Yapı & Dekorasyon</option>
                     <option value="TECH">Teknoloji & Tamir</option>
@@ -253,19 +233,19 @@ export default function BecomeProviderView() {
               </form>
             </div>
 
-            {/* Fiyat Listesi Alanı */}
+            {/* Fiyat Listesi */}
             <div className="bg-white/40 backdrop-blur-xl border border-white/60 p-5 rounded-[35px] shadow-sm">
                <div className="flex items-center justify-between mb-4 px-1">
-                  <div className="flex items-center gap-2 opacity-60">
+                  <div className="flex items-center gap-2 opacity-60 text-slate-900">
                     <CurrencyCircleDollar size={16} weight="bold" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">Hizmet & Fiyat (₺)</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest">Hizmetler & Fiyatlar (₺)</span>
                   </div>
-                  <button type="button" onClick={addService} className={`flex items-center gap-1 text-[9px] font-black uppercase px-3 py-1.5 rounded-full ${theme.bg} text-white active:scale-95 transition-all`}>
-                    <Plus size={10} weight="bold" /> Ekle
+                  <button type="button" onClick={addService} className={`flex items-center gap-1 text-[9px] font-black uppercase px-3 py-1.5 rounded-full ${theme.bg} text-white`}>
+                    <Plus size={10} weight="bold" /> Satır Ekle
                   </button>
               </div>
 
-              <datalist id="service-suggestions">
+              <datalist id="reg-suggestions">
                 {suggestions.map(s => <option key={s} value={s} />)}
               </datalist>
 
@@ -274,46 +254,34 @@ export default function BecomeProviderView() {
                   <div key={index} className="space-y-1.5">
                     <div className="flex items-center gap-2">
                       <input 
-                        required form="ustaForm" list="service-suggestions"
-                        placeholder="Hizmet Adı" value={service.name}
+                        required form="ustaForm" list="reg-suggestions"
+                        placeholder="Hizmet" value={service.name}
                         onChange={(e) => handleServiceChange(index, 'name', e.target.value)}
-                        className="flex-1 bg-white/50 border border-white/60 p-3 rounded-[16px] text-xs font-bold text-slate-800 outline-none focus:bg-white transition-all"
+                        className="flex-1 bg-white/50 border border-white/60 p-3 rounded-[16px] text-xs font-bold text-slate-800 outline-none"
                       />
                       <input 
                         required form="ustaForm" type="number" placeholder="Min" value={service.min}
                         onChange={(e) => handleServiceChange(index, 'min', e.target.value)}
-                        className="w-[70px] bg-white/50 border border-white/60 p-3 rounded-[16px] text-xs font-bold text-slate-800 outline-none focus:bg-white transition-all text-center"
+                        className="w-[70px] bg-white/50 border border-white/60 p-3 rounded-[16px] text-xs font-bold text-slate-800 text-center"
                       />
-                      <span className="text-slate-400 font-bold">-</span>
                       <input 
                         required form="ustaForm" type="number" placeholder="Max" value={service.max}
                         onChange={(e) => handleServiceChange(index, 'max', e.target.value)}
-                        className={`w-[70px] bg-white/50 border p-3 rounded-[16px] text-xs font-bold text-slate-800 outline-none focus:bg-white transition-all text-center ${service.error ? 'border-red-400 bg-red-50' : 'border-white/60'}`}
+                        className={`w-[70px] bg-white/50 border p-3 rounded-[16px] text-xs font-bold text-slate-800 text-center ${service.error ? 'border-red-400 bg-red-50 text-red-600' : 'border-white/60'}`}
                       />
-                      {services.length > 1 && (
-                        <button type="button" onClick={() => removeService(index)} className="p-3 text-red-400 hover:bg-red-50 rounded-[16px] transition-all">
-                          <Trash size={16} weight="bold" />
-                        </button>
-                      )}
+                      <button type="button" onClick={() => removeService(index)} className="p-3 text-red-400"><Trash size={16} weight="bold" /></button>
                     </div>
-                    {/* Hata Mesajı */}
-                    {service.error && (
-                      <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-1.5 px-2 text-red-500">
-                        <WarningCircle size={14} weight="fill" className="shrink-0 mt-0.5" />
-                        <span className="text-[9px] font-black leading-tight">{service.error}</span>
-                      </motion.div>
-                    )}
+                    {service.error && <div className="flex items-center gap-1 px-2 text-red-500 text-[8px] font-black uppercase"><WarningCircle size={12}/>{service.error}</div>}
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Gönder Butonu */}
             <button 
               form="ustaForm" type="submit" disabled={loading}
               className={`w-full py-4 rounded-[22px] text-white font-black text-[10px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all mt-4 flex items-center justify-center gap-2 ${theme.bg} ${loading ? 'opacity-60' : ''}`}
             >
-              {loading ? 'İşleniyor...' : 'Başvuruyu Tamamla'}
+              {loading ? 'Kaydediliyor...' : 'Ustayı Kaydet'}
               {!loading && <CheckCircle size={16} weight="bold" />}
             </button>
           </motion.div>

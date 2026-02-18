@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Param, Post, Body } from '@nestjs/common';
+import { Controller, Get, Query, Param, Post, Body, Delete } from '@nestjs/common';
 import { ProviderGatewayService } from './provider.service';
 import { Put } from '@nestjs/common';
 
@@ -35,4 +35,8 @@ export class ProviderGatewayController {
   async update(@Param('id') id: string, @Body() body: any) {
     return await this.providerService.update({ id, ...body }); // Body'nin içine id'yi de ekleyip microservice'e atıyoruz
   }
+  @Delete(':id')
+async delete(@Param('id') id: string) {
+  return await this.providerService.delete(id); // microservice'deki delete'i tetikler
+}
 }
