@@ -3,8 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, PipelineStage } from 'mongoose';
 import { haversineKm, isValidCoordinate } from '../common/geo';
 import { Page, toPage } from '../common/pagination';
-import { parsePriceList } from '../common/price';
 import { ProviderDoc, ProviderDocument } from './provider.schema';
+import { toProviderEntity } from './provider.mapper';
 import { ProviderEntity, ProviderQuery, ProviderView } from './provider.types';
 import { ProvidersRepository } from './providers.repository';
 
@@ -105,7 +105,7 @@ export class MongoProvidersRepository extends ProvidersRepository {
         data.priceList.map((p) => [p.serviceName, `${p.minPrice ?? ''}-${p.maxPrice ?? ''}`]),
       ),
     });
-    return this.toEntity((doc as any).toObject());
+    return toProviderEntity((doc as any).toObject());
   }
 
   async updateReviewStats(id: string, rating: number, reviewCount: number): Promise<void> {
@@ -115,32 +115,8 @@ export class MongoProvidersRepository extends ProvidersRepository {
 
   private toView(doc: any, distanceKm: number | null): ProviderView {
     return {
-      ...this.toEntity(doc),
+      ...toProviderEntity(doc),
       distanceKm: distanceKm == null ? null : Math.round(distanceKm * 10) / 10,
-    };
-  }
-
-  private toEntity(doc: any): ProviderEntity {
-    const located = isValidCoordinate(doc.lat, doc.lng);
-    return {
-      id: String(doc._id),
-      businessName: doc.businessName ?? '',
-      phoneNumber: doc.phoneNumber ?? '',
-      mainType: doc.mainType ?? '',
-      subType: doc.subType ?? '',
-      city: doc.city ?? '',
-      district: doc.district ?? '',
-      address: doc.address ?? '',
-      lat: located ? doc.lat : null,
-      lng: located ? doc.lng : null,
-      rating: typeof doc.rating === 'number' ? doc.rating : 0,
-      reviewCount: typeof doc.reviewCount === 'number' ? doc.reviewCount : 0,
-      isPremium: doc.isPremium === true,
-      isVerified: doc.aiVerified === true || doc.isPremium === true,
-      about: doc.about ?? '',
-      profileImage: doc.profileImage || null,
-      portfolioImages: Array.isArray(doc.portfolioImages) ? doc.portfolioImages.filter(Boolean) : [],
-      priceList: parsePriceList(doc.priceList),
     };
   }
 }
