@@ -20,8 +20,9 @@ export class MongoProvidersRepository extends ProvidersRepository {
   async list(query: ProviderQuery): Promise<Page<ProviderView>> {
     const hasLocation = isValidCoordinate(query.userLat, query.userLng);
     const match: Record<string, unknown> = {};
-    if (query.mainType) match.mainType = query.mainType;
-    if (query.subType) match.subType = query.subType;
+    // Legacy crawled data used different casing ("elektrikçi" vs "Elektrikçi"): match exactly but ignore case.
+    if (query.mainType) match.mainType = { $regex: `^${escapeRegex(query.mainType)}$`, $options: 'i' };
+    if (query.subType) match.subType = { $regex: `^${escapeRegex(query.subType)}$`, $options: 'i' };
     if (query.city) match.city = { $regex: `^${escapeRegex(query.city)}$`, $options: 'i' };
     if (query.q) {
       const rx = { $regex: escapeRegex(query.q.trim()), $options: 'i' };
