@@ -12,7 +12,7 @@ Usta, evindeki işi yapacak ustayı bulmanın en kolay yolu. İhtiyacına dokun,
 • Uygulama içi yazışma: fotoğraf gönder, yanıtla, hazır mesajları kullan
 • Büyük yazı seçenekleri ve koyu tema
 • Verilerini istediğin zaman indir, hesabını sil
-• Ustalar için panel: gelen talepler, profil fotoğrafı, hizmetler ve fiyat listesi, “Öne çıkan” ile üstte görünme
+• Ustalar için panel: gelen talepler, profil fotoğrafı, hizmetler ve fiyat listesi
 
 Usta bir ilan ve iletişim platformudur; iş, ödeme ve anlaşmazlıklar kullanıcılar arasındadır. Şikayet ve resmi başvuru yolları uygulamadadır.
 

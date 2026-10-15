@@ -24,7 +24,7 @@ Elektrik, su tesisatı, klima, boya, dekorasyon, marangoz, beyaz eşya, elektron
 
 1. [Neden Usta?](#neden-usta) · 2. [Kimin için?](#kimin-için) · 3. [Özellikler](#özellikler) · 4. [Usta hesabı](#usta-hesabı) · 5. [Ekranlar](#ekranlar)
 6. [HCI ilkeleri](#insanbilgisayar-etkileşimi-hci-ilkeleri) · 7. [Görsel tasarım dili](#görsel-tasarım-dili) · 8. [Yazılım mühendisliği ilkeleri](#yazılım-mühendisliği-ilkeleri)
-9. [Mimari](#mimari) · 10. [Güvenlik ve gizlilik](#güvenlik-ve-gizlilik) · 11. [Kalite güvencesi](#kalite-güvencesi) · 12. [Kurulum](#kurulum-ve-çalıştırma) · 13. [API](#api-özeti) · 14. [Yol haritası](#bilinen-sınırlar-ve-yol-haritası)
+9. [Mimari](#mimari) · 10. [Güvenlik ve gizlilik](#güvenlik-ve-gizlilik) · 11. [Kalite güvencesi](#kalite-güvencesi) · 12. [Kurulum](#kurulum-ve-çalıştırma) · 13. [API](#api-özeti) · 14. [Ürüne alınırsa eklenecekler](#uygulama-ürüne-alınırsa-eklenecekler)
 
 ---
 
@@ -46,7 +46,7 @@ Usta bulmak çoğu insan için hâlâ "bir tanıdığa sormak" demek. İlan site
 | Kullanıcı | İhtiyacı | Usta'nın cevabı |
 |---|---|---|
 | **Müşteri** (arıza, tadilat, temizlik) | Hızlı, güvenilir, yakın usta | Resimli hizmet seçimi, mesafeye göre sıralama, puan, fiyat listesi, adres, tek dokunuşla arama |
-| **Usta / esnaf** | Müşteri bulmak, işi takip etmek | Kendi iş paneli: gelen talepler, tek dokunuşla kabul, profil, fiyat listesi, fotoğraflar, "Öne çıkan" |
+| **Usta / esnaf** | Müşteri bulmak, işi takip etmek | Kendi iş paneli: gelen talepler, tek dokunuşla kabul, profil, fiyat listesi, fotoğraflar |
 | **50+ yaş, düşük teknoloji rahatlığı** | Büyük yazı, az adım, sade dil | Arayüz Boyutu (Normal / Büyük / Çok büyük), 3 sekme, büyük dokunma alanları |
 | **Gece / loş ortam** | Göz yormayan ekran | Açık, Koyu ya da telefon varsayılanı |
 
@@ -58,7 +58,7 @@ Usta bulmak çoğu insan için hâlâ "bir tanıdığa sormak" demek. İlan site
 
 **Mesajlaşma ve talepler** · İlk mesaj otomatik `Hizmet Talebi: …`; sağa kaydırarak yanıtla, kendi mesajını düzenle / sil, fotoğraf gönder, hazır mesajlar, "Usta kabul etti" / "İş bitti" durumları, okunmamış sayacı.
 
-**Hesap** · Sunucuda saklanan gerçek hesaplar: müşteri ya da usta olarak kayıt, e-posta veya telefonla giriş. (SMS / e-posta doğrulaması sonraki adım; bkz. [yol haritası](#bilinen-sınırlar-ve-yol-haritası).)
+**Hesap** · Sunucuda saklanan gerçek hesaplar: müşteri ya da usta olarak kayıt, e-posta veya telefonla giriş. (SMS / e-posta doğrulaması sonraki adım; bkz. [eklenecekler](#uygulama-ürüne-alınırsa-eklenecekler).)
 
 **Ayarlar** · Arayüz Boyutu, Görünüm (Açık / Koyu / Telefon varsayılanı), **Verilerimi indir**, hesabı sil, destek, rehber, güvenli iletişim, **Şikayet ve resmi başvurular** (e-Devlet Tüketici Hakem Heyeti, Ticaret Bakanlığı, ALO 175, 155), Kullanıcı Sözleşmesi, KVKK Aydınlatma Metni, Sorumluluk Reddi.
 
@@ -68,38 +68,26 @@ Usta olarak girince uygulama farklı bir yüz gösterir: müşteri araması yok,
 
 | Sekme | Ne yapar |
 |---|---|
-| **Panel** | Yeni talep / mesaj / puan özeti, yanıt bekleyenler (tek dokunuşla Kabul et), "Sayfanı tamamla" listesi, öne çıkma durumu |
+| **Panel** | Yeni talep / mesaj / puan özeti, yanıt bekleyenler (tek dokunuşla Kabul et), "Sayfanı tamamla" listesi, |
 | **Talepler** | Yeni · Devam eden · Biten gruplarında gelen kutusu, kabul / uygun değilim, sohbet, müşteriyi ara |
 | **Sayfam** | Profil fotoğrafı, iş fotoğrafları, tanıtım, hizmet bölgesi / adres, fiyat listesi, tamamlanma yüzdesi, "Müşteri gözüyle gör" |
 | **Ayarlar** | Boyut, görünüm, hesap, yasal metinler |
 
-<p align="center"><img src="docs/screenshots/usta-overview.png" alt="Usta paneli, Sayfam, Öne çık, koyu tema" width="860"></p>
-
-### Öne çıkan (ücretli yerleşim)
-
-Ustalar süreye göre aramalarda en üstte, "Öne çıkan" etiketiyle görünebilir; süre bitince normal sıraya dönerler. Plan uzadıkça günlük fiyat düşer:
-
-| Plan | Fiyat (KDV dahil) | Günlük |
-|---|---|---|
-| 1 hafta | 99 ₺ | 14,14 ₺ |
-| 1 ay | 249 ₺ | 8,30 ₺ |
-| 3 ay | 599 ₺ | 6,66 ₺ |
-
-Sunucu planları satar, çalışan promosyonun üstüne ekler ve satın alımı kaydeder (`PAYMENTS_MODE=test` iken ücret alınmaz ve uygulama bunu açıkça söyler; mağaza satın alma doğrulaması için bkz. [docs/RELEASE.md](docs/RELEASE.md)). Plan, iş ya da müşteri sayısı garantisi vermez; metinlerde de öyle yazar.
+<p align="center"><img src="docs/screenshots/usta-overview.png" alt="Usta paneli, Sayfam, koyu tema, yapılan işler" width="860"></p>
 
 ## Ekranlar
 
-| Karşılama | Ana sayfa | Usta sayfası | Sohbet |
+| Karşılama | Ana sayfa | Usta sayfası | Yapılan işler |
 |:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/welcome-choices.png" width="200"> | <img src="docs/screenshots/home.png" width="200"> | <img src="docs/screenshots/detail.png" width="200"> | <img src="docs/screenshots/chat.png" width="200"> |
+| <img src="docs/screenshots/welcome-choices.png" width="200"> | <img src="docs/screenshots/home.png" width="200"> | <img src="docs/screenshots/detail.png" width="200"> | <img src="docs/screenshots/detail-work.png" width="200"> |
 
-| Taleplerim | İletişim seçenekleri | Ayarlar | Resmi başvurular |
+| Sohbet | Taleplerim | İletişim seçenekleri | Ayarlar |
 |:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/requests.png" width="200"> | <img src="docs/screenshots/contact-options.png" width="200"> | <img src="docs/screenshots/settings.png" width="200"> | <img src="docs/screenshots/official.png" width="200"> |
+| <img src="docs/screenshots/chat.png" width="200"> | <img src="docs/screenshots/requests.png" width="200"> | <img src="docs/screenshots/contact-options.png" width="200"> | <img src="docs/screenshots/settings.png" width="200"> |
 
-| Koyu ana sayfa | Koyu sonuçlar | Usta paneli | Öne çık |
+| Koyu karşılama | Koyu ana sayfa | Usta paneli | Sayfam |
 |:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/home-dark.png" width="200"> | <img src="docs/screenshots/results-dark.png" width="200"> | <img src="docs/screenshots/usta-panel.png" width="200"> | <img src="docs/screenshots/promote.png" width="200"> |
+| <img src="docs/screenshots/welcome-dark.png" width="200"> | <img src="docs/screenshots/home-dark.png" width="200"> | <img src="docs/screenshots/usta-panel.png" width="200"> | <img src="docs/screenshots/usta-page.png" width="200"> |
 
 ## İnsan–bilgisayar etkileşimi (HCI) ilkeleri
 
@@ -114,7 +102,7 @@ Sunucu planları satar, çalışan promosyonun üstüne ekler ve satın alımı 
 | **Hata önleme ve kurtarma** (Nielsen) | Yanlış şifre, kullanılmış e-posta, konum izni yok, ağ yok: her biri ne olduğunu ve ne yapılacağını söyleyen Türkçe mesajla; ham hata ekrana basılmaz. |
 | **Sistemin durumunu göster** | İskelet yükleme kartları, okunmamış rozetleri, "Ustaya iletildi / Usta kabul etti" durum cümleleri, test modunda ücret alınmadığının açıkça yazılması. |
 | **Erişilebilirlik (WCAG AA)** | Kontrast testle doğrulanır (açık + koyu palet); `Semantics` etiketleri; sistem yazı boyutu × Usta Arayüz Boyutu birlikte ölçeklenir; 320 dp genişlikte 1,5× yazıyla taşma yok. |
-| **Dürüstlük** (karanlık desenlerden kaçınma) | Uydurma fiyat ya da sahte "doğrulandı" rozeti yok; "Öne çıkan" ücretli yerleşimdir ve öyle yazılır; yazışmaların kayıt altında olduğu sohbette hep görünür. |
+| **Dürüstlük** (karanlık desenlerden kaçınma) | Uydurma fiyat ya da sahte "doğrulandı" rozeti yok; yazışmaların kayıt altında olduğu sohbette hep görünür. |
 | **Gestalt: yakınlık ve hizalama** | Aynı bilgi aynı kartta, aynı kenar boşluğuyla; "Giriş yap" ve "Değiştir" aynı sağ kenarda biter; ayar açıklamaları tek satırdır. |
 | **Dil ve ton** | Sade, sıcak, "sen" dili; ek uyumu ve cümle düzeni gözden geçirildi; sayı ve para birimi Türkçe biçimde. |
 
@@ -131,7 +119,7 @@ Sunucu planları satar, çalışan promosyonun üstüne ekler ve satın alımı 
 
 - **Katmanlı mimari, tek yönlü veri akışı.** `UI → controller (Riverpod) → repository → data source → API`. Widget'lar ağı ya da depoyu bilmez.
 - **SOLID.** Tek sorumluluk (ekran / denetleyici / depo ayrı), bağımlılığı tersine çevirme (konum, yer adı, depolama arayüzlerle enjekte edilir), açık–kapalı (yeni hizmet = `kServices`'e bir satır).
-- **DRY ve tek doğruluk kaynağı.** Renk, boşluk, tipografi, ikon, hizmet listesi, plan listesi tek yerde.
+- **DRY ve tek doğruluk kaynağı.** Renk, boşluk, tipografi, ikon ve hizmet listesi tek yerde.
 - **Değiştirilebilir altyapı.** Sunucuda `Store<T>` arayüzü (`MemoryStore` / `MongoStore`); `DATA_SOURCE=mock|mongo` ile veritabanı olmadan da çalışır.
 - **Güvenli varsayılanlar.** Sunucu tarafı kimlik doğrulama ve yetkilendirme guard'ı, sınırlandırılmış giriş denemesi, sırlar yalnızca ortam değişkenlerinde (twelve-factor).
 - **Hata yönetimi.** Her hata `AppFailure` ile kullanıcıya anlaşılır Türkçe mesaj olur.
@@ -146,7 +134,7 @@ Sunucu planları satar, çalışan promosyonun üstüne ekler ve satın alımı 
 │ Flutter (iOS / Android)  │ ─────────────────▶ │ NestJS modüler monolit       │ ─▶ │ MongoDB Atlas   │
 │ Riverpod · go_router     │                    │ auth · accounts · providers  │    │ usta_db         │
 │ Dio · SharedPreferences  │ ◀───────────────── │ orders · conversations       │    │ (veya bellek)   │
-└──────────────────────────┘                    │ promotions · complaints …    │    └─────────────────┘
+└──────────────────────────┘                    │ complaints · privacy …       │    └─────────────────┘
                                                 └──────────────────────────────┘
 ```
 
@@ -161,15 +149,15 @@ Sunucu planları satar, çalışan promosyonun üstüne ekler ve satın alımı 
 - **Veri hakları:** **Verilerimi indir** (hesap, talep, mesaj, şikayet) ve **Hesabımı sil** (kimlik kaldırılır, kayıtlar kimliksiz saklanır).
 - **Şikayet:** Nedenli, takip numaralı şikayet; ardından resmi merciler.
 - **Sorumluluk reddi:** Platform işin yapılması, ödeme ve anlaşmazlıklarda taraf değildir.
-- ⚠️ Hukuki metinler **taslaktır**; yayından önce bir avukat incelemelidir.
+- Hukuki metinler taslaktır; yayından önce bir avukat incelemelidir.
 
 ## Kalite güvencesi
 
 | Katman | Kapsam | Sonuç |
 |---|---|---|
-| Flutter birim / bileşen / duman | **111 test**: doğrulayıcılar, mesafe, hizmet eşleştirme, fiyat kuralları, modeller, oturum ve kayıt akışı, keşif, ilk ekranda iki usta, 3–4 sekme, Arayüz Boyutu, **koyu tema canlı geçişi**, usta paneli ve plan satın alma, kendi sayfa kuralları, usta kaydında konum | ✅ |
+| Flutter birim / bileşen / duman | **111 test**: doğrulayıcılar, mesafe, hizmet eşleştirme, fiyat kuralları, modeller, oturum ve kayıt akışı, keşif, ilk ekranda iki usta, 3–4 sekme, Arayüz Boyutu, **koyu tema canlı geçişi**, usta paneli, kendi sayfa kuralları, usta kaydında konum | ✅ |
 | Erişilebilirlik | Açık ve koyu paletin WCAG AA kontrast testi; 320 dp × 1,5× yazı × Büyük / Çok büyük için taşma testleri (müşteri ve usta ekranları) | ✅ |
-| Sunucu | **37 Jest testi**: hesap, giriş, kilitleme, belirteç, yetki guard'ı, sohbet, durum geçişleri, depo, promosyonlar | ✅ |
+| Sunucu | **37 Jest testi**: hesap, giriş, kilitleme, belirteç, yetki guard'ı, sohbet, durum geçişleri, depo | ✅ |
 | Gerçek veritabanı | Atlas'ta uçtan uca duman testi (kayıt, giriş, korumalı uç noktalar, liste, filtre, talep, sohbet) | ✅ |
 | Cihaz | iPhone 16 Pro simülatörü ve gerçek iPhone | ✅ |
 
@@ -199,7 +187,7 @@ flutter run --dart-define=API_BASE_URL=http://localhost:3000
 
 **Gerçek iPhone:** Mac ve telefon aynı ağdayken `--dart-define=API_BASE_URL=http://<Mac-LAN-IP>:3000`.
 
-**Derleme:** `flutter build apk --release` · `flutter build appbundle --release` · `flutter build ipa --release` (aynı `--dart-define`). Mağaza hazırlığı: [docs/RELEASE.md](docs/RELEASE.md), mağaza metinleri: [docs/store/listing-tr.md](docs/store/listing-tr.md).
+**Derleme:** `flutter build apk --release` · `flutter build appbundle --release` · `flutter build ipa --release` (aynı `--dart-define`). Yayın kontrol listesi: [docs/RELEASE.md](docs/RELEASE.md), mağaza metinleri: [docs/store/listing-tr.md](docs/store/listing-tr.md).
 
 **Veri araçları:** `npm run db:cleanup-test <önek>` test kayıtlarını siler (`@simtest.local` e-postalı hesaplar dahil); `npm run db:seed-demo -- <providerId>` bir usta sayfasını fotoğraf ve yorumlarla doldurur (fotoğraflar `server/seed-media/` içinden okunur, git'e girmez).
 
@@ -213,11 +201,10 @@ flutter run --dart-define=API_BASE_URL=http://localhost:3000
 | Yorumlar | `GET/POST /providers/:providerId/reviews` |
 | Talepler | `POST/GET /service-requests` · `PATCH /service-requests/:id/status` |
 | Sohbet | `GET /conversations/:id` · `GET/POST /conversations/:id/messages` · `POST /conversations/:id/read` · `POST /conversations/:id/attachments` · `PATCH/DELETE /messages/:id` · `GET /attachments/:id` |
-| Öne çıkma | `GET /promotions/plans` · `POST /providers/:id/promotions` |
 | Şikayet | `POST/GET /complaints` |
 | Diğer | `GET /categories` · `GET /notifications` · `GET /health` |
 
-Herkese açık okumalar (usta listesi ve detayı, yorumlar, planlar, fotoğraflar, sağlık) oturumsuz çalışır; diğer her şey geçerli oturum ister.
+Herkese açık okumalar (usta listesi ve detayı, yorumlar, fotoğraflar, sağlık) oturumsuz çalışır; diğer her şey geçerli oturum ister.
 
 ## Proje yapısı
 
@@ -229,19 +216,21 @@ lib/
   features/   auth · chat · discovery · location · notifications · orders · profile
               provider · reviews · safety · settings · shell · studio (usta paneli)
 server/src/   accounts · attachments · auth · categories · common · complaints · conversations
-              notifications · orders · privacy · promotions · providers · reviews · users
+              notifications · orders · privacy · providers · reviews · users
 assets/       services (Gemini), onboarding, brand
 docs/         screenshots, RELEASE.md, store/
 ```
 
-## Bilinen sınırlar ve yol haritası
+## Uygulama ürüne alınırsa eklenecekler
 
-- **SMS / e-posta doğrulaması yok.** Hesaplar doğrudan veritabanına kaydolur; doğrulama (ve şifre sıfırlama) sıradaki adımdır.
-- **Ödeme test modunda.** "Öne çıkan" planları çalışır ama ücret alınmaz; App Store / Google Play satın alma doğrulaması bağlanmalıdır.
-- **Anlık bildirim yok.** Sohbet ve talepler yoklamayla yenilenir (3 sn / 15 sn); FCM / APNs sonraki adımdır.
-- **Veri kalitesi.** Atlas verisinde bazı konumlar şehirle uyuşmaz, çoğu kayıtta fotoğraf ve fiyat yoktur; arayüz bunu uydurmadan gösterir.
-- **Hukuki metinler taslaktır** ve avukat incelemesi bekler.
-- Yol haritası: doğrulama ve şifre sıfırlama, anlık bildirim, mağaza satın alma doğrulaması, yorum yönetimi, App Store / Play Store yayını.
+Mevcut sürüm uçtan uca çalışır ve test edilmiştir. Ürün mağazalara çıkarken eklenmesi planlanan adımlar:
+
+- **Hesap doğrulama:** SMS ve e-posta doğrulaması, şifre sıfırlama.
+- **Anlık bildirim:** Yeni talep ve mesajlar için FCM / APNs (şimdilik yoklama ile yenileniyor).
+- **Barındırma:** HTTPS arkasında yönetilen sunucu, izleme, yedekleme ve hız sınırlama.
+- **Hukuki inceleme:** Kullanıcı Sözleşmesi, KVKK Aydınlatma Metni ve Sorumluluk Reddi metinlerinin avukat onayı.
+- **Veri zenginleştirme:** Konum ve fotoğraf eksiklerinin tamamlanması, usta doğrulama süreci.
+- **Mağaza yayını:** App Store ve Google Play imzalama, listeleme ve inceleme süreçleri.
 
 ---
 

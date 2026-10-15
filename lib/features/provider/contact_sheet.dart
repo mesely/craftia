@@ -86,7 +86,7 @@ class _ContactSheet extends ConsumerWidget {
                 ChoiceTile(
                   leading: UstaIcons.requests,
                   label: 'Uygulamadan yaz',
-                  caption: 'Hizmet talebi gönder, yazışma kayıt altında kalsın',
+                  caption: 'Talebin kayıt altında kalır',
                   selected: false,
                   onTap: writeInApp,
                 ),
@@ -94,7 +94,7 @@ class _ContactSheet extends ConsumerWidget {
                 ChoiceTile(
                   leading: UstaIcons.message,
                   label: 'WhatsApp’tan yaz',
-                  caption: 'WhatsApp açılır (uygulama dışında, kayıt tutulmaz)',
+                  caption: 'Uygulama dışında, kayıt tutulmaz',
                   selected: false,
                   onTap: () async {
                     navigator.pop();

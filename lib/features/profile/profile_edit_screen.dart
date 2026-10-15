@@ -491,10 +491,10 @@ class _PhotoGrid extends StatelessWidget {
                               color: AppColors.scrim,
                               shape: BoxShape.circle,
                             ),
-                            child: UstaIcon(
+                            child: const UstaIcon(
                               UstaIcons.trash,
                               size: 18,
-                              color: AppColors.onPrimary,
+                              color: Color(0xFFFFFFFF),
                             ),
                           ),
                         ),
