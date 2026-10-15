@@ -3,17 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
-import '../../../core/icons/usta_icon.dart';
-import '../../../core/icons/usta_icons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/auth_methods.dart';
 import '../auth_controller.dart';
-import '../federated_sign_in.dart';
+import '../identity.dart';
 
-/// "veya" + Google, Apple and SMS sign-in. The three buttons are always built and ready; each one
-/// is enabled only when the server reports its method as switched on (Firebase configured).
+/// "veya" + Google sign-in. It only appears when the app has Firebase and the server has Google
+/// switched on; otherwise nothing is drawn (Apple and SMS are not offered at all).
 class FederatedButtons extends ConsumerStatefulWidget {
   const FederatedButtons({super.key});
 
@@ -22,36 +20,28 @@ class FederatedButtons extends ConsumerStatefulWidget {
 }
 
 class _FederatedButtonsState extends ConsumerState<FederatedButtons> {
-  SignInMethod? _busy;
+  bool _busy = false;
 
   void _toast(String m) => ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(m)));
 
-  Future<void> _go(SignInMethod method) async {
-    setState(() => _busy = method);
+  Future<void> _google() async {
+    setState(() => _busy = true);
     try {
-      final token = await ref.read(federatedSignInProvider).idToken(method);
-      final outcome = await ref
-          .read(authProvider.notifier)
-          .signInWith(method, token);
+      final auth = ref.read(authProvider.notifier);
+      final outcome = await auth.signInWithGoogle();
       if (!mounted || outcome == null) return;
       if (outcome.needsProfile) {
         final name = await _askName(outcome.suggested?['name'] ?? '');
         if (name == null || !mounted) return;
-        await ref
-            .read(authProvider.notifier)
-            .completeFederated(
-              token!,
-              name: name,
-              phone: outcome.suggested?['phone'],
-            );
+        await auth.completeGoogle(name: name);
       }
       if (mounted) context.go('/');
     } catch (e) {
       if (mounted) _toast(AppFailure.from(e).message);
     } finally {
-      if (mounted) setState(() => _busy = null);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -61,10 +51,21 @@ class _FederatedButtonsState extends ConsumerState<FederatedButtons> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Hoş geldin'),
-        content: TextField(
-          controller: controller,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(labelText: 'Adın ve soyadın'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: controller,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(labelText: 'Adın ve soyadın'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Devam ederek Kullanıcı Sözleşmesi ve KVKK Aydınlatma Metni\'ni kabul etmiş olursun.',
+              style: AppTypography.bodySm,
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -85,7 +86,11 @@ class _FederatedButtonsState extends ConsumerState<FederatedButtons> {
 
   @override
   Widget build(BuildContext context) {
+    final available = ref.watch(identityProvider).available;
     final methods = ref.watch(authMethodsProvider).value ?? AuthMethods.none;
+    if (!available || !methods.allows(SignInMethod.google)) {
+      return const SizedBox.shrink();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -100,47 +105,22 @@ class _FederatedButtonsState extends ConsumerState<FederatedButtons> {
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        for (final m in SignInMethod.values) ...[
-          OutlinedButton.icon(
-            onPressed: methods.allows(m) && _busy == null ? () => _go(m) : null,
-            icon: _busy == m
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : switch (m) {
-                    SignInMethod.phone => UstaIcon(UstaIcons.phone, size: 20),
-                    SignInMethod.google => const _Letter('G'),
-                    SignInMethod.apple => const _Letter('A'),
-                  },
-            label: Text(m.label),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-        ],
-        if (!methods.anyFederated)
-          Text(
-            'Google, Apple ve SMS ile giriş yakında açılacak.',
-            style: AppTypography.bodySm,
-            textAlign: TextAlign.center,
-          ),
+        OutlinedButton.icon(
+          onPressed: _busy ? null : _google,
+          icon: _busy
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(
+                  'G',
+                  style: AppTypography.button.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+          label: Text(SignInMethod.google.label),
+        ),
       ],
     );
   }
-}
-
-class _Letter extends StatelessWidget {
-  const _Letter(this.letter);
-
-  final String letter;
-
-  @override
-  Widget build(BuildContext context) => SizedBox.square(
-    dimension: 20,
-    child: Center(
-      child: Text(
-        letter,
-        style: AppTypography.button.copyWith(fontWeight: FontWeight.w800),
-      ),
-    ),
-  );
 }

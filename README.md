@@ -10,7 +10,7 @@ Elektrik, su tesisatı, klima, boya, dekorasyon, marangoz, beyaz eşya, elektron
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-0F4C9A?logo=flutter&logoColor=white)](https://flutter.dev)
 [![NestJS](https://img.shields.io/badge/NestJS-API-0F4C9A?logo=nestjs&logoColor=white)](https://nestjs.com)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-0F4C9A?logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
-![Tests](https://img.shields.io/badge/tests-115%20Flutter%20%C2%B7%2045%20API%20%C2%B7%2031%20E2E-1B7F52)
+![Tests](https://img.shields.io/badge/tests-120%20Flutter%20%C2%B7%2046%20API%20%C2%B7%2031%20E2E%20%C2%B7%209%20Firebase-1B7F52)
 ![WCAG](https://img.shields.io/badge/WCAG-AA-1B7F52)
 ![Platforms](https://img.shields.io/badge/iOS%20%C2%B7%20Android-0F4C9A)
 
@@ -58,7 +58,7 @@ Usta bulmak çoğu insan için hâlâ "bir tanıdığa sormak" demek. İlan site
 
 **Mesajlaşma ve talepler** · İlk mesaj otomatik `Hizmet Talebi: …`; sağa kaydırarak yanıtla, kendi mesajını düzenle / sil, fotoğraf gönder, hazır mesajlar, "Usta kabul etti" / "İş bitti" durumları, okunmamış sayacı.
 
-**Hesap** · Sunucuda saklanan gerçek hesaplar: müşteri ya da usta olarak kayıt, e-posta veya telefon + şifre ile giriş. **Google, Apple ve SMS ile giriş** (Firebase Authentication) uçtan uca hazırdır ve pasiftir: Firebase proje anahtarı girildiğinde düğmeler kendiliğinden açılır ([docs/AUTH.md](docs/AUTH.md)).
+**Hesap** · Firebase Authentication ile **e-posta + şifre** ve **Google** ile kayıt ve giriş; "Şifremi unuttum" e-postası, doğrulama e-postası. Hesap kaydı, rol (müşteri / usta) ve oturum sunucudaki veritabanında tutulur; sunucu her Firebase kimlik belirtecini Google sertifikalarıyla doğrular ([docs/AUTH.md](docs/AUTH.md)).
 
 **Ayarlar** · Arayüz Boyutu, Görünüm (Açık / Koyu / Telefon varsayılanı), **Verilerimi indir**, hesabı sil, destek, rehber, güvenli iletişim, **Şikayet ve resmi başvurular** (e-Devlet Tüketici Hakem Heyeti, Ticaret Bakanlığı, ALO 175, 155), Kullanıcı Sözleşmesi, KVKK Aydınlatma Metni, Sorumluluk Reddi.
 
@@ -85,9 +85,9 @@ Usta olarak girince uygulama farklı bir yüz gösterir: müşteri araması yok,
 |:---:|:---:|:---:|:---:|
 | <img src="docs/screenshots/chat.png" width="200"> | <img src="docs/screenshots/requests.png" width="200"> | <img src="docs/screenshots/contact-options.png" width="200"> | <img src="docs/screenshots/settings.png" width="200"> |
 
-| Koyu karşılama | Koyu ana sayfa | Usta paneli | Koyu usta paneli |
+| Giriş | Koyu karşılama | Koyu ana sayfa | Usta paneli |
 |:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/welcome-dark.png" width="200"> | <img src="docs/screenshots/home-dark.png" width="200"> | <img src="docs/screenshots/usta-panel.png" width="200"> | <img src="docs/screenshots/usta-panel-dark.png" width="200"> |
+| <img src="docs/screenshots/login.png" width="200"> | <img src="docs/screenshots/welcome-dark.png" width="200"> | <img src="docs/screenshots/home-dark.png" width="200"> | <img src="docs/screenshots/usta-panel.png" width="200"> |
 
 ## İnsan–bilgisayar etkileşimi (HCI) ilkeleri
 
@@ -144,7 +144,7 @@ Usta olarak girince uygulama farklı bir yüz gösterir: müşteri araması yok,
 ## Güvenlik ve gizlilik
 
 - **Kimlik doğrulama:** Şifreler sunucuda **scrypt + rastgele tuz** ile saklanır; oturum, HMAC-SHA256 imzalı, süreli belirteçtir. Telefonda şifre saklanmaz. Her korumalı istek `Authorization: Bearer` taşır; sunucu, isteği yapan kişinin kendi kimliğiyle işlem yaptığını doğrular (başkası adına talep, sohbet, dışa aktarma, silme reddedilir). Aynı hesap için art arda hatalı giriş geçici olarak kilitlenir.
-- **Pasif girişler:** Google, Apple ve SMS yolu sunucuda tamdır (RS256 imza, `aud` / `iss` / `exp` denetimi, yalnızca doğrulanmış e-posta ile hesap eşleme); `FIREBASE_PROJECT_ID` girilene kadar kapalıdır.
+- **Kimlik doğrulama:** Firebase ID token'ı sunucuda doğrulanır (RS256 imza, `aud` / `iss` / `exp` denetimi); hesap eşleme yalnızca iki tarafta da doğrulanmış e-postayla yapılır (önceden kayıt olup başkasının adresini kapma saldırısı engellenir). Apple ve SMS yolları sunucuda hazırdır ama uygulamada sunulmaz.
 - **Sırlar:** Veritabanı bağlantısı ve `AUTH_SECRET` yalnızca `server/.env` içindedir (`.gitignore`'da). `.env.example` boş yer tutucular içerir.
 - **KVKK ve şeffaflık:** Mesajların güvenlik ve anlaşmazlık süreçleri için sunucuda saklandığı, gerektiğinde taraflarla paylaşılabileceği sohbette, kayıtta ve KVKK metninde açıkça yazar.
 - **Veri hakları:** **Verilerimi indir** (hesap, talep, mesaj, şikayet) ve **Hesabımı sil** (kimlik kaldırılır, kayıtlar kimliksiz saklanır).
@@ -156,9 +156,10 @@ Usta olarak girince uygulama farklı bir yüz gösterir: müşteri araması yok,
 
 | Katman | Kapsam | Sonuç |
 |---|---|---|
-| Flutter birim / bileşen / duman | **115 test**: doğrulayıcılar, mesafe, hizmet eşleştirme, fiyat kuralları, modeller, oturum ve kayıt akışı, keşif, ilk ekranda iki usta, 3–4 sekme, Arayüz Boyutu, **koyu tema canlı geçişi**, usta paneli, kendi sayfa kuralları, usta kaydında konum | ✅ |
+| Flutter birim / bileşen / duman | **120 test**: doğrulayıcılar, mesafe, hizmet eşleştirme, fiyat kuralları, modeller, oturum ve kayıt akışı, keşif, ilk ekranda iki usta, 3–4 sekme, Arayüz Boyutu, **koyu tema canlı geçişi**, usta paneli, kendi sayfa kuralları, usta kaydında konum | ✅ |
 | Erişilebilirlik | Açık ve koyu paletin WCAG AA kontrast testi; 320 dp × 1,5× yazı × Büyük / Çok büyük için taşma testleri (müşteri ve usta ekranları) | ✅ |
-| Sunucu | **45 Jest testi**: hesap, giriş, kilitleme, belirteç, yetki guard'ı, Firebase token doğrulama (Google / Apple / SMS), sohbet, durum geçişleri, depo | ✅ |
+| Sunucu | **46 Jest testi**: hesap, giriş, kilitleme, belirteç, yetki guard'ı, Firebase token doğrulama (e-posta, Google, SMS), sohbet, durum geçişleri, depo | ✅ |
+| Gerçek Firebase | `npm run e2e:firebase`: gerçek Firebase projesinde geçici kullanıcı açar, belirteci canlı API'ye verir (9 adım), sonra siler | ✅ |
 | Uçtan uca (HTTP) | `npm run e2e`: 31 adım, gerçek HTTP ile hem bellek hem Atlas modunda: kayıt, giriş, yetki reddi, usta sayfası ve fotoğraflar, konuma göre liste, talep, sohbet (yanıt / düzenle / sil / fotoğraf), durumlar, şikayet, veri indirme, hesap silme | ✅ |
 | Cihaz | iPhone 16 Pro simülatörü ve gerçek iPhone | ✅ |
 
@@ -197,7 +198,7 @@ flutter run --dart-define=API_BASE_URL=http://localhost:3000
 
 | Alan | Uç noktalar |
 |---|---|
-| Kimlik | `POST /auth/register` · `POST /auth/login` · `POST /auth/firebase` (Google / Apple / SMS) · `GET /auth/methods` · `POST /auth/upgrade` · `GET /auth/me` |
+| Kimlik | `POST /auth/register` · `POST /auth/login` · `POST /auth/firebase` (e-posta / Google) · `GET /auth/methods` · `POST /auth/upgrade` · `GET /auth/me` |
 | Hesap | `GET/PATCH /accounts/:id` · `GET /privacy/export` · `DELETE /privacy/account` |
 | Ustalar | `GET /providers` (filtre, arama, sıralama, konum, `excludeId`) · `GET /providers/:id` · `PATCH /providers/:id` · `POST/DELETE /providers/:id/photos` · `POST /providers/:id/profile-photo` |
 | Yorumlar | `GET/POST /providers/:providerId/reviews` |
@@ -227,7 +228,7 @@ docs/         screenshots, RELEASE.md, store/
 
 Mevcut sürüm uçtan uca çalışır ve test edilmiştir. Ürün mağazalara çıkarken eklenmesi planlanan adımlar:
 
-- **Firebase anahtarı:** Google, Apple ve SMS girişi hazır; proje kimliği ve platform dosyaları eklenince açılır. Şifre sıfırlama.
+- **Ek giriş yöntemleri:** Apple ve SMS ile giriş (sunucuda hazır, uygulamada kapalı), telefon doğrulaması.
 - **Anlık bildirim:** Yeni talep ve mesajlar için FCM / APNs (şimdilik yoklama ile yenileniyor).
 - **Barındırma:** HTTPS arkasında yönetilen sunucu, izleme, yedekleme ve hız sınırlama.
 - **Hukuki inceleme:** Kullanıcı Sözleşmesi, KVKK Aydınlatma Metni ve Sorumluluk Reddi metinlerinin avukat onayı.

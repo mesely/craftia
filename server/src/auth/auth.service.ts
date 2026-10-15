@@ -61,7 +61,7 @@ export class AuthService {
 
   /** Which sign-in buttons are switched on. Password sign-in is always available. */
   methods() {
-    return { password: true, ...this.firebase.methods() };
+    return { password: true, firebase: this.firebase.enabled, ...this.firebase.methods() };
   }
 
   /**
@@ -72,7 +72,7 @@ export class AuthService {
     if (!this.firebase.enabled) throw new ServiceUnavailableException('Bu giriş yöntemi henüz etkin değil.');
     const identity = await this.firebase.verify(dto.idToken);
     if (!identity) throw new UnauthorizedException('Giriş doğrulanamadı. Lütfen tekrar dene.');
-    const kind = identity.signInProvider === 'google.com' ? 'google' : identity.signInProvider === 'apple.com' ? 'apple' : identity.signInProvider === 'phone' ? 'phone' : null;
+    const kind = { 'google.com': 'google', password: 'email', 'apple.com': 'apple', phone: 'phone' }[identity.signInProvider] as 'google' | 'email' | 'apple' | 'phone' | undefined;
     if (!kind || !this.firebase.methods()[kind]) throw new ServiceUnavailableException('Bu giriş yöntemi henüz etkin değil.');
 
     const existing = await this.accounts.findFederated(identity);

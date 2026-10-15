@@ -1,9 +1,8 @@
-/// The ways to sign in. Password sign-in always works; the others (all through Firebase) are
-/// switched on from the server when a Firebase project is configured.
+/// The ways to sign in through Firebase. Apple and SMS code exist on the server but are not offered
+/// in the app. (Legacy password sign-in against the app's own database still works without Firebase.)
 enum SignInMethod {
   google('google', 'Google ile devam et'),
-  apple('apple', 'Apple ile devam et'),
-  phone('phone', 'Telefon numarasıyla devam et');
+  email('email', 'E-posta ve şifre');
 
   const SignInMethod(this.apiKey, this.label);
   final String apiKey;
@@ -19,7 +18,6 @@ class AuthMethods {
   final Set<SignInMethod> enabled;
 
   bool allows(SignInMethod m) => enabled.contains(m);
-  bool get anyFederated => enabled.isNotEmpty;
 
   factory AuthMethods.fromJson(Map<String, dynamic> json) => AuthMethods(
     enabled: {

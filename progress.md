@@ -51,6 +51,16 @@ Flutter (Riverpod 3, go_router 18, Dio) --REST--> server/ (NestJS 12, Mongoose 9
 - [x] `npm run e2e` (server/scripts/e2e.js): 31 HTTP checks, passes on mock and on Atlas.
 - Tests: 115 Flutter, 45 server jest, 31 e2e.
 
+## v2.4 (this session)
+- [x] **Real Firebase Auth** (project craftia-7608b, iOS+Android apps created via firebase CLI, debug SHA-1/256 registered). App: `IdentityProvider` (`features/auth/identity.dart`, `firebase_identity.dart`), e-mail+password register/login/forgot password, Google sign-in (button only shows when app has Firebase AND server `google` on), name dialog for new Google users, rollback of a freshly created Firebase user when the server refuses sign-up. Apple and SMS are NOT shown anywhere (server code kept, off unless AUTH_METHODS lists them). Server default methods `google,email`; `FIREBASE_PROJECT_ID` in server/.env (and must be set on Koyeb). Without Firebase the app falls back to its own password sign-in (tests, mock).
+- [x] Linking by e-mail/phone only when the existing account is verified too (anti pre-registration takeover) + tests.
+- [x] `npm run e2e:firebase` (real Firebase user -> live API, 9 checks) passes. `npm run e2e` 31 checks passes. 120 Flutter tests, 46 jest.
+- [x] iOS pods: `enable-swift-package-manager: false` in pubspec (SPM cannot resolve Firebase 13 + GoogleSignIn 9). Android builds fine. Version 2.2.0+4. Release files: release/usta-2.2.0.apk/.aab (debug-signed).
+- [ ] iPhone install pending: device was "unavailable" (locked / not connected). `flutter build ios --release --dart-define=API_BASE_URL=http://<mac-ip>:3000` then `xcrun devicectl device install app --device 00008101-001115563E3A001E build/ios/iphoneos/Runner.app`.
+- [ ] Koyeb runs `DATA_SOURCE=mock` (see its /health): to serve the real data set DATA_SOURCE=mongo, MONGODB_URI, DATABASE_NAME=usta_db, AUTH_SECRET, FIREBASE_PROJECT_ID there (Koyeb login was not available to me).
+- [ ] Google sign-in on a real device not exercised (needs a phone / Google account); Play-signing SHA-1 must be added for store builds.
+- Disk is ~99% full: free caches (Xcode DerivedData, ~/.gradle/caches) before builds; the test simulator iPhone 16 Pro was erased this session.
+
 ## Remaining
 - [ ] Firebase keys (then Google/Apple/SMS switch on), password reset.
 - [ ] Push notifications (FCM/APNs). Promotions/payments are test mode only (not advertised in README).

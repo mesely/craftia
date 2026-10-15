@@ -41,15 +41,18 @@ describe('Firebase sign-in (Google, Apple, SMS)', () => {
 
   it('stays passive until a Firebase project is configured', async () => {
     const { auth } = setup();
-    expect(auth.methods()).toEqual({ password: true, google: false, apple: false, phone: false });
+    expect(auth.methods()).toEqual({ password: true, firebase: false, google: false, email: false, apple: false, phone: false });
     await expect(auth.loginWithFirebase({ idToken: idToken(google) })).rejects.toBeInstanceOf(ServiceUnavailableException);
   });
 
   it('switches methods on from the environment', () => {
     process.env.FIREBASE_PROJECT_ID = PROJECT;
-    expect(setup().auth.methods()).toEqual({ password: true, google: true, apple: true, phone: true });
+    // Default: Google and e-mail. Apple and SMS stay off unless they are listed explicitly.
+    expect(setup().auth.methods()).toEqual({ password: true, firebase: true, google: true, email: true, apple: false, phone: false });
     process.env.AUTH_METHODS = 'google';
-    expect(setup().auth.methods()).toEqual({ password: true, google: true, apple: false, phone: false });
+    expect(setup().auth.methods()).toEqual({ password: true, firebase: true, google: true, email: false, apple: false, phone: false });
+    process.env.AUTH_METHODS = 'google,email,apple,phone';
+    expect(setup().auth.methods()).toMatchObject({ apple: true, phone: true });
   });
 
   it('asks a new person for a role first, then creates the account', async () => {
@@ -64,24 +67,44 @@ describe('Firebase sign-in (Google, Apple, SMS)', () => {
     expect('account' in again && again.account.name).toBe('Ayşe Yılmaz');
   });
 
-  it('lands a Google sign-in on the existing password account with the same verified e-mail', async () => {
+  it('registers and signs in with Firebase e-mail + password, with the usta listing', async () => {
     process.env.FIREBASE_PROJECT_ID = PROJECT;
     const { auth } = setup();
-    const created = await auth.register({ role: 'customer', name: 'Ayşe Yılmaz', phone: '05321234567', email: 'ayse@example.com', password: 'gizli123' });
+    const mail = { email: 'usta@example.com', email_verified: false, sub: 'uid-mail', firebase: { sign_in_provider: 'password' } };
+    const first = await auth.loginWithFirebase({ idToken: idToken(mail) });
+    expect(first).toMatchObject({ needsProfile: true });
+    const s = await auth.loginWithFirebase({ idToken: idToken(mail), role: 'provider', name: 'Ali Usta', phone: '05329998877', provider });
+    expect('account' in s && s.account).toMatchObject({ role: 'provider', email: 'usta@example.com', emailVerified: false, signInProvider: 'password' });
+    expect('account' in s && s.account.providerId).toBeTruthy();
+    const again = await auth.loginWithFirebase({ idToken: idToken(mail) });
+    expect('account' in again && again.account.name).toBe('Ali Usta');
+    // Once Firebase reports the address verified, the account learns it.
+    const verified = await auth.loginWithFirebase({ idToken: idToken({ ...mail, email_verified: true }) });
+    expect('account' in verified && verified.account.emailVerified).toBe(true);
+  });
+
+  it('links Google to an e-mail account only when that account verified its address', async () => {
+    process.env.FIREBASE_PROJECT_ID = PROJECT;
+    const { auth } = setup();
+    const mail = { email: 'ayse@example.com', email_verified: true, sub: 'uid-mail', firebase: { sign_in_provider: 'password' } };
+    const created = await auth.loginWithFirebase({ idToken: idToken(mail), role: 'customer', name: 'Ayşe Yılmaz' });
     const s = await auth.loginWithFirebase({ idToken: idToken(google) });
-    expect('account' in s && s.account.id).toBe(created.account.id);
+    expect('account' in s && s.account.id).toBe('account' in created ? created.account.id : '');
   });
 
-  it('never links by an unverified e-mail', async () => {
+  it('never links by an unverified account e-mail (no pre-registration hijack)', async () => {
     process.env.FIREBASE_PROJECT_ID = PROJECT;
     const { auth } = setup();
-    await auth.register({ role: 'customer', name: 'Ayşe Yılmaz', phone: '05321234567', email: 'ayse@example.com', password: 'gizli123' });
-    const s = await auth.loginWithFirebase({ idToken: idToken({ ...google, email_verified: false }) });
-    expect(s).toMatchObject({ needsProfile: true });
+    const mail = { email: 'ayse@example.com', email_verified: false, sub: 'uid-attacker', firebase: { sign_in_provider: 'password' } };
+    await auth.loginWithFirebase({ idToken: idToken(mail), role: 'customer', name: 'Saldırgan' });
+    const g = await auth.loginWithFirebase({ idToken: idToken(google) });
+    expect(g).toMatchObject({ needsProfile: true });
+    await expect(auth.loginWithFirebase({ idToken: idToken(google), role: 'customer' })).rejects.toBeDefined();
   });
 
-  it('signs in by SMS number and creates an usta with the listing', async () => {
+  it('SMS sign-in works when explicitly switched on, and creates an usta with the listing', async () => {
     process.env.FIREBASE_PROJECT_ID = PROJECT;
+    process.env.AUTH_METHODS = 'phone';
     const { auth } = setup();
     const sms = { phone_number: '+905329998877', firebase: { sign_in_provider: 'phone' }, sub: 'uid-sms' };
     const s = await auth.loginWithFirebase({ idToken: idToken(sms), role: 'provider', name: 'Ali Usta', provider });

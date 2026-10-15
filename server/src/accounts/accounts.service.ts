@@ -134,8 +134,15 @@ export class AccountsService {
    */
   async findFederated(id: { uid: string; email: string | null; emailVerified: boolean; phone: string | null }): Promise<AccountEntity | null> {
     let rec = (await this.store.find({ firebaseUid: id.uid }, { limit: 1 }))[0] ?? null;
-    if (!rec && id.email && id.emailVerified) rec = (await this.store.find({ email: id.email }, { limit: 1 }))[0] ?? null;
-    if (!rec && id.phone) rec = (await this.store.find({ phone: normalizePhone(id.phone) }, { limit: 1 }))[0] ?? null;
+    // Only a *verified* e-mail on both sides links accounts (stops pre-registering someone else's address).
+    if (!rec && id.email && id.emailVerified) {
+      const byMail = (await this.store.find({ email: id.email }, { limit: 1 }))[0] ?? null;
+      if (byMail?.emailVerified) rec = byMail;
+    }
+    if (!rec && id.phone) {
+      const byPhone = (await this.store.find({ phone: normalizePhone(id.phone) }, { limit: 1 }))[0] ?? null;
+      if (byPhone?.phoneVerified) rec = byPhone;
+    }
     if (!rec) return null;
     const patch: Partial<AccountRecord> = { firebaseUid: id.uid };
     if (id.email && id.emailVerified && rec.email === id.email) patch.emailVerified = true;

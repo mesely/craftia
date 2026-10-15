@@ -20,5 +20,5 @@ abstract final class AppConfig {
 
   static const supportEmail = 'destek@usta.app';
   static const legalEmail = 'hukuk@ustaapp.com';
-  static const appVersion = '2.1.0';
+  static const appVersion = '2.2.0';
 }

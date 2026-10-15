@@ -9,6 +9,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/utils/validators.dart';
 import 'auth_controller.dart';
 import 'widgets/auth_layout.dart';
+import 'widgets/federated_buttons.dart';
 import 'widgets/consent_checkbox.dart';
 
 class CustomerRegisterScreen extends ConsumerStatefulWidget {
@@ -158,6 +159,8 @@ class _CustomerRegisterScreenState
           ),
         ],
         const SizedBox(height: AppSpacing.lg),
+        const FederatedButtons(),
+        const SizedBox(height: AppSpacing.sm),
         Center(
           child: TextButton(
             onPressed: () => context.pushReplacement('/login'),

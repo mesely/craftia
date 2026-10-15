@@ -12,7 +12,8 @@
     "db:check": "node scripts/db-check.js",
     "db:cleanup-test": "node scripts/cleanup-test-data.js",
     "db:seed-demo": "node scripts/seed-demo-provider.js",
-    "e2e": "node scripts/e2e.js"
+    "e2e": "node scripts/e2e.js",
+    "e2e:firebase": "node scripts/e2e-firebase.js"
   },
   "jest": {
     "moduleFileExtensions": [

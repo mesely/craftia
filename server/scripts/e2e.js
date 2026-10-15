@@ -33,8 +33,9 @@ function ok(name, cond, extra = '') {
   const health = (await call('GET', '/health', { expect: 200 })).json;
   ok('health', health.status === 'ok', JSON.stringify(health));
   const methods = (await call('GET', '/auth/methods', { expect: 200 })).json;
-  ok('password sign-in is on, federated ones are passive', methods.password === true && typeof methods.google === 'boolean');
-  ok('federated sign-in answers 503 while switched off', methods.google || (await call('POST', '/auth/firebase', { body: { idToken: 'x'.repeat(30) } })).status === 503);
+  ok('password sign-in is on; Apple and SMS stay off', methods.password === true && methods.apple === false && methods.phone === false);
+  const bogus = (await call('POST', '/auth/firebase', { body: { idToken: 'x'.repeat(30) } })).status;
+  ok('federated sign-in refuses a forged token (401) or is switched off (503)', methods.firebase ? bogus === 401 : bogus === 503, String(bogus));
   const list = (await call('GET', '/providers?limit=5', { expect: 200 })).json;
   ok('public provider list works without a session', Array.isArray(list.items) && list.items.length > 0);
   ok('protected routes need a session', (await call('GET', '/service-requests?userId=x')).status === 401);

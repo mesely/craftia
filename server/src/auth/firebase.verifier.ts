@@ -12,7 +12,8 @@ export interface FederatedIdentity {
   signInProvider: string;
 }
 
-export type SignInMethod = 'google' | 'apple' | 'phone';
+/** `email` is Firebase e-mail + password. Apple and SMS code exist but stay off unless listed in AUTH_METHODS. */
+export type SignInMethod = 'google' | 'email' | 'apple' | 'phone';
 
 const CERTS_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
 
@@ -22,7 +23,7 @@ type KeyResolver = (kid: string) => Promise<string | null>;
  * Verifies Firebase Authentication ID tokens (Google, Apple, SMS phone …) without the Firebase
  * Admin SDK: RS256 signature against Google's published certificates plus the standard claim
  * checks. It stays passive until FIREBASE_PROJECT_ID is set; then `AUTH_METHODS`
- * (default `google,apple,phone`) says which buttons are switched on.
+ * (default `google,email`) says which sign-in methods are switched on.
  */
 @Injectable()
 export class FirebaseVerifier {
@@ -40,9 +41,9 @@ export class FirebaseVerifier {
 
   methods(): Record<SignInMethod, boolean> {
     const on = this.enabled
-      ? (process.env.AUTH_METHODS ?? 'google,apple,phone').split(',').map((m) => m.trim().toLowerCase())
+      ? (process.env.AUTH_METHODS || 'google,email').split(',').map((m) => m.trim().toLowerCase())
       : [];
-    return { google: on.includes('google'), apple: on.includes('apple'), phone: on.includes('phone') };
+    return { google: on.includes('google'), email: on.includes('email'), apple: on.includes('apple'), phone: on.includes('phone') };
   }
 
   private async certFor(kid: string): Promise<string | null> {

@@ -65,19 +65,23 @@ class AccountsRepository {
     }
   }
 
-  /// Google / Apple / SMS sign-in with a Firebase ID token. Returns a session, or what the
+  /// Sign-in with a Firebase ID token (Google or e-mail). Returns a session, or what the
   /// server suggests for a first-time person who still has to choose a role.
   Future<FederatedOutcome> firebaseLogin(
     String idToken, {
     String? role,
     String? name,
     String? phone,
+    String? email,
+    ProviderApplication? application,
   }) => guarded(() async {
     final json = await _remote.firebaseLogin({
       'idToken': idToken,
       'role': ?role,
       'name': ?name,
       'phone': ?phone,
+      'email': ?email,
+      'provider': ?application?.toJson(),
     });
     if (json['needsProfile'] == true) {
       final s = Map<String, dynamic>.from(json['suggested'] as Map? ?? {});

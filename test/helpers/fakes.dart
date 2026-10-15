@@ -7,7 +7,7 @@ import 'package:usta/core/errors/app_failure.dart';
 import 'package:usta/data/models/account.dart';
 import 'package:usta/data/models/auth_methods.dart';
 import 'package:usta/data/models/session.dart';
-import 'package:usta/features/auth/federated_sign_in.dart';
+import 'package:usta/features/auth/identity.dart';
 import 'package:usta/data/repositories/accounts_repository.dart';
 import 'package:usta/data/models/filter_state.dart';
 import 'package:usta/data/models/paged.dart';
@@ -152,6 +152,7 @@ class FakeAccountsRepository extends AccountsRepository {
   /// Which Firebase methods the "server" reports as switched on.
   Set<SignInMethod> enabledMethods = {};
   FederatedOutcome? nextOutcome;
+  AppFailure? firebaseFailure;
   final firebaseCalls = <String>[];
 
   @override
@@ -163,15 +164,19 @@ class FakeAccountsRepository extends AccountsRepository {
     String? role,
     String? name,
     String? phone,
+    String? email,
+    ProviderApplication? application,
   }) async {
-    firebaseCalls.add('$idToken|${role ?? ''}|${name ?? ''}');
+    firebaseCalls.add('$idToken|${role ?? ''}|${name ?? ''}|${email ?? ''}');
+    if (firebaseFailure != null) throw firebaseFailure!;
     if (role != null) {
+      if (application != null) applications.add(application);
       return FederatedOutcome.session(
         _create(
-          AccountRole.customer,
+          role == 'provider' ? AccountRole.provider : AccountRole.customer,
           name ?? 'Yeni',
           phone ?? '',
-          '$idToken@x.test',
+          email ?? '$idToken@x.test',
           'x',
         ),
       );
@@ -277,17 +282,45 @@ class FakeAccountsRepository extends AccountsRepository {
   }
 }
 
-class FakeFederatedSignIn implements FederatedSignIn {
-  FakeFederatedSignIn(this.token);
-
-  final String? token;
-  final asked = <SignInMethod>[];
+class FakeIdentity implements IdentityProvider {
+  FakeIdentity({this.google, this.available = true});
 
   @override
-  Future<String?> idToken(SignInMethod method) async {
-    asked.add(method);
-    return token;
+  final bool available;
+  final String? google;
+  final calls = <String>[];
+
+  @override
+  Future<String?> googleIdToken() async {
+    calls.add('google');
+    return google;
   }
+
+  @override
+  Future<String> emailIdToken(
+    String email,
+    String password, {
+    bool create = false,
+  }) async {
+    calls.add('${create ? 'create' : 'login'}:$email');
+    return 'tok-$email';
+  }
+
+  @override
+  Future<void> sendPasswordReset(String email) async =>
+      calls.add('reset:$email');
+
+  @override
+  Future<void> sendEmailVerification() async => calls.add('verify');
+
+  @override
+  Future<void> discardNewUser() async => calls.add('discard');
+
+  @override
+  Future<void> signOut() async => calls.add('signOut');
+
+  @override
+  Future<void> deleteUser() async => calls.add('deleteUser');
 }
 
 class FakePromotionsRepository extends PromotionsRepository {
@@ -383,7 +416,9 @@ List<Override> testOverrides({
   bool onboardingSeen = true,
   FakePromotionsRepository? promotions,
   FakeAccountsRepository? accountsRepo,
+  IdentityProvider? identity,
 }) => [
+  if (identity != null) identityProvider.overrideWithValue(identity),
   ustaRepositoryProvider.overrideWithValue(
     usta ??
         FakeUstaRepository(

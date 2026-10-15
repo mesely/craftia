@@ -7,7 +7,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/validators.dart';
+import '../../data/models/auth_methods.dart';
 import 'auth_controller.dart';
+import 'identity.dart';
 import 'widgets/auth_layout.dart';
 import 'widgets/federated_buttons.dart';
 
@@ -54,12 +56,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  /// With Firebase the account is an e-mail address, so the field says so.
+  bool get _viaEmail =>
+      ref.watch(identityProvider).available &&
+      (ref.watch(authMethodsProvider).value?.allows(SignInMethod.email) ??
+          false);
+
+  Future<void> _forgot() async {
+    final mail = _identifier.text.trim();
+    if (Validators.email(mail) != null) {
+      setState(() => _error = 'Önce e-posta adresini yaz, sonra buna dokun.');
+      return;
+    }
+    try {
+      await ref.read(authProvider.notifier).sendPasswordReset(mail);
+      if (!mounted) return;
+      setState(() => _error = null);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              'Şifre yenileme bağlantısını $mail adresine gönderdik.',
+            ),
+          ),
+        );
+    } catch (e) {
+      if (mounted) setState(() => _error = AppFailure.from(e).message);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AuthLayout(
       title: 'Giriş yap',
-      subtitle:
-          'Kayıt olurken kullandığın e-posta ya da telefon numarasıyla gir.',
+      subtitle: _viaEmail
+          ? 'Kayıt olurken kullandığın e-posta ve şifreyle gir.'
+          : 'Kayıt olurken kullandığın e-posta ya da telefon numarasıyla gir.',
       bottom: FilledButton(
         onPressed: _busy ? null : _submit,
         child: _busy
@@ -82,14 +115,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.username],
-                decoration: const InputDecoration(
-                  labelText: 'E-posta veya telefon',
+                decoration: InputDecoration(
+                  labelText: _viaEmail ? 'E-posta' : 'E-posta veya telefon',
                 ),
-                validator: (v) => Validators.required(
-                  v,
-                  'E-posta ya da telefon numaranı yaz.',
-                  min: 5,
-                ),
+                validator: (v) => _viaEmail
+                    ? Validators.email(v)
+                    : Validators.required(
+                        v,
+                        'E-posta ya da telefon numaranı yaz.',
+                        min: 5,
+                      ),
               ),
               const FormGap(),
               TextFormField(
@@ -110,6 +145,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ],
           ),
         ),
+        if (_viaEmail)
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: _forgot,
+              child: const Text('Şifremi unuttum'),
+            ),
+          ),
         if (_error != null) ...[
           const SizedBox(height: AppSpacing.md),
           Text(
