@@ -61,6 +61,17 @@ Flutter (Riverpod 3, go_router 18, Dio) --REST--> server/ (NestJS 12, Mongoose 9
 - [ ] Google sign-in on a real device not exercised (needs a phone / Google account); Play-signing SHA-1 must be added for store builds.
 - Disk is ~99% full: free caches (Xcode DerivedData, ~/.gradle/caches) before builds; the test simulator iPhone 16 Pro was erased this session.
 
+## Going live (production checklist, for the next stage)
+Where things stand: the apps built on 2026-10-15 (iOS on two iPhones, `release/usta-2.2.0.apk/.aab`) talk to the **developer Mac** at `http://192.168.1.121:3000`, so they only work while that Mac runs `server/` (`node dist/main.js`, `.env` with DATA_SOURCE=mongo) on the same Wi-Fi. Nothing is rebuilt for production yet, by decision.
+
+1. **Backend on Koyeb** (service already auto-deploys from `main` via the root `Dockerfile`; URL `https://dangerous-dulcia-mesely-636f9730.koyeb.app`, currently running `DATA_SOURCE=mock`). In the Koyeb service settings add: `DATA_SOURCE=mongo`, `MONGODB_URI` (from `server/.env`, never commit), `DATABASE_NAME=usta_db`, `AUTH_SECRET` (`openssl rand -hex 32`), `FIREBASE_PROJECT_ID=craftia-7608b`, optional `AUTH_METHODS` (default `google,email`), `PORT=7860` if Koyeb does not set it. Redeploy, then check `/health` says `mongo` and `/auth/methods` shows `firebase:true`.
+2. **MongoDB Atlas**: Network Access must allow Koyeb's outbound IPs (or 0.0.0.0/0 with a strong DB password).
+3. **Verify the live API** with the repo's own checks: `API=https://<koyeb-url> npm run e2e` and `API=https://<koyeb-url> FIREBASE_WEB_API_KEY=<web api key from lib/core/firebase/firebase_options.dart> npm run e2e:firebase` (both in `server/`; clean up with `npm run db:cleanup-test simtest-`).
+4. **Rebuild the apps against the live URL** (HTTPS, no Mac needed): `flutter build apk --release --dart-define=API_BASE_URL=https://<koyeb-url>`, same for `appbundle`, `ios --release`; iOS install: `xcrun devicectl device install app --device <udid> build/ios/iphoneos/Runner.app` (the profile must include the phone; building with `-d <udid>` refreshes it). Free ≥3 GB disk first.
+5. **Store release**: create an upload keystore (`android/key.properties`, see docs/RELEASE.md), add the **Play app-signing SHA-1/SHA-256** to Firebase (Android app `com.usta.usta`) or Google sign-in fails on store builds; iOS: App Store Connect build, privacy answers, review account. Enable Apple/SMS later only by adding them to `AUTH_METHODS` and adding the UI (server code is ready, app hides them).
+6. **Open product items**: legal texts need a lawyer's review; push notifications (FCM/APNs); Firebase email templates (Turkish), custom domain for the API; the 3 missing Lütfi price-list rows (12 of 15 restored); payments/promotions stay in test mode and are not advertised.
+7. **Housekeeping**: rotate `AUTH_SECRET` only deliberately (it signs sessions); disk on the dev Mac is ~99% full, clear `~/.gradle/caches` and Xcode DerivedData before builds.
+
 ## Remaining
 - [ ] Firebase keys (then Google/Apple/SMS switch on), password reset.
 - [ ] Push notifications (FCM/APNs). Promotions/payments are test mode only (not advertised in README).
