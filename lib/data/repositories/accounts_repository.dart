@@ -3,6 +3,7 @@ import '../datasources/remote_data_source.dart';
 import '../models/provider_application.dart';
 import '../models/session.dart';
 import '../models/account.dart';
+import '../models/auth_methods.dart';
 
 /// Sign-up, sign-in and the KVKK rights (data export, deletion), all against the database.
 class AccountsRepository {
@@ -55,6 +56,39 @@ class AccountsRepository {
       }),
     ),
   );
+
+  Future<AuthMethods> methods() async {
+    try {
+      return AuthMethods.fromJson(await _remote.authMethods());
+    } catch (_) {
+      return AuthMethods.none;
+    }
+  }
+
+  /// Google / Apple / SMS sign-in with a Firebase ID token. Returns a session, or what the
+  /// server suggests for a first-time person who still has to choose a role.
+  Future<FederatedOutcome> firebaseLogin(
+    String idToken, {
+    String? role,
+    String? name,
+    String? phone,
+  }) => guarded(() async {
+    final json = await _remote.firebaseLogin({
+      'idToken': idToken,
+      'role': ?role,
+      'name': ?name,
+      'phone': ?phone,
+    });
+    if (json['needsProfile'] == true) {
+      final s = Map<String, dynamic>.from(json['suggested'] as Map? ?? {});
+      return FederatedOutcome.needsProfile({
+        'name': '${s['name'] ?? ''}',
+        'email': '${s['email'] ?? ''}',
+        'phone': '${s['phone'] ?? ''}',
+      });
+    }
+    return FederatedOutcome.session(Session.fromJson(json));
+  });
 
   /// A signed-in customer who starts offering services.
   Future<Session> upgrade(ProviderApplication application) => guarded(

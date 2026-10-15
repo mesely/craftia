@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/account.dart';
+import '../../data/models/auth_methods.dart';
 import '../../data/models/provider_application.dart';
 import '../../data/models/session.dart';
 import '../../data/providers.dart';
@@ -87,6 +88,38 @@ class AuthController extends Notifier<AuthState> {
   /// Throws an [AppFailure] with a Turkish message when the details do not match.
   Future<Account> signIn(String identifier, String password) async => _start(
     await ref.read(accountsRepositoryProvider).login(identifier, password),
+  );
+
+  /// Google / Apple / SMS. Returns the signed-in account, or null when the person has to say who
+  /// they are first (see [completeFederated]) or closed the sheet.
+  Future<FederatedOutcome?> signInWith(
+    SignInMethod method,
+    String? idToken,
+  ) async {
+    if (idToken == null) return null;
+    final outcome = await ref
+        .read(accountsRepositoryProvider)
+        .firebaseLogin(idToken);
+    if (!outcome.needsProfile) await _start(outcome.session as Session);
+    return outcome;
+  }
+
+  /// The second step for someone new: they chose a role and confirmed their name.
+  Future<Account> completeFederated(
+    String idToken, {
+    required String name,
+    String? phone,
+  }) async => _start(
+    (await ref
+                .read(accountsRepositoryProvider)
+                .firebaseLogin(
+                  idToken,
+                  role: 'customer',
+                  name: name,
+                  phone: phone,
+                ))
+            .session
+        as Session,
   );
 
   Future<void> signOut() async {

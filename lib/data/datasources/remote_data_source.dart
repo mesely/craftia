@@ -99,6 +99,12 @@ class RemoteDataSource {
   Future<Map<String, dynamic>> login(Map<String, dynamic> body) async =>
       _asMap(await _api.post('/auth/login', body: body));
 
+  Future<Map<String, dynamic>> authMethods() async =>
+      _asMap(await _api.get('/auth/methods'));
+
+  Future<Map<String, dynamic>> firebaseLogin(Map<String, dynamic> body) async =>
+      _asMap(await _api.post('/auth/firebase', body: body));
+
   Future<Map<String, dynamic>> upgrade(Map<String, dynamic> body) async =>
       _asMap(await _api.post('/auth/upgrade', body: body));
 

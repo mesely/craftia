@@ -5,7 +5,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:usta/data/datasources/remote_data_source.dart';
 import 'package:usta/core/errors/app_failure.dart';
 import 'package:usta/data/models/account.dart';
+import 'package:usta/data/models/auth_methods.dart';
 import 'package:usta/data/models/session.dart';
+import 'package:usta/features/auth/federated_sign_in.dart';
 import 'package:usta/data/repositories/accounts_repository.dart';
 import 'package:usta/data/models/filter_state.dart';
 import 'package:usta/data/models/paged.dart';
@@ -147,6 +149,45 @@ class FakeAccountsRepository extends AccountsRepository {
   String? deleted;
   var _next = 0;
 
+  /// Which Firebase methods the "server" reports as switched on.
+  Set<SignInMethod> enabledMethods = {};
+  FederatedOutcome? nextOutcome;
+  final firebaseCalls = <String>[];
+
+  @override
+  Future<AuthMethods> methods() async => AuthMethods(enabled: enabledMethods);
+
+  @override
+  Future<FederatedOutcome> firebaseLogin(
+    String idToken, {
+    String? role,
+    String? name,
+    String? phone,
+  }) async {
+    firebaseCalls.add('$idToken|${role ?? ''}|${name ?? ''}');
+    if (role != null) {
+      return FederatedOutcome.session(
+        _create(
+          AccountRole.customer,
+          name ?? 'Yeni',
+          phone ?? '',
+          '$idToken@x.test',
+          'x',
+        ),
+      );
+    }
+    return nextOutcome ??
+        FederatedOutcome.session(
+          _create(
+            AccountRole.customer,
+            'Google Kişi',
+            '0555$idToken',
+            '$idToken@x.test',
+            'x',
+          ),
+        );
+  }
+
   static String _norm(String v) =>
       v.trim().toLowerCase().replaceAll(RegExp(r'\s'), '');
 
@@ -233,6 +274,19 @@ class FakeAccountsRepository extends AccountsRepository {
   Future<void> deleteAccount(String accountId) async {
     deleted = accountId;
     accounts.removeWhere((a) => a.id == accountId);
+  }
+}
+
+class FakeFederatedSignIn implements FederatedSignIn {
+  FakeFederatedSignIn(this.token);
+
+  final String? token;
+  final asked = <SignInMethod>[];
+
+  @override
+  Future<String?> idToken(SignInMethod method) async {
+    asked.add(method);
+    return token;
   }
 }
 

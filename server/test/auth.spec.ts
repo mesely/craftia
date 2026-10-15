@@ -3,6 +3,7 @@ import { AccountsService } from '../src/accounts/accounts.service';
 import { AttachmentsService } from '../src/attachments/attachments.service';
 import { AuthGuard } from '../src/auth/auth.guard';
 import { AuthService } from '../src/auth/auth.service';
+import { FirebaseVerifier } from '../src/auth/firebase.verifier';
 import { TokenService } from '../src/auth/token.service';
 import { StoreFactory } from '../src/common/store';
 import { MockProvidersRepository } from '../src/providers/providers.mock.repository';
@@ -13,7 +14,7 @@ function setup() {
   const accounts = new AccountsService(stores);
   const providers = new ProvidersService(new MockProvidersRepository(), accounts, new AttachmentsService(stores));
   const tokens = new TokenService();
-  const auth = new AuthService(accounts, providers, tokens);
+  const auth = new AuthService(accounts, providers, tokens, new FirebaseVerifier());
   const guard = new AuthGuard(tokens, accounts);
   return { accounts, auth, tokens, guard, stores };
 }

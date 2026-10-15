@@ -9,12 +9,18 @@ export interface AccountEntity {
   email: string;
   /** The `providers` document this account manages (usta accounts only). */
   providerId: string | null;
+  /** Verified by a trusted sign-in (Firebase). Plain password sign-ups are unverified for now. */
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  /** `password`, `google.com`, `apple.com`, `phone` … */
+  signInProvider: string;
   termsAcceptedAt: string;
   createdAt: string;
 }
 
 /** What is stored: the account plus a salted scrypt hash of the password. */
 export interface AccountRecord extends AccountEntity {
+  firebaseUid?: string;
   passwordHash?: string;
   passwordSalt?: string;
 }

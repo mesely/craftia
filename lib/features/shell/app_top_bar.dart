@@ -10,7 +10,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/network_image.dart';
 import '../auth/auth_controller.dart';
+import '../discovery/discovery_providers.dart';
 import '../orders/requests_controller.dart';
 
 /// Always on top of the main tabs: the brand on the left; notifications and the profile button
@@ -80,7 +82,10 @@ class AppTopBar extends ConsumerWidget {
               const Spacer(),
               _BellButton(unread: unread),
               const SizedBox(width: AppSpacing.xs),
-              _ProfileButton(initials: _initials(account.name)),
+              _ProfileButton(
+                initials: _initials(account.name),
+                providerId: account.providerId,
+              ),
             ],
           ],
         ),
@@ -155,14 +160,19 @@ class _BellButton extends StatelessWidget {
   }
 }
 
-class _ProfileButton extends StatelessWidget {
-  const _ProfileButton({required this.initials});
+class _ProfileButton extends ConsumerWidget {
+  const _ProfileButton({required this.initials, this.providerId});
 
   final String initials;
+  final String? providerId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final box = context.ui.tapTarget;
+    // An usta shows their own profile photo; everyone else shows their initials.
+    final photo = providerId == null
+        ? null
+        : ref.watch(ustaDetailProvider(providerId!)).value?.profileImage;
     return Semantics(
       button: true,
       label: 'Profilim',
@@ -184,10 +194,20 @@ class _ProfileButton extends StatelessWidget {
                   AppBorders.hairline.copyWith(color: AppColors.primary),
                 ),
               ),
-              child: Text(
-                initials,
-                style: AppTypography.label.copyWith(color: AppColors.primary),
-              ),
+              clipBehavior: Clip.antiAlias,
+              child: photo != null
+                  ? AppNetworkImage(
+                      url: photo,
+                      width: box - 10,
+                      height: box - 10,
+                      cacheWidth: 160,
+                    )
+                  : Text(
+                      initials,
+                      style: AppTypography.label.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
             ),
           ),
         ),

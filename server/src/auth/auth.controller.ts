@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import type { Request } from 'express';
-import { LoginDto, RegisterDto, UpgradeDto } from './auth.dto';
+import { FirebaseLoginDto, LoginDto, RegisterDto, UpgradeDto } from './auth.dto';
 import { AuthService } from './auth.service';
 
 type Authed = Request & { accountId?: string };
@@ -17,6 +17,16 @@ export class AuthController {
   @Post('login')
   login(@Body() body: LoginDto) {
     return this.auth.login(body);
+  }
+
+  @Get('methods')
+  methods() {
+    return this.auth.methods();
+  }
+
+  @Post('firebase')
+  firebase(@Body() body: FirebaseLoginDto) {
+    return this.auth.loginWithFirebase(body);
   }
 
   @Post('upgrade')

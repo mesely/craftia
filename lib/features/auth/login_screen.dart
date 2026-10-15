@@ -9,6 +9,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/utils/validators.dart';
 import 'auth_controller.dart';
 import 'widgets/auth_layout.dart';
+import 'widgets/federated_buttons.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -116,7 +117,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             style: AppTypography.body.copyWith(color: AppColors.danger),
           ),
         ],
-        const SizedBox(height: AppSpacing.xxl),
+        const SizedBox(height: AppSpacing.xl),
+        const FederatedButtons(),
+        const SizedBox(height: AppSpacing.xl),
         Text('Hesabın yok mu?', style: AppTypography.titleSm),
         const SizedBox(height: AppSpacing.sm),
         OutlinedButton(

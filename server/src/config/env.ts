@@ -25,7 +25,7 @@ export function loadConfig(): AppConfig {
     port: Number(process.env.PORT) || 3000,
     dataSource,
     mongoUri,
-    databaseName: process.env.DATABASE_NAME || 'usta',
+    databaseName: process.env.DATABASE_NAME || 'usta_db',
   };
 }
 

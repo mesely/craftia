@@ -32,3 +32,4 @@ export class Logger {
   log(): void {}
 }
 export const CanActivate = undefined;
+export class ServiceUnavailableException extends HttpError {}

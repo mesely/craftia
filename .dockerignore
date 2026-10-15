@@ -1,0 +1,16 @@
+.git
+.dart_tool
+build
+release
+android
+ios
+lib
+test
+assets
+docs
+config
+frontend
+server/node_modules
+server/dist
+server/seed-media
+server/.env

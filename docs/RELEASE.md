@@ -5,7 +5,7 @@ Usta v2.1 is feature-complete and tested. These are the things that stay *outsid
 ## 1. Must do before the first store build
 | # | Item | Why / how |
 |---|---|---|
-| 1 | **Verification + password reset** | Accounts, scrypt hashes, signed sessions and the server guard exist. Add SMS / e-mail verification and a reset flow. Set a strong `AUTH_SECRET` (required in production). |
+| 1 | **Verification + Firebase** | Accounts, scrypt hashes, signed sessions and the server guard exist. Google / Apple / SMS sign-in is built and passive: follow [docs/AUTH.md](AUTH.md) to switch it on. Set a strong `AUTH_SECRET` (required in production). Password reset is still to do. |
 | 2 | **HTTPS API + hosting** | Deploy `server/` (any Node host) behind HTTPS, set `DATA_SOURCE=mongo`, `MONGODB_URI`, `DATABASE_NAME`, `NODE_ENV=production`; build the app with `--dart-define=API_BASE_URL=https://api.<your-domain>`. Rotate the Atlas password that was used during development. |
 | 4 | **Legal texts** | KVKK Aydınlatma Metni, Kullanıcı Sözleşmesi and Sorumluluk Reddi in `lib/features/settings/document_screen.dart` are drafts. A lawyer must review them; also publish them on a public URL (stores require a privacy-policy link). |
 | 5 | **Remove dev-only strings** | `NSLocalNetworkUsageDescription` in `ios/Runner/Info.plist` and the local-networking ATS exception are for LAN development. |

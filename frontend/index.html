@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Usta · Yakınındaki ustayı bul</title>
+<meta name="description" content="Elektrik, su tesisatı, klima, boya ve daha fazlası için yakınındaki ustayı bul, karşılaştır, ara ya da uygulamadan yaz.">
+<link rel="icon" href="icon.png">
+<style>
+  :root { --bg:#F4F6FA; --surface:#fff; --ink:#14181F; --muted:#4A5362; --primary:#0F4C9A; --soft:#DDE9F8; --border:#DDE2EA; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0E1218; --surface:#171C25; --ink:#EEF1F6; --muted:#B4BCC9; --primary:#6AA6F0; --soft:#1C2F4A; --border:#2C3544; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.55 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); }
+  header, section, footer { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+  .hero { padding-top: 56px; text-align: center; }
+  .hero img.icon { width: 96px; height: 96px; border-radius: 22px; }
+  h1 { font-size: clamp(32px, 6vw, 52px); line-height: 1.1; letter-spacing: -0.02em; margin: 20px 0 12px; }
+  .lead { color: var(--muted); max-width: 620px; margin: 0 auto; font-size: 18px; }
+  .shots { display:flex; gap:16px; overflow-x:auto; padding: 36px 4px 12px; scroll-snap-type: x mandatory; }
+  .shots img { height: 520px; border-radius: 28px; border:1px solid var(--border); scroll-snap-align: center; flex: 0 0 auto; }
+  h2 { font-size: 26px; letter-spacing: -0.01em; margin: 56px 0 16px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px; }
+  .card b { display:block; margin-bottom:4px; }
+  .card span { color: var(--muted); font-size: 15px; }
+  a.btn { display:inline-block; margin-top:22px; padding:12px 22px; border-radius:12px; background:var(--primary); color:var(--bg); text-decoration:none; font-weight:600; }
+  footer { padding: 40px 20px 56px; color: var(--muted); font-size: 14px; text-align:center; }
+</style>
+</head>
+<body>
+<header class="hero">
+  <img class="icon" src="icon.png" alt="Usta uygulama ikonu">
+  <h1>Hangi ustaya ihtiyacın var?</h1>
+  <p class="lead">Bir resme dokun, yakınındaki ustaları gör, puanlara ve fiyat listesine bak; ara ya da uygulamadan yaz. Ustalar için kendi iş paneli ile.</p>
+  <a class="btn" href="https://github.com/mesely/craftia">Kaynak kodu ve dokümantasyon</a>
+  <div class="shots" aria-label="Uygulamadan ekranlar">
+    <img src="screens/welcome-choices.png" alt="Karşılama" loading="lazy">
+    <img src="screens/home.png" alt="Ana sayfa" loading="lazy">
+    <img src="screens/detail.png" alt="Usta sayfası" loading="lazy">
+    <img src="screens/detail-work.png" alt="Yapılan işler" loading="lazy">
+    <img src="screens/chat.png" alt="Sohbet" loading="lazy">
+    <img src="screens/home-dark.png" alt="Koyu tema" loading="lazy">
+    <img src="screens/usta-panel.png" alt="Usta paneli" loading="lazy">
+  </div>
+</header>
+<section>
+  <h2>Neden Usta?</h2>
+  <div class="grid">
+    <div class="card"><b>Tek ekranda hizmet ve usta</b><span>Dokuz resimli hizmet kutusu, hemen altında yakındaki ustalar.</span></div>
+    <div class="card"><b>Gerçek veri</b><span>9 000'den fazla usta kaydı; olmayan fiyat uydurulmaz.</span></div>
+    <div class="card"><b>Uygulama içi yazışma</b><span>Sohbet, fotoğraf, yanıtla, düzenle ve hazır mesajlar.</span></div>
+    <div class="card"><b>Herkes için erişilebilir</b><span>Üç yazı boyutu, koyu tema, WCAG AA kontrast.</span></div>
+    <div class="card"><b>Ustalar için panel</b><span>Gelen talepler, profil, fiyat listesi ve iş fotoğrafları.</span></div>
+    <div class="card"><b>Şeffaf ve güvenli</b><span>KVKK metinleri, veri indirme, şikayet ve resmi başvuru yolları.</span></div>
+  </div>
+</section>
+<footer>Usta · Flutter, NestJS ve MongoDB ile geliştirildi.</footer>
+</body>
+</html>

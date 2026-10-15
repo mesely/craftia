@@ -17,7 +17,7 @@ const mongoose = require('mongoose');
   const convs = await db.collection('conversations').find({ customerId: rx }).toArray();
   const ids = convs.map((c) => c._id);
   const demoProviders = [
-    ...(await db.collection('providers').find({ isDemo: true }, { projection: { _id: 1 } }).toArray()).map((p) => String(p._id)),
+    ...(await db.collection('providers').find({ $or: [{ isDemo: true }, { businessName: 'E2E Elektrik' }] }, { projection: { _id: 1 } }).toArray()).map((p) => String(p._id)),
     ...testProviderIds,
   ];
   const demoConvs = await db.collection('conversations').find({ providerId: { $in: demoProviders } }).toArray();
@@ -29,7 +29,7 @@ const mongoose = require('mongoose');
     orders: (await db.collection('orders').deleteMany({ $or: [{ userId: rx }, { providerId: { $in: demoProviders } }] })).deletedCount,
     complaints: (await db.collection('complaints').deleteMany({ reporterId: rx })).deletedCount,
     accounts: (await db.collection('app_accounts').deleteMany({ $or: [{ _id: rx }, { providerId: { $in: demoProviders } }] })).deletedCount,
-    demoProviders: (await db.collection('providers').deleteMany({ $or: [{ isDemo: true }, { _id: { $in: testProviderIds.filter((i) => /^[a-f\d]{24}$/i.test(i)).map((i) => new mongoose.Types.ObjectId(i)) } }] })).deletedCount,
+    demoProviders: (await db.collection('providers').deleteMany({ $or: [{ isDemo: true }, { businessName: 'E2E Elektrik' }, { _id: { $in: testProviderIds.filter((i) => /^[a-f\d]{24}$/i.test(i)).map((i) => new mongoose.Types.ObjectId(i)) } }] })).deletedCount,
   };
   console.log(report);
   await mongoose.disconnect();

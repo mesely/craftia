@@ -16,7 +16,8 @@ const PUBLIC: Array<{ method: string; test: RegExp }> = [
   { method: 'GET', test: /^\/providers(\/[a-f\d]{24}|\/[\w-]+)?$/ },
   { method: 'GET', test: /^\/providers\/[\w-]+\/reviews$/ },
   { method: 'GET', test: /^\/attachments\/[\w-]+$/ },
-  { method: 'POST', test: /^\/auth\/(register|login)$/ },
+  { method: 'GET', test: /^\/auth\/methods$/ },
+  { method: 'POST', test: /^\/auth\/(register|login|firebase)$/ },
 ];
 
 @Injectable()

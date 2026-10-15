@@ -17,8 +17,9 @@ export const normalizeIdentifier = (raw: string): { email?: string; phone?: stri
   return t.includes('@') ? { email: t } : { phone: normalizePhone(t) };
 };
 
-const strip = ({ passwordHash, passwordSalt, ...account }: AccountRecord): AccountEntity => {
+const strip = ({ passwordHash, passwordSalt, firebaseUid, ...account }: AccountRecord): AccountEntity => {
   void passwordHash;
+  void firebaseUid;
   void passwordSalt;
   return account;
 };
@@ -46,7 +47,17 @@ export class AccountsService {
     };
     if (await this.store.get(dto.id)) return strip((await this.store.update(dto.id, patch))!);
     const now = new Date().toISOString();
-    return strip(await this.store.insert({ id: dto.id, ...patch, termsAcceptedAt: now, createdAt: now }));
+    return strip(
+      await this.store.insert({
+        id: dto.id,
+        ...patch,
+        emailVerified: false,
+        phoneVerified: false,
+        signInProvider: 'password',
+        termsAcceptedAt: now,
+        createdAt: now,
+      }),
+    );
   }
 
   private async byContact(email?: string, phone?: string): Promise<AccountRecord | null> {
@@ -88,6 +99,9 @@ export class AccountsService {
         providerId: input.providerId ?? null,
         passwordHash: hash,
         passwordSalt: salt,
+        emailVerified: false,
+        phoneVerified: false,
+        signInProvider: 'password',
         termsAcceptedAt: now,
         createdAt: now,
       }),
@@ -112,6 +126,50 @@ export class AccountsService {
     }
     this.failures.delete(key);
     return strip(record!);
+  }
+
+  /**
+   * The account for a verified federated identity: by Firebase uid first, then by a *verified*
+   * e-mail or phone (so a Google sign-in lands on the same person's existing account).
+   */
+  async findFederated(id: { uid: string; email: string | null; emailVerified: boolean; phone: string | null }): Promise<AccountEntity | null> {
+    let rec = (await this.store.find({ firebaseUid: id.uid }, { limit: 1 }))[0] ?? null;
+    if (!rec && id.email && id.emailVerified) rec = (await this.store.find({ email: id.email }, { limit: 1 }))[0] ?? null;
+    if (!rec && id.phone) rec = (await this.store.find({ phone: normalizePhone(id.phone) }, { limit: 1 }))[0] ?? null;
+    if (!rec) return null;
+    const patch: Partial<AccountRecord> = { firebaseUid: id.uid };
+    if (id.email && id.emailVerified && rec.email === id.email) patch.emailVerified = true;
+    if (id.phone && rec.phone === normalizePhone(id.phone)) patch.phoneVerified = true;
+    return strip((await this.store.update(rec.id, patch))!);
+  }
+
+  async registerFederated(input: {
+    identity: { uid: string; email: string | null; emailVerified: boolean; phone: string | null; signInProvider: string };
+    role: AccountRole;
+    name: string;
+    phone?: string;
+    email?: string;
+    providerId?: string | null;
+  }): Promise<AccountEntity> {
+    const email = (input.identity.email ?? input.email ?? '').trim().toLowerCase();
+    const phone = input.identity.phone ? normalizePhone(input.identity.phone) : input.phone ? normalizePhone(input.phone) : '';
+    await this.assertAvailable(email, phone);
+    const now = new Date().toISOString();
+    return strip(
+      await this.store.insert({
+        role: input.role,
+        name: input.name.trim(),
+        phone,
+        email,
+        providerId: input.providerId ?? null,
+        firebaseUid: input.identity.uid,
+        emailVerified: !!input.identity.email && input.identity.emailVerified,
+        phoneVerified: !!input.identity.phone,
+        signInProvider: input.identity.signInProvider,
+        termsAcceptedAt: now,
+        createdAt: now,
+      }),
+    );
   }
 
   async knows(identifier: string): Promise<boolean> {

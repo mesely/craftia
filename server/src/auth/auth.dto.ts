@@ -20,3 +20,13 @@ export class LoginDto {
 export class UpgradeDto {
   @ValidateNested() @Type(() => CreateProviderDto) provider: CreateProviderDto;
 }
+
+/** Sign-in with a Firebase ID token (Google, Apple or SMS). New people also say who they are. */
+export class FirebaseLoginDto {
+  @IsString() @MinLength(20) @MaxLength(4096) idToken: string;
+  @IsIn(['customer', 'provider']) @IsOptional() role?: 'customer' | 'provider';
+  @IsString() @MinLength(2) @MaxLength(80) @IsOptional() name?: string;
+  @IsString() @MinLength(10) @MaxLength(20) @IsOptional() phone?: string;
+  @IsEmail({}, { message: 'E-posta adresi geçersiz.' }) @IsOptional() email?: string;
+  @ValidateNested() @Type(() => CreateProviderDto) @IsOptional() provider?: CreateProviderDto;
+}

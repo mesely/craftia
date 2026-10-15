@@ -44,9 +44,16 @@ Flutter (Riverpod 3, go_router 18, Dio) --REST--> server/ (NestJS 12, Mongoose 9
 - [x] Release artifacts (gitignored `release/`): usta-2.1.0.apk/.aab (debug-signed until `android/key.properties` exists), iOS installed on the iPhone.
 - Tests: 111 Flutter, 37 server.
 
+## v2.3 (this session)
+- [x] **Firebase-ready sign-in, passive**: server `auth/firebase.verifier.ts` verifies Firebase ID tokens (RS256 vs Google certs, aud/iss/exp), `POST /auth/firebase`, `GET /auth/methods`; `FIREBASE_PROJECT_ID` empty => all three (google/apple/phone) off (503), `AUTH_METHODS` picks a subset. Accounts gained `emailVerified/phoneVerified/signInProvider/firebaseUid` (never returned: uid). Linking only by *verified* e-mail/phone. Client: `FederatedSignIn` interface (default `NotConfiguredFederatedSignIn`), `FederatedButtons` on login screen (disabled + "yakında açılacak" until server says on), name dialog for new people. To enable: docs/AUTH.md (3 steps; needs firebase_auth plugin + google-services files).
+- [x] Deploy fix: root `Dockerfile` rewritten for `server/` (multi-stage, node 20, healthcheck, non-root) - old one built deleted microservices (Koyeb failed); `vercel.json` + static `frontend/` landing page (Vercel failed because the old Next.js app was gone). Verified locally: `npm ci` + build + prune + start + /health. TokenService no longer crashes in production without AUTH_SECRET (derives key from MONGODB_URI, warns) - still set AUTH_SECRET on the host. Koyeb needs env: DATA_SOURCE=mongo, MONGODB_URI, DATABASE_NAME=usta_db, AUTH_SECRET, PORT.
+- [x] Top-right profile button shows the usta's profile photo (initials for others). Screenshots re-taken with real Lütfi photos (light/dark, panel, page).
+- [x] `npm run e2e` (server/scripts/e2e.js): 31 HTTP checks, passes on mock and on Atlas.
+- Tests: 115 Flutter, 45 server jest, 31 e2e.
+
 ## Remaining
-- [ ] SMS / e-mail verification and password reset (accounts and sessions are real now).
-- [ ] Push notifications (FCM/APNs); payments for "Öne çıkan" (currently info/mailto only).
+- [ ] Firebase keys (then Google/Apple/SMS switch on), password reset.
+- [ ] Push notifications (FCM/APNs). Promotions/payments are test mode only (not advertised in README).
 - [ ] Lawyer review of legal texts; App Store / Play signing.
 - [ ] Atlas data quality: coordinates vs city mismatches, almost no photos/prices (UI never invents them).
 - [ ] Atlas still holds test data with prefixes `simtest-`/`smoketest-` and demo providers: run `cd server && npm run db:cleanup-test simtest-` (and `smoketest-`) when finished testing.
@@ -70,8 +77,8 @@ NEVER PUT CREDENTIALS OR SECRETS HERE.
 
 ## Validation (last run)
 - flutter analyze: no issues
-- flutter test: 111 passed
-- server: `npm test` 37 passed, `npm run build` ok
+- flutter test: 115 passed
+- server: `npm test` 45 passed + `npm run e2e` 31 checks, `npm run build` ok
 - Simulator (iPhone 16 Pro) verified: home, detail, contact sheet, chat, requests, notifications, settings, official page, welcome, dark theme live switch.
 
 ## Known Issues

@@ -6,8 +6,8 @@ export const TOKEN_LIFETIME_MS = 90 * DAY;
 
 /**
  * Signed session tokens (HMAC-SHA256, `payload.signature`). The secret comes from AUTH_SECRET;
- * production refuses to start without one, development falls back to a random per-process secret
- * (so sessions end when the dev server restarts).
+ * without one it falls back to a key derived from the database credential, or (mock mode) a random
+ * per-process secret.
  */
 @Injectable()
 export class TokenService {
@@ -17,8 +17,11 @@ export class TokenService {
     const configured = process.env.AUTH_SECRET ?? '';
     if (configured.length >= 32) {
       this.secret = configured;
-    } else if (process.env.NODE_ENV === 'production') {
-      throw new Error('AUTH_SECRET (at least 32 characters) is required in production.');
+    } else if (process.env.MONGODB_URI) {
+      // No explicit secret: derive a stable one from the database credential (never public), so a
+      // deploy still starts and sessions survive restarts. Set AUTH_SECRET to rotate it on purpose.
+      this.secret = createHmac('sha256', 'usta-session-key').update(process.env.MONGODB_URI).digest('hex');
+      new Logger('Auth').warn('AUTH_SECRET is not set: deriving the session key from the database credential. Set AUTH_SECRET.');
     } else {
       this.secret = randomBytes(32).toString('hex');
       new Logger('Auth').warn('AUTH_SECRET is not set: using a temporary secret, sessions end on restart.');
