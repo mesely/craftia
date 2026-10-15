@@ -9,7 +9,8 @@
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main.js",
     "test": "jest",
-    "db:check": "node scripts/db-check.js"
+    "db:check": "node scripts/db-check.js",
+    "db:cleanup-test": "node scripts/cleanup-test-data.js"
   },
   "jest": {
     "moduleFileExtensions": [
