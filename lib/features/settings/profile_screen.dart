@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/accessibility/ui_scale.dart';
-import '../../core/accessibility/ui_scale_controller.dart';
 import '../../core/config/app_config.dart';
 import '../../core/icons/usta_icon.dart';
 import '../../core/icons/usta_icons.dart';
@@ -12,199 +11,302 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
-import '../../core/widgets/choice_tile.dart';
+import '../../core/utils/contact_launcher.dart';
+import '../../core/utils/formatters.dart';
+import '../../data/models/account.dart';
+import '../auth/auth_controller.dart';
+import '../orders/requests_controller.dart';
 
-class ProfileScreen extends StatelessWidget {
+/// Profilim: who I am here, and — for an usta — the small control panel for their listing.
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final account = ref.watch(authProvider.select((s) => s.account));
+    final gutter = context.ui.gutter;
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: EdgeInsets.fromLTRB(
-            context.ui.gutter,
-            AppSpacing.lg,
-            context.ui.gutter,
-            AppSpacing.xxl,
-          ),
-          children: [
-            const Text('Profil', style: AppTypography.display),
-            const SizedBox(height: AppSpacing.xl),
-            const _UiSizeSection(),
-            const SizedBox(height: AppSpacing.xxl),
-            _Group(
-              children: [
-                _Row(
-                  icon: UstaIcons.user,
-                  label: 'Usta olarak kaydol',
-                  caption: 'Çevrendeki müşteriler seni bulsun',
-                  onTap: () => context.push('/profile/become-provider'),
-                ),
-                _Row(
-                  icon: UstaIcons.help,
-                  label: 'Destek',
-                  onTap: () => context.push('/profile/support'),
-                ),
-                _Row(
-                  icon: UstaIcons.search,
-                  label: 'Uygulama rehberi',
-                  onTap: () => context.push('/profile/guide'),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            _Group(
-              children: [
-                _Row(
-                  icon: UstaIcons.document,
-                  label: 'Kullanıcı sözleşmesi',
-                  onTap: () => context.push('/profile/legal/agreement'),
-                ),
-                _Row(
-                  icon: UstaIcons.shield,
-                  label: 'KVKK aydınlatma metni',
-                  onTap: () => context.push('/profile/legal/kvkk'),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            Center(
-              child: Text(
-                'Usta v${AppConfig.appVersion}',
-                style: AppTypography.caption,
-              ),
-            ),
-          ],
+      appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'Geri',
+          icon: const UstaIcon(UstaIcons.arrowLeft, size: 26),
+          onPressed: () => context.canPop() ? context.pop() : context.go('/'),
         ),
       ),
+      body: account == null
+          ? Center(
+              child: Padding(
+                padding: EdgeInsets.all(gutter),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Profilini görmek için giriş yap',
+                      style: AppTypography.titleSm,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    FilledButton(
+                      onPressed: () => context.push('/login'),
+                      child: const Text('Giriş yap'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : ListView(
+              padding: EdgeInsets.fromLTRB(gutter, 0, gutter, AppSpacing.xxxl),
+              children: [
+                _Header(account: account),
+                const SizedBox(height: AppSpacing.xxl),
+                if (account.isProvider)
+                  _ProviderPanel(account: account)
+                else
+                  _BecomeProviderCard(),
+              ],
+            ),
     );
   }
 }
 
-/// "Arayüz Boyutu": text, buttons and spacing grow together. The phone's own font
-/// size setting still applies on top of this.
-class _UiSizeSection extends ConsumerWidget {
-  const _UiSizeSection();
+class _Header extends StatelessWidget {
+  const _Header({required this.account});
+
+  final Account account;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final current = ref.watch(uiScaleProvider);
-    final controller = ref.read(uiScaleProvider.notifier);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) {
+    final initials = initialsOf(account.name);
+    return Row(
       children: [
-        Row(
-          children: [
-            const UstaIcon(
-              UstaIcons.textSize,
-              size: 26,
-              color: AppColors.primary,
+        Container(
+          width: 72,
+          height: 72,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.primarySoft,
+            borderRadius: AppRadius.borderLg,
+            border: Border.fromBorderSide(
+              AppBorders.hairline.copyWith(color: AppColors.primary),
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Semantics(
-                header: true,
-                child: const Text('Arayüz Boyutu', style: AppTypography.title),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        const Text(
-          'Yazıları ve düğmeleri sana uygun büyüklüğe getir.',
-          style: AppTypography.bodySm,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        for (final scale in UiScale.values) ...[
-          if (scale != UiScale.normal) const SizedBox(height: AppSpacing.sm),
-          ChoiceTile(
-            label: scale.label,
-            caption: scale.description,
-            selected: scale == current,
-            onTap: () => controller.select(scale),
           ),
-        ],
+          child: Text(
+            initials,
+            style: AppTypography.title.copyWith(color: AppColors.primary),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.lg),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(account.name, style: AppTypography.title),
+              ),
+              Text(
+                account.isProvider ? 'Usta hesabı' : 'Müşteri hesabı',
+                style: AppTypography.body.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (account.phone.isNotEmpty)
+                Text(formatPhone(account.phone), style: AppTypography.bodySm),
+              if (account.email.isNotEmpty && !account.isDemo)
+                Text(account.email, style: AppTypography.bodySm),
+              if (account.isDemo)
+                Text('Demo hesabı', style: AppTypography.bodySm),
+            ],
+          ),
+        ),
       ],
     );
   }
 }
 
-class _Group extends StatelessWidget {
-  const _Group({required this.children});
+class _ProviderPanel extends ConsumerWidget {
+  const _ProviderPanel({required this.account});
 
-  final List<Widget> children;
+  final Account account;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(unreadCountProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Usta paneli', style: AppTypography.title),
+        const SizedBox(height: AppSpacing.md),
+        _ActionTile(
+          icon: UstaIcons.requests,
+          title: 'Gelen talepler',
+          caption: unread > 0
+              ? '$unread yeni mesajın var'
+              : 'Müşterilerden gelen talepler ve mesajlar',
+          onTap: () => context.go('/requests'),
+        ),
+        if (account.providerId != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _ActionTile(
+            icon: UstaIcons.user,
+            title: 'Müşterilerin gördüğü sayfam',
+            caption: 'Profilini, fiyat listeni ve yorumlarını kontrol et',
+            onTap: () => context.push('/usta/${account.providerId}'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _ActionTile(
+            icon: UstaIcons.pencil,
+            title: 'Sayfamı düzenle',
+            caption: 'Tanıtım, adres, fiyat listesi ve iş fotoğrafları',
+            onTap: () => context.push('/profile/edit'),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.xxl),
+        const _FeaturedCard(),
+      ],
+    );
+  }
+}
+
+/// What "Öne çıkan usta" means for an usta, in plain words, with a real way to ask for it.
+class _FeaturedCard extends ConsumerWidget {
+  const _FeaturedCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: AppColors.primarySoft,
         borderRadius: AppRadius.borderLg,
-        border: Border.fromBorderSide(AppBorders.hairline),
+        border: Border.fromBorderSide(
+          AppBorders.hairline.copyWith(color: AppColors.primary),
+        ),
       ),
-      clipBehavior: Clip.antiAlias,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const Divider(indent: AppSpacing.lg),
-            children[i],
-          ],
+          Row(
+            children: [
+              UstaIcon(UstaIcons.crown, size: 26, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text('Öne çıkan usta ol', style: AppTypography.title),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          for (final line in const [
+            'Aramalarda listenin en üstünde görünürsün.',
+            'Kartında “Öne çıkan” etiketi olur.',
+            'Daha çok müşteri sana ulaşır, daha çok iş alırsın.',
+          ])
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: UstaIcon(
+                      UstaIcons.check,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      line,
+                      style: AppTypography.body.copyWith(fontSize: 15),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: AppSpacing.sm),
+          FilledButton(
+            onPressed: () => ref
+                .read(contactLauncherProvider)
+                .mail(
+                  AppConfig.supportEmail,
+                  subject: '[Usta] Öne çıkan usta olmak istiyorum',
+                  body: 'Merhaba, öne çıkan usta olmak hakkında bilgi almak istiyorum.',
+                ),
+            child: const Text('Bilgi al'),
+          ),
         ],
       ),
     );
   }
 }
 
-class _Row extends StatelessWidget {
-  const _Row({
+class _BecomeProviderCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => _ActionTile(
+    icon: UstaIcons.hammer,
+    title: 'Hizmet de mi veriyorsun?',
+    caption: 'Aynı hesapla usta olarak kayıt ol, müşteriler seni bulsun.',
+    onTap: () => context.push('/register/provider'),
+  );
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
     required this.icon,
-    required this.label,
+    required this.title,
+    required this.caption,
     required this.onTap,
-    this.caption,
   });
 
   final UstaIconData icon;
-  final String label;
-  final String? caption;
+  final String title;
+  final String caption;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: context.ui.rowHeight),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              UstaIcon(icon, size: 24, color: AppColors.inkMuted),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label, style: AppTypography.body),
-                    if (caption != null)
-                      Text(caption!, style: AppTypography.bodySm),
-                  ],
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: '$title. $caption',
+    excludeSemantics: true,
+    child: Material(
+      color: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: AppRadius.borderMd,
+        side: AppBorders.hairline,
+      ),
+      child: InkWell(
+        borderRadius: AppRadius.borderMd,
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: context.ui.rowHeight + 8),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: [
+                UstaIcon(icon, size: 26, color: AppColors.primary),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: AppTypography.titleSm),
+                      const SizedBox(height: 2),
+                      Text(caption, style: AppTypography.bodySm),
+                    ],
+                  ),
                 ),
-              ),
-              const UstaIcon(
-                UstaIcons.chevronRight,
-                size: 20,
-                color: AppColors.inkMuted,
-              ),
-            ],
+                UstaIcon(
+                  UstaIcons.chevronRight,
+                  size: 20,
+                  color: AppColors.inkMuted,
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

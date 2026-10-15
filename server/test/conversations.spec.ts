@@ -1,12 +1,13 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { AccountsService } from '../src/accounts/accounts.service';
 import { StoreFactory } from '../src/common/store';
+import { AttachmentsService } from '../src/attachments/attachments.service';
 import { ConversationsService } from '../src/conversations/conversations.service';
 
 function setup() {
   const stores = new StoreFactory(undefined);
   const accounts = new AccountsService(stores);
-  const chats = new ConversationsService(stores, accounts);
+  const chats = new ConversationsService(stores, accounts, new AttachmentsService(stores));
   return { accounts, chats };
 }
 

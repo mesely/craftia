@@ -65,7 +65,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
           tooltip: 'Geri',
           icon: const UstaIcon(UstaIcons.arrowLeft, size: 26),
           onPressed: () =>
-              context.canPop() ? context.pop() : context.go('/profile'),
+              context.canPop() ? context.pop() : context.go('/settings'),
         ),
       ),
       body: ListView(
@@ -77,9 +77,9 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
           AppSpacing.xxxl,
         ),
         children: [
-          const Text('Destek', style: AppTypography.display),
+          Text('Destek', style: AppTypography.display),
           const SizedBox(height: AppSpacing.xs),
-          const Text(
+          Text(
             'Sorununu seç, kısaca anlat; e-posta olarak ekibimize iletelim.',
             style: AppTypography.bodySm,
           ),

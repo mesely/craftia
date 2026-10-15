@@ -12,6 +12,7 @@ import { RequestStatus, ServiceRequestEntity } from './order.types';
 export interface ServiceRequestView extends ServiceRequestEntity {
   conversationId: string | null;
   customerName: string;
+  providerPhone: string;
   lastMessageAt: string;
   lastMessageText: string;
   unread: number;
@@ -74,6 +75,7 @@ export class OrdersService {
       ...request,
       conversationId,
       customerName: dto.customerName?.trim() || 'Müşteri',
+      providerPhone: dto.providerId ? (await this.providers.get(dto.providerId)).phoneNumber : '',
       lastMessageAt: request.createdAt,
       lastMessageText: `Hizmet Talebi: ${request.description}`,
       unread: 0,
@@ -85,11 +87,20 @@ export class OrdersService {
     if (!userId && !providerId) throw new BadRequestException('userId veya providerId gerekli.');
     const rows = userId ? await this.repo.listByUser(userId) : await this.repo.listByProvider(providerId!);
     const chats = await this.conversations.byRequestIds(rows.map((r) => r.id));
+    const phones = new Map<string, string>();
+    for (const id of new Set(rows.map((r) => r.providerId).filter((v): v is string => !!v))) {
+      try {
+        phones.set(id, (await this.providers.get(id)).phoneNumber);
+      } catch {
+        // The listing was removed: the request stays readable, just without a phone to call.
+      }
+    }
     return rows
       .map((r) => {
         const c = chats.get(r.id);
         return {
           ...r,
+          providerPhone: (r.providerId && phones.get(r.providerId)) || '',
           conversationId: c?.id ?? null,
           customerName: c?.customerName ?? '',
           lastMessageAt: c?.lastMessageAt ?? r.createdAt,

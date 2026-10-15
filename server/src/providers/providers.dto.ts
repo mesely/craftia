@@ -47,3 +47,20 @@ export class CreateProviderDto {
   @IsArray() @ArrayMaxSize(30) @ValidateNested({ each: true }) @Type(() => PriceItemDto) @IsOptional()
   priceList?: PriceItemDto[];
 }
+
+/** An usta editing their own listing. [actorId] must be the account that manages it. */
+export class UpdateProviderDto {
+  @IsString() @MaxLength(64) actorId: string;
+  @IsString() @MinLength(20, { message: 'Tanıtım en az 20 karakter olmalı.' }) @MaxLength(500) @IsOptional() about?: string;
+  @IsString() @MaxLength(200) @IsOptional() address?: string;
+  @IsArray() @ArrayMaxSize(12) @IsString({ each: true }) @MaxLength(40, { each: true }) @IsOptional() serviceAreas?: string[];
+  @IsString() @MinLength(10) @MaxLength(20) @IsOptional() phoneNumber?: string;
+  @IsArray() @ArrayMaxSize(30) @ValidateNested({ each: true }) @Type(() => PriceItemDto) @IsOptional() priceList?: PriceItemDto[];
+}
+
+export class ProviderPhotoDto {
+  @IsString() @MaxLength(64) actorId: string;
+  @IsIn(['image/jpeg', 'image/png', 'image/webp'], { message: 'Yalnızca JPEG, PNG veya WebP fotoğraf yüklenebilir.' })
+  contentType: string;
+  @IsString() data: string;
+}

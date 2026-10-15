@@ -12,6 +12,8 @@ class ProviderApplication {
     this.address = '',
     this.about = '',
     this.priceList = const [],
+    this.serviceAreas = const [],
+    this.demo = false,
   });
 
   final String businessName;
@@ -24,6 +26,12 @@ class ProviderApplication {
   final String about;
   final List<ServicePrice> priceList;
 
+  /// Districts served by an usta who travels to customers (no shop address).
+  final List<String> serviceAreas;
+
+  /// Created through the mock sign-in; flagged so the record is easy to clean up.
+  final bool demo;
+
   Map<String, dynamic> toJson() => {
     'businessName': businessName,
     'phoneNumber': phoneNumber,
@@ -33,6 +41,8 @@ class ProviderApplication {
     'district': district,
     if (address.isNotEmpty) 'address': address,
     if (about.isNotEmpty) 'about': about,
+    if (serviceAreas.isNotEmpty) 'serviceAreas': serviceAreas,
+    if (demo) 'demo': true,
     'priceList': [
       for (final p in priceList)
         {

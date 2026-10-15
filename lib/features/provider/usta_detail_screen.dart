@@ -16,8 +16,11 @@ import '../../core/utils/formatters.dart';
 import '../../core/widgets/network_image.dart';
 import '../../core/widgets/skeleton.dart';
 import '../../core/widgets/state_views.dart';
+import '../../data/models/complaint.dart';
 import '../../data/models/review.dart';
+import '../../data/models/service_price.dart';
 import '../../data/models/usta.dart';
+import '../auth/ensure_signed_in.dart';
 import '../discovery/discovery_providers.dart';
 import '../location/location_controller.dart';
 import '../reviews/review_sheet.dart';
@@ -89,6 +92,7 @@ class _DetailBody extends ConsumerWidget {
         padding: EdgeInsets.fromLTRB(gutter, 0, gutter, AppSpacing.xxxl),
         children: [
           _Identity(usta: usta, distance: distance),
+          _Where(usta: usta),
           if (usta.about.isNotEmpty) ...[
             const _SectionTitle('Hakkında'),
             Text(usta.about, style: AppTypography.body),
@@ -98,7 +102,7 @@ class _DetailBody extends ConsumerWidget {
           const _SectionTitle('Yapılan işler'),
           _Portfolio(images: usta.portfolioImages),
           _ReviewsSection(usta: usta),
-          _Where(usta: usta),
+          _ReportLink(usta: usta),
         ],
       ),
     );
@@ -106,17 +110,15 @@ class _DetailBody extends ConsumerWidget {
 }
 
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
+  const _SectionTitle(this.text, {this.top = AppSpacing.xxxl});
 
   final String text;
+  final double top;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        top: AppSpacing.xxxl,
-        bottom: AppSpacing.md,
-      ),
+      padding: EdgeInsets.only(top: top, bottom: AppSpacing.md),
       child: Semantics(
         header: true,
         child: Text(text, style: AppTypography.title),
@@ -179,18 +181,20 @@ class _Identity extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.lg),
-        RatingLabel(
-          rating: usta.rating,
-          reviewCount: usta.reviewCount,
-          large: true,
-        ),
+        if (usta.hasRating) ...[
+          const SizedBox(height: AppSpacing.lg),
+          RatingLabel(
+            rating: usta.rating,
+            reviewCount: usta.reviewCount,
+            large: true,
+          ),
+        ],
         if (place.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: usta.hasRating ? AppSpacing.sm : AppSpacing.lg),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(top: 1),
                 child: UstaIcon(
                   UstaIcons.pin,
@@ -221,35 +225,43 @@ class _PriceList extends StatelessWidget {
         text: 'Bu usta henüz fiyat listesi eklememiş. Net fiyat için arayabilirsin.',
       );
     }
+    // At very large text the price moves under its name instead of squeezing it.
+    final stacked = MediaQuery.textScalerOf(context).scale(16) > 22;
     return Column(
       children: [
         for (var i = 0; i < usta.priceList.length; i++) ...[
           if (i > 0) const Divider(),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.md + 2),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    usta.priceList[i].serviceName,
-                    style: AppTypography.body,
+            child: stacked
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        usta.priceList[i].serviceName,
+                        style: AppTypography.body,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      _priceText(usta.priceList[i]),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          usta.priceList[i].serviceName,
+                          style: AppTypography.body,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      _priceText(usta.priceList[i], end: true),
+                    ],
                   ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Text(
-                  usta.priceList[i].priceLabel,
-                  style: usta.priceList[i].hasPrice
-                      ? AppTypography.titleSm
-                      : AppTypography.bodySm,
-                  textAlign: TextAlign.end,
-                ),
-              ],
-            ),
           ),
         ],
         const Divider(),
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(top: AppSpacing.sm),
           child: Text(
             'Fiyatlar tahminidir; kesin tutar için ustayla konuş.',
@@ -260,6 +272,12 @@ class _PriceList extends StatelessWidget {
     );
   }
 }
+
+Widget _priceText(ServicePrice price, {bool end = false}) => Text(
+  price.priceLabel,
+  style: price.hasPrice ? AppTypography.titleSm : AppTypography.bodySm,
+  textAlign: end ? TextAlign.end : TextAlign.start,
+);
 
 /// Up to six thumbnails in a 3-up grid; the sixth says how many more there are.
 class _Portfolio extends StatelessWidget {
@@ -343,7 +361,7 @@ class _InlineEmpty extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
         borderRadius: AppRadius.borderMd,
       ),
@@ -430,6 +448,14 @@ class _ReviewsSection extends ConsumerWidget {
                 icon: const UstaIcon(UstaIcons.pencil, size: 20),
                 label: const Text('Yorum yaz'),
                 onPressed: () async {
+                  if (!await ensureSignedIn(
+                    context,
+                    ref,
+                    reason: 'Yorum yazmak için hesabına giriş yapmalısın.',
+                  )) {
+                    return;
+                  }
+                  if (!context.mounted) return;
                   final sent = await showReviewSheet(context, usta.id);
                   if (sent == true && context.mounted) {
                     ref.invalidate(ustaDetailProvider(usta.id));
@@ -481,6 +507,54 @@ class _ReviewTile extends StatelessWidget {
   }
 }
 
+/// A calm, always-findable way to report a problem with this usta.
+class _ReportLink extends ConsumerWidget {
+  const _ReportLink({required this.usta});
+
+  final Usta usta;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xxl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Divider(),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Bu ustayla ilgili bir sorun mu yaşadın? Dolandırıcılık, kaba davranış ya da yanlış bilgi şüphesini bize bildirebilirsin.',
+            style: AppTypography.bodySm,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          TextButton.icon(
+            icon: const UstaIcon(UstaIcons.flag, size: 20),
+            label: const Text('Şikayet et'),
+            onPressed: () async {
+              if (!await ensureSignedIn(
+                context,
+                ref,
+                reason: 'Şikayet etmek için hesabına giriş yapmalısın.',
+              )) {
+                return;
+              }
+              if (!context.mounted) return;
+              context.push(
+                '/complaint',
+                extra: ComplaintTarget(
+                  type: ComplaintTargetType.provider,
+                  id: usta.id,
+                  name: usta.businessName,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Address + "Yol Tarifi" for ustas with a shop; "Hizmet bölgesi" for those who travel.
 /// Not every usta has a shop, so the page never pretends one exists.
 class _Where extends ConsumerWidget {
@@ -500,7 +574,7 @@ class _Where extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(hasShop ? 'Adres' : 'Hizmet bölgesi'),
+        _SectionTitle(hasShop ? 'Adres' : 'Hizmet bölgesi', top: AppSpacing.xl),
         if (hasShop)
           Text(usta.address, style: AppTypography.body)
         else ...[
@@ -509,7 +583,7 @@ class _Where extends ConsumerWidget {
             style: AppTypography.body,
           ),
           const SizedBox(height: AppSpacing.xs),
-          const Text(
+          Text(
             'Bu usta için sabit bir adres paylaşılmamış. Size gelip gelemeyeceğini ustaya sorabilirsin.',
             style: AppTypography.bodySm,
           ),
@@ -551,7 +625,7 @@ class _ActionBar extends ConsumerWidget {
     final launcher = ref.read(contactLauncherProvider);
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),

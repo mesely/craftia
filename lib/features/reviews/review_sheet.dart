@@ -83,9 +83,9 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Deneyimini paylaş', style: AppTypography.title),
+          Text('Deneyimini paylaş', style: AppTypography.title),
           const SizedBox(height: AppSpacing.xs),
-          const Text(
+          Text(
             'Yorumun diğer kullanıcıların doğru ustayı bulmasına yardımcı olur.',
             style: AppTypography.bodySm,
           ),

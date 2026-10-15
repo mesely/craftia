@@ -1,0 +1,171 @@
+import 'package:flutter/material.dart';
+
+import '../../core/accessibility/ui_scale.dart';
+import '../../core/constants/services.dart';
+import '../../core/icons/usta_icon.dart';
+import '../../core/icons/usta_icons.dart';
+import '../../core/theme/app_borders.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_typography.dart';
+
+/// A service as a big, picture-first button: the illustration says it, the label confirms it.
+/// Selection = border, tint *and* a check badge (never colour alone).
+class ServiceTile extends StatelessWidget {
+  const ServiceTile({
+    super.key,
+    required this.service,
+    required this.selected,
+    required this.onTap,
+    this.horizontal = false,
+  });
+
+  final ServiceOption service;
+  final bool selected;
+  final VoidCallback onTap;
+
+  /// Picture beside the label (used when text is large and columns are fewer).
+  final bool horizontal;
+
+  @override
+  Widget build(BuildContext context) {
+    final art = horizontal ? 56.0 : 60.0;
+    // The drawings are made on white paper: in dark mode they sit on a soft light plate.
+    final image = ClipRRect(
+      borderRadius: AppRadius.borderSm,
+      child: Image.asset(
+        service.art,
+        width: art,
+        height: art,
+        cacheWidth: (art * MediaQuery.devicePixelRatioOf(context)).round(),
+        excludeFromSemantics: true,
+        filterQuality: FilterQuality.medium,
+        color: AppColors.artPlate,
+        colorBlendMode: BlendMode.multiply,
+      ),
+    );
+    final label = Text(
+      service.label,
+      textAlign: horizontal ? TextAlign.start : TextAlign.center,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: AppTypography.label.copyWith(
+        fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+      ),
+    );
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: service.label,
+      excludeSemantics: true,
+      child: Material(
+        color: selected ? AppColors.primarySoft : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadius.borderMd,
+          side: selected ? AppBorders.selected : AppBorders.hairline,
+        ),
+        child: InkWell(
+          borderRadius: AppRadius.borderMd,
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: horizontal ? context.ui.rowHeight + 16 : 108,
+            ),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.sm + 2),
+                  child: horizontal
+                      ? Row(
+                          children: [
+                            image,
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(child: label),
+                          ],
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            image,
+                            const SizedBox(height: AppSpacing.xs),
+                            label,
+                          ],
+                        ),
+                ),
+                if (selected)
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(3),
+                        child: UstaIcon(
+                          UstaIcons.check,
+                          size: 14,
+                          color: AppColors.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The nine services, 3 across (2 across when the text is large).
+class ServiceGrid extends StatelessWidget {
+  const ServiceGrid({
+    super.key,
+    required this.selectedId,
+    required this.onSelect,
+  });
+
+  final String? selectedId;
+  final ValueChanged<ServiceOption> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final roomy = MediaQuery.textScalerOf(context).scale(16) > 17.5;
+    final columns = roomy ? 2 : 3;
+    final tiles = [
+      for (final s in kServices)
+        ServiceTile(
+          service: s,
+          selected: s.id == selectedId,
+          horizontal: roomy,
+          onTap: () => onSelect(s),
+        ),
+    ];
+    return Column(
+      children: [
+        for (var i = 0; i < tiles.length; i += columns) ...[
+          if (i > 0) const SizedBox(height: AppSpacing.sm),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var j = 0; j < columns; j++) ...[
+                  if (j > 0) const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: i + j < tiles.length
+                        ? tiles[i + j]
+                        : const SizedBox(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}

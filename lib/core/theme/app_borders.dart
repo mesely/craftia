@@ -3,7 +3,9 @@ import 'package:flutter/painting.dart';
 import 'app_colors.dart';
 
 abstract final class AppBorders {
-  static const hairline = BorderSide(color: AppColors.border);
-  static const strong = BorderSide(color: AppColors.borderStrong, width: 1.5);
-  static const selected = BorderSide(color: AppColors.primary, width: 2);
+  static BorderSide get hairline => BorderSide(color: AppColors.border);
+  static BorderSide get strong =>
+      BorderSide(color: AppColors.borderStrong, width: 1.5);
+  static BorderSide get selected =>
+      BorderSide(color: AppColors.primary, width: 2);
 }

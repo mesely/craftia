@@ -1,6 +1,7 @@
 import { Controller, Get, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AccountsModule } from './accounts/accounts.module';
+import { AttachmentsModule } from './attachments/attachments.module';
 import { StoresModule } from './common/stores.module';
 import { ComplaintsModule } from './complaints/complaints.module';
 import { ConversationsModule } from './conversations/conversations.module';
@@ -30,6 +31,7 @@ class HealthController {
     DatabaseModule.register(),
     StoresModule,
     AccountsModule,
+    AttachmentsModule,
     ConversationsModule,
     ComplaintsModule,
     PrivacyModule,

@@ -54,13 +54,9 @@ class FilterState extends Equatable {
   /// Search needs two characters to be meaningful; shorter text is ignored.
   bool get searching => query.trim().length >= 2;
 
-  /// Filters chosen in the filter sheet (category and sort are shown separately).
-  int get activeFilterCount =>
-      (subType != null ? 1 : 0) +
-      (city != null ? 1 : 0) +
-      (distanceKm != null ? 1 : 0);
-
-  bool get hasActiveRefinements => activeFilterCount > 0;
+  /// Anything narrowing the list: a service, a city or a distance.
+  bool get hasActiveRefinements =>
+      subType != null || city != null || distanceKm != null;
 
   @override
   List<Object?> get props => [

@@ -5,7 +5,7 @@ import { isValidCoordinate, haversineKm } from '../common/geo';
 import { SEED_PROVIDERS } from '../data/seed';
 import { runProviderQuery } from './provider.query';
 import { ProviderEntity, ProviderQuery, ProviderView } from './provider.types';
-import { ProvidersRepository } from './providers.repository';
+import { ProviderProfilePatch, ProvidersRepository } from './providers.repository';
 
 @Injectable()
 export class MockProvidersRepository extends ProvidersRepository {
@@ -31,6 +31,13 @@ export class MockProvidersRepository extends ProvidersRepository {
     const entity = { ...data, id: `p-${randomUUID().slice(0, 8)}` };
     this.providers.push(entity);
     return entity;
+  }
+
+  async update(id: string, patch: ProviderProfilePatch): Promise<ProviderEntity | null> {
+    const p = this.providers.find((e) => e.id === id);
+    if (!p) return null;
+    Object.assign(p, patch);
+    return { ...p };
   }
 
   async updateReviewStats(id: string, rating: number, reviewCount: number): Promise<void> {

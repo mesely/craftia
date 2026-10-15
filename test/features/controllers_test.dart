@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:usta/core/constants/services.dart';
 import 'package:usta/data/models/filter_state.dart';
 import 'package:usta/data/models/user_location.dart';
 import 'package:usta/features/discovery/discovery_providers.dart';
@@ -12,31 +13,73 @@ Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 20));
 
 void main() {
   group('filters', () {
-    test('changing the category resets the sub-type', () {
+    test(
+      'picking a service sets both parts and tapping it again clears it',
+      () {
+        final container = ProviderContainer(overrides: testOverrides());
+        addTearDown(container.dispose);
+        final filters = container.read(filtersProvider.notifier);
+
+        filters.selectService(kServices.firstWhere((s) => s.id == 'klima'));
+        var state = container.read(filtersProvider);
+        expect(state.mainType, 'TECHNICAL');
+        expect(state.subType, 'Klima ve Kombi Servisi');
+
+        filters.selectService(kServices.firstWhere((s) => s.id == 'boya'));
+        state = container.read(filtersProvider);
+        expect(state.mainType, 'CONSTRUCTION');
+        expect(state.subType, 'Boyacı');
+
+        filters.selectService(kServices.firstWhere((s) => s.id == 'boya'));
+        expect(container.read(filtersProvider).subType, isNull);
+        expect(container.read(filtersProvider).mainType, isNull);
+      },
+    );
+
+    test(
+      'searching spans every service; choosing a service ends the search',
+      () {
+        final container = ProviderContainer(overrides: testOverrides());
+        addTearDown(container.dispose);
+        final filters = container.read(filtersProvider.notifier)
+          ..selectService(kServices.first)
+          ..setQuery('kombi');
+        var state = container.read(filtersProvider);
+        expect(state.searching, isTrue);
+        expect(state.mainType, isNull);
+        expect(state.subType, isNull);
+
+        filters.selectService(kServices.firstWhere((s) => s.id == 'su'));
+        state = container.read(filtersProvider);
+        expect(state.query, '');
+        expect(state.subType, 'Su Tesisatçısı');
+      },
+    );
+
+    test('a one-letter query is not a search', () {
       final container = ProviderContainer(overrides: testOverrides());
       addTearDown(container.dispose);
-      final filters = container.read(filtersProvider.notifier);
-
-      filters.selectSubType('Elektrikçi');
-      expect(container.read(filtersProvider).subType, 'Elektrikçi');
-      filters.selectCategory('LIFE');
-      expect(container.read(filtersProvider).mainType, 'LIFE');
-      expect(container.read(filtersProvider).subType, isNull);
+      container.read(filtersProvider.notifier).setQuery('k');
+      final state = container.read(filtersProvider);
+      expect(state.searching, isFalse);
+      expect(
+        ProviderQuery(filters: state).toQueryParameters(1).containsKey('q'),
+        isFalse,
+      );
     });
 
-    test('reset keeps the category but clears refinements', () {
+    test('clearAll resets everything but the sort order', () {
       final container = ProviderContainer(overrides: testOverrides());
       addTearDown(container.dispose);
-      final filters = container.read(filtersProvider.notifier)
-        ..selectCategory('CLIMATE')
+      container.read(filtersProvider.notifier)
+        ..selectService(kServices.first)
         ..setCity('Bursa')
-        ..setDistance(15);
-      expect(container.read(filtersProvider).hasActiveRefinements, isTrue);
-      filters.reset();
+        ..setDistance(15)
+        ..setSort(SortMode.rating)
+        ..clearAll();
       final state = container.read(filtersProvider);
-      expect(state.mainType, 'CLIMATE');
-      expect(state.city, isNull);
-      expect(state.distanceKm, isNull);
+      expect(state.hasActiveRefinements, isFalse);
+      expect(state.sortMode, SortMode.rating);
     });
   });
 

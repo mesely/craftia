@@ -10,6 +10,7 @@ class RequestsRepository {
 
   Future<ServiceRequest> create({
     required String userId,
+    required String customerName,
     required String mainType,
     required String subType,
     required String city,
@@ -17,49 +18,50 @@ class RequestsRepository {
     String? providerId,
     String? contactPhone,
     UserLocation? location,
-  }) async {
-    try {
-      return ServiceRequest.fromJson(
-        await _remote.createServiceRequest({
-          'userId': userId,
-          'mainType': mainType,
-          if (subType.isNotEmpty) 'subType': subType,
-          'city': city,
-          'description': description,
-          'providerId': ?providerId,
-          if (contactPhone != null && contactPhone.isNotEmpty)
-            'contactPhone': contactPhone,
-          if (location != null && location.isValid) 'lat': location.lat,
-          if (location != null && location.isValid) 'lng': location.lng,
-        }),
+  }) => guarded(
+    () async => ServiceRequest.fromJson(
+      await _remote.createServiceRequest({
+        'userId': userId,
+        'customerName': customerName,
+        'mainType': mainType,
+        if (subType.isNotEmpty) 'subType': subType,
+        'city': city,
+        'description': description,
+        'providerId': ?providerId,
+        if (contactPhone != null && contactPhone.isNotEmpty)
+          'contactPhone': contactPhone,
+        if (location != null && location.isValid) 'lat': location.lat,
+        if (location != null && location.isValid) 'lng': location.lng,
+      }),
+    ),
+  );
+
+  /// A customer's own requests ([userId]) or an usta's inbox ([providerId]).
+  Future<List<ServiceRequest>> list({String? userId, String? providerId}) =>
+      guarded(
+        () async =>
+            (await _remote.getServiceRequests(
+                  userId: userId,
+                  providerId: providerId,
+                ))
+                .whereType<Map>()
+                .map(
+                  (e) => ServiceRequest.fromJson(Map<String, dynamic>.from(e)),
+                )
+                .toList(growable: false),
       );
-    } on AppFailure {
-      rethrow;
-    } catch (_) {
-      throw AppFailure.unknown;
-    }
-  }
 
-  Future<List<ServiceRequest>> list(String userId) async {
-    try {
-      return (await _remote.getServiceRequests(userId))
-          .whereType<Map>()
-          .map((e) => ServiceRequest.fromJson(Map<String, dynamic>.from(e)))
-          .toList(growable: false);
-    } on AppFailure {
-      rethrow;
-    } catch (_) {
-      throw AppFailure.unknown;
-    }
-  }
-
-  Future<ServiceRequest> cancel(String id) async {
-    try {
-      return ServiceRequest.fromJson(await _remote.cancelServiceRequest(id));
-    } on AppFailure {
-      rethrow;
-    } catch (_) {
-      throw AppFailure.unknown;
-    }
-  }
+  Future<ServiceRequest> changeStatus(
+    String id, {
+    required RequestStatus status,
+    required String actorId,
+  }) => guarded(
+    () async => ServiceRequest.fromJson(
+      await _remote.changeRequestStatus(
+        id,
+        status: status.apiValue,
+        actorId: actorId,
+      ),
+    ),
+  );
 }

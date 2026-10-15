@@ -1,5 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Res } from '@nestjs/common';
-import type { Response } from 'express';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { EditMessageDto, SendMessageDto, UploadAttachmentDto } from './conversations.dto';
 import { ConversationsService } from './conversations.service';
 
@@ -41,12 +40,5 @@ export class ConversationsController {
   @Delete('messages/:id')
   remove(@Param('id') id: string, @Query('senderId') senderId = '') {
     return this.conversations.remove(id, senderId);
-  }
-
-  @Get('attachments/:id')
-  async attachment(@Param('id') id: string, @Res() res: Response) {
-    const { contentType, buffer } = await this.conversations.attachment(id);
-    res.setHeader('Cache-Control', 'private, max-age=86400');
-    res.type(contentType).send(buffer);
   }
 }

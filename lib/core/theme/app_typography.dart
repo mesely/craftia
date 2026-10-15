@@ -8,7 +8,7 @@ import 'app_colors.dart';
 abstract final class AppTypography {
   static const fontFamily = 'Inter';
 
-  static const display = TextStyle(
+  static TextStyle get display => TextStyle(
     fontFamily: fontFamily,
     fontSize: 28,
     height: 1.18,
@@ -16,7 +16,7 @@ abstract final class AppTypography {
     letterSpacing: -0.5,
     color: AppColors.ink,
   );
-  static const title = TextStyle(
+  static TextStyle get title => TextStyle(
     fontFamily: fontFamily,
     fontSize: 22,
     height: 1.25,
@@ -24,7 +24,7 @@ abstract final class AppTypography {
     letterSpacing: -0.3,
     color: AppColors.ink,
   );
-  static const titleSm = TextStyle(
+  static TextStyle get titleSm => TextStyle(
     fontFamily: fontFamily,
     fontSize: 18,
     height: 1.3,
@@ -32,34 +32,34 @@ abstract final class AppTypography {
     letterSpacing: -0.1,
     color: AppColors.ink,
   );
-  static const body = TextStyle(
+  static TextStyle get body => TextStyle(
     fontFamily: fontFamily,
     fontSize: 16,
     height: 1.45,
     fontWeight: FontWeight.w400,
     color: AppColors.ink,
   );
-  static const bodySm = TextStyle(
+  static TextStyle get bodySm => TextStyle(
     fontFamily: fontFamily,
     fontSize: 14,
     height: 1.4,
     fontWeight: FontWeight.w400,
     color: AppColors.inkMuted,
   );
-  static const label = TextStyle(
+  static TextStyle get label => TextStyle(
     fontFamily: fontFamily,
     fontSize: 15,
     height: 1.25,
     fontWeight: FontWeight.w600,
     color: AppColors.ink,
   );
-  static const button = TextStyle(
+  static TextStyle get button => TextStyle(
     fontFamily: fontFamily,
     fontSize: 16,
     height: 1.2,
     fontWeight: FontWeight.w600,
   );
-  static const caption = TextStyle(
+  static TextStyle get caption => TextStyle(
     fontFamily: fontFamily,
     fontSize: 13,
     height: 1.3,
@@ -67,7 +67,7 @@ abstract final class AppTypography {
     color: AppColors.inkMuted,
   );
 
-  static TextTheme get textTheme => const TextTheme(
+  static TextTheme get textTheme => TextTheme(
     displaySmall: display,
     headlineSmall: title,
     titleLarge: titleSm,

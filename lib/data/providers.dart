@@ -5,6 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/network/api_client.dart';
 import 'datasources/remote_data_source.dart';
+import 'repositories/accounts_repository.dart';
+import 'repositories/chat_repository.dart';
+import 'repositories/complaints_repository.dart';
 import 'repositories/requests_repository.dart';
 import 'repositories/reviews_repository.dart';
 import 'repositories/usta_repository.dart';
@@ -18,6 +21,15 @@ final ustaRepositoryProvider = Provider<UstaRepository>(
 );
 final reviewsRepositoryProvider = Provider<ReviewsRepository>(
   (ref) => ReviewsRepository(ref.watch(remoteDataSourceProvider)),
+);
+final accountsRepositoryProvider = Provider<AccountsRepository>(
+  (ref) => AccountsRepository(ref.watch(remoteDataSourceProvider)),
+);
+final chatRepositoryProvider = Provider<ChatRepository>(
+  (ref) => ChatRepository(ref.watch(remoteDataSourceProvider)),
+);
+final complaintsRepositoryProvider = Provider<ComplaintsRepository>(
+  (ref) => ComplaintsRepository(ref.watch(remoteDataSourceProvider)),
 );
 final requestsRepositoryProvider = Provider<RequestsRepository>(
   (ref) => RequestsRepository(ref.watch(remoteDataSourceProvider)),

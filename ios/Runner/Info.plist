@@ -68,12 +68,17 @@
 		</array>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Yakınındaki ustaları gösterebilmemiz için konumuna ihtiyacımız var.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>Ustaya göndermek istediğin sorun ya da iş fotoğrafını çekebilmen için kameraya ihtiyacımız var.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Ustaya göndermek ya da sayfana eklemek istediğin fotoğrafı seçebilmen için galerine ihtiyacımız var.</string>
 		<key>LSApplicationQueriesSchemes</key>
 		<array>
 			<string>tel</string>
 			<string>sms</string>
 			<string>mailto</string>
 			<string>https</string>
+			<string>whatsapp</string>
 		</array>
 		<key>NSLocalNetworkUsageDescription</key>
 		<string>Geliştirme sırasında bilgisayardaki Usta sunucusuna bağlanmak için gerekir.</string>

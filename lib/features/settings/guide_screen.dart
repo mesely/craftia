@@ -43,7 +43,7 @@ class GuideScreen extends StatelessWidget {
           tooltip: 'Geri',
           icon: const UstaIcon(UstaIcons.arrowLeft, size: 26),
           onPressed: () =>
-              context.canPop() ? context.pop() : context.go('/profile'),
+              context.canPop() ? context.pop() : context.go('/settings'),
         ),
       ),
       body: ListView(
@@ -54,9 +54,9 @@ class GuideScreen extends StatelessWidget {
           AppSpacing.xxxl,
         ),
         children: [
-          const Text('Uygulama rehberi', style: AppTypography.display),
+          Text('Uygulama rehberi', style: AppTypography.display),
           const SizedBox(height: AppSpacing.xs),
-          const Text(
+          Text(
             'Usta ile doğru ustaya dört adımda ulaş.',
             style: AppTypography.bodySm,
           ),
@@ -77,7 +77,7 @@ class GuideScreen extends StatelessWidget {
                     Container(
                       width: 44,
                       height: 44,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.primarySoft,
                         borderRadius: AppRadius.borderMd,
                       ),
@@ -105,9 +105,9 @@ class GuideScreen extends StatelessWidget {
               ),
             ),
           const SizedBox(height: AppSpacing.lg),
-          const Text('Güvenlik ve sorumluluk', style: AppTypography.titleSm),
+          Text('Güvenlik ve sorumluluk', style: AppTypography.titleSm),
           const SizedBox(height: AppSpacing.sm),
-          const Text(
+          Text(
             'Usta, bağımsız hizmet verenlerle seni buluşturan bir platformdur. İşe başlamadan önce fiyatı netleştir; elden yapılan ödemeler platform güvencesi dışındadır.',
             style: AppTypography.bodySm,
           ),

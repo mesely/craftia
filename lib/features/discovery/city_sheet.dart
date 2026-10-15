@@ -53,7 +53,7 @@ class _CitySheetState extends ConsumerState<_CitySheet> {
             padding: const EdgeInsets.all(AppSpacing.gutter),
             child: TextField(
               textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Şehir ara',
                 prefixIcon: Padding(
                   padding: EdgeInsets.all(AppSpacing.md + 2),
@@ -89,7 +89,7 @@ class _CitySheetState extends ConsumerState<_CitySheet> {
                     ),
                   ),
                   trailing: isSelected
-                      ? const UstaIcon(
+                      ? UstaIcon(
                           UstaIcons.check,
                           color: AppColors.primary,
                           size: 24,

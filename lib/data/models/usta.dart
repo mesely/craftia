@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
-import '../../core/constants/categories.dart';
+import '../../core/constants/services.dart';
+import '../../core/config/app_config.dart';
 import '../../core/utils/distance.dart';
 import '../../core/utils/formatters.dart';
 import 'service_price.dart';
@@ -56,11 +57,10 @@ class Usta extends Equatable {
   /// Distance reported by the server for the user's location, if one was sent.
   final double? distanceKm;
 
-  /// The service as people read it ("Klima ve Kombi"), whatever casing the database holds.
-  String get subTypeText => subTypeLabel(subType, [
-    for (final c in kBuiltInCategories)
-      for (final s in c.subTypes) (value: s.value, label: s.label),
-  ]);
+  /// The service as people read it ("Klima & Kombi"), whatever casing the database holds.
+  String get subTypeText =>
+      serviceFor(mainType: mainType, subType: subType)?.label ??
+      capitalizeFirst(subType);
 
   bool get hasRating => rating > 0;
 
@@ -110,12 +110,13 @@ class Usta extends Equatable {
       isVerified: json['isVerified'] == true,
       about: (json['about'] ?? '').toString(),
       profileImage: (json['profileImage'] as String?)?.isNotEmpty == true
-          ? json['profileImage'] as String
+          ? AppConfig.resolve(json['profileImage'] as String)
           : null,
       portfolioImages: (json['portfolioImages'] is List)
           ? (json['portfolioImages'] as List)
                 .whereType<String>()
                 .where((s) => s.isNotEmpty)
+                .map(AppConfig.resolve)
                 .toList(growable: false)
           : const [],
       priceList: ServicePrice.parseList(json['priceList']),

@@ -3,15 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/accessibility/ui_scale.dart';
 import '../../core/errors/app_failure.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/utils/validators.dart';
 import '../../core/widgets/app_sheet.dart';
+import '../../data/models/service_request.dart';
 import '../../data/models/usta.dart';
+import '../auth/auth_controller.dart';
 import '../location/location_controller.dart';
 import '../orders/requests_controller.dart';
 
-Future<bool?> showRequestSheet(BuildContext context, Usta usta) =>
-    showAppSheet<bool>(context, builder: (_) => _RequestSheet(usta: usta));
+/// "Hizmet talebi": what needs doing, in the customer's words. It becomes the first message of
+/// the chat ("Hizmet Talebi: …"). Returns the created request, or null when dismissed.
+Future<ServiceRequest?> showRequestSheet(BuildContext context, Usta usta) =>
+    showAppSheet<ServiceRequest>(
+      context,
+      builder: (_) => _RequestSheet(usta: usta),
+    );
 
 class _RequestSheet extends ConsumerStatefulWidget {
   const _RequestSheet({required this.usta});
@@ -24,8 +33,10 @@ class _RequestSheet extends ConsumerStatefulWidget {
 
 class _RequestSheetState extends ConsumerState<_RequestSheet> {
   final _form = GlobalKey<FormState>();
-  final _description = TextEditingController();
-  final _phone = TextEditingController();
+  late final _description = TextEditingController();
+  late final _phone = TextEditingController(
+    text: ref.read(authProvider).account?.phone ?? '',
+  );
   bool _sending = false;
   String? _error;
 
@@ -44,7 +55,7 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
     });
     try {
       final location = ref.read(locationProvider).location;
-      await ref
+      final created = await ref
           .read(requestsProvider.notifier)
           .create(
             mainType: widget.usta.mainType,
@@ -55,7 +66,7 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
             contactPhone: _phone.text.trim(),
             location: location,
           );
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) Navigator.of(context).pop(created);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -86,25 +97,27 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
               style: AppTypography.title,
             ),
             const SizedBox(height: AppSpacing.xs),
-            const Text(
-              'Sorununu kısaca anlat, usta seninle iletişime geçsin.',
+            Text(
+              'Ne yapılması gerektiğini yaz. Mesajın ustaya “Hizmet Talebi” olarak gider ve sohbet açılır.',
               style: AppTypography.bodySm,
             ),
             const SizedBox(height: AppSpacing.xl),
             TextFormField(
               controller: _description,
               minLines: 3,
-              maxLines: 5,
-              maxLength: 500,
+              maxLines: 6,
+              maxLength: 600,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
                 labelText: 'Ne yapılması gerekiyor?',
                 hintText:
-                    'Örn. Mutfak musluğu damlatıyor, bu hafta bakılabilir mi?',
+                    'Örn. Mutfaktaki priz çalışmıyor, bu hafta bakılabilir mi?',
               ),
-              validator: (v) => (v == null || v.trim().length < 10)
-                  ? 'Lütfen birkaç cümleyle anlat (en az 10 karakter).'
-                  : null,
+              validator: (v) => Validators.required(
+                v,
+                'Lütfen birkaç cümleyle anlat (en az 10 karakter).',
+                min: 10,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             TextFormField(
@@ -114,16 +127,15 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
               autofillHints: const [AutofillHints.telephoneNumber],
               decoration: const InputDecoration(
                 labelText: 'Telefon numaran (isteğe bağlı)',
-                hintText: '05xx xxx xx xx',
+                hintText: '05XX XXX XX XX',
+                helperText: 'Usta seni gerekirse arayabilsin.',
               ),
             ),
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.md),
               Text(
                 _error!,
-                style: AppTypography.bodySm.copyWith(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                style: AppTypography.body.copyWith(color: AppColors.danger),
               ),
             ],
             const SizedBox(height: AppSpacing.xl),
@@ -132,12 +144,11 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
               child: FilledButton(
                 onPressed: _sending ? null : _submit,
                 child: _sending
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
+                    ? SizedBox.square(
+                        dimension: 22,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          color: Colors.white,
+                          color: AppColors.onPrimary,
                         ),
                       )
                     : const Text('Talebi gönder'),

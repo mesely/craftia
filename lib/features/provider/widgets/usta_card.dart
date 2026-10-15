@@ -48,7 +48,7 @@ class UstaCard extends StatelessWidget {
       onTap: () => context.push('/usta/${usta.id}', extra: usta),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppRadius.borderLg,
           border: Border.fromBorderSide(AppBorders.hairline),
@@ -91,11 +91,13 @@ class UstaCard extends StatelessWidget {
                           ),
                         ),
                       const SizedBox(height: AppSpacing.sm),
-                      RatingLabel(
-                        rating: usta.rating,
-                        reviewCount: usta.reviewCount,
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
+                      if (usta.hasRating) ...[
+                        RatingLabel(
+                          rating: usta.rating,
+                          reviewCount: usta.reviewCount,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                      ],
                       _Where(usta: usta, distance: distance),
                     ],
                   ),
@@ -127,7 +129,7 @@ class UstaCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.xs),
-                      const UstaIcon(
+                      UstaIcon(
                         UstaIcons.chevronRight,
                         size: 20,
                         color: AppColors.primary,
@@ -161,7 +163,7 @@ class _Where extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(top: 1),
           child: UstaIcon(UstaIcons.pin, size: 18, color: AppColors.inkMuted),
         ),
@@ -184,11 +186,11 @@ class _Signal extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Başlangıç fiyatı', style: AppTypography.caption),
+          Text('Başlangıç fiyatı', style: AppTypography.caption),
           Text(formatLira(price!), style: AppTypography.titleSm),
         ],
       );
     }
-    return const Text('Fiyat için arayın', style: AppTypography.bodySm);
+    return Text('Fiyat için arayın', style: AppTypography.bodySm);
   }
 }

@@ -54,15 +54,7 @@ class RatingLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = (large ? AppTypography.titleSm : AppTypography.label);
-    if (rating <= 0) {
-      return Text(
-        'Yeni usta',
-        style: style.copyWith(
-          color: AppColors.primary,
-          fontWeight: FontWeight.w600,
-        ),
-      );
-    }
+    if (rating <= 0) return const SizedBox.shrink();
     return Wrap(
       spacing: AppSpacing.xs,
       runSpacing: 2,
@@ -102,7 +94,7 @@ class VerifiedLabel extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const UstaIcon(UstaIcons.verified, size: 18, color: AppColors.primary),
+        UstaIcon(UstaIcons.verified, size: 18, color: AppColors.primary),
         const SizedBox(width: AppSpacing.xs),
         Flexible(
           child: Text(

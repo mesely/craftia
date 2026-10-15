@@ -34,8 +34,8 @@ class AppNetworkImage extends StatelessWidget {
       memCacheWidth: cacheWidth,
       maxWidthDiskCache: 1000,
       fadeInDuration: const Duration(milliseconds: 150),
-      placeholder: (_, _) => const ColoredBox(color: AppColors.surfaceMuted),
-      errorWidget: (_, _, _) => const ColoredBox(
+      placeholder: (_, _) => ColoredBox(color: AppColors.surfaceMuted),
+      errorWidget: (_, _, _) => ColoredBox(
         color: AppColors.surfaceMuted,
         child: Center(
           child: UstaIcon(

@@ -76,7 +76,7 @@ class LocationNotice extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    const UstaIcon(
+                    UstaIcon(
                       UstaIcons.locate,
                       size: 26,
                       color: AppColors.primary,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/services.dart';
 import '../../core/icons/usta_icon.dart';
 import '../../core/theme/app_borders.dart';
 import '../../core/theme/app_colors.dart';
@@ -10,31 +11,13 @@ import 'category_icons.dart';
 /// Drawn in one flat blue style so a klima looks like a klima and a boyacı like a boyacı.
 /// Unknown services fall back to their category's art, then to the icon family.
 String? serviceArtAsset({String? mainType, String? subType}) {
-  final t = foldTurkish(subType ?? '');
-  const rules = <(String, String)>[
-    ('elektrik', 'elektrikci'),
-    ('tesisat', 'su-tesisatcisi'),
-    ('klima', 'klima-kombi'),
-    ('kombi', 'klima-kombi'),
-    ('boya', 'boyaci'),
-    ('dekorasyon', 'dekorasyon'),
-    ('marangoz', 'marangoz'),
-    ('beyaz esya', 'beyaz-esya'),
-    ('camasir', 'beyaz-esya'),
-    ('buzdolabi', 'beyaz-esya'),
-    ('elektronik', 'elektronik'),
-    ('televizyon', 'elektronik'),
-    ('laptop', 'elektronik'),
-    ('temizlik', 'ev-temizligi'),
-  ];
-  for (final (keyword, file) in rules) {
-    if (t.contains(keyword)) return 'assets/services/$file.webp';
-  }
+  final service = serviceFor(mainType: mainType, subType: subType);
+  if (service != null) return service.art;
   return switch (mainType) {
-    'TECHNICAL' => 'assets/services/elektrikci.webp',
-    'CONSTRUCTION' => 'assets/services/boyaci.webp',
+    'TECHNICAL' => 'assets/services/elektrik.webp',
+    'CONSTRUCTION' => 'assets/services/boya.webp',
     'TECH' => 'assets/services/elektronik.webp',
-    'LIFE' => 'assets/services/ev-temizligi.webp',
+    'LIFE' => 'assets/services/temizlik.webp',
     _ => null,
   };
 }
@@ -62,7 +45,7 @@ class ServiceArt extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: asset == null ? AppColors.surface : AppColors.artPlate,
         borderRadius: radius,
         border: Border.fromBorderSide(AppBorders.hairline),
       ),
@@ -77,10 +60,13 @@ class ServiceArt extends StatelessWidget {
             )
           : Image.asset(
               asset,
-              fit: BoxFit.cover,
+              // The whole drawing is always visible; only the empty margin meets the rounded frame.
+              fit: BoxFit.contain,
               cacheWidth: (size * dpr).round(),
               excludeFromSemantics: true,
               filterQuality: FilterQuality.medium,
+              color: AppColors.artPlate,
+              colorBlendMode: BlendMode.multiply,
             ),
     );
   }

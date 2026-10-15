@@ -1,78 +1,66 @@
-# Usta Rebuild Progress
+# Usta Progress
 
 ## Current State
-Flutter client + NestJS modular monolith, working end to end against the **real MongoDB Atlas database** (`usta_db`, 9 042 providers) through the backend. Map tab removed, 3-tab navigation, blue design system, UI size setting (Normal / Büyük / Çok büyük), original icon family, Gemini-generated per-service illustrations. Branch: `flutter-rebuild`.
+Usta v2: Turkish-first local-services marketplace. Flutter client + NestJS modular monolith + MongoDB Atlas `usta_db` (9 042 real providers). Branch `flutter-rebuild`. Everything the last big brief asked for is implemented and tested; what is left is release hardening (see Remaining).
 
 ## Architecture
 ```
-Flutter (Riverpod, go_router, Dio) --HTTPS/REST--> server/ (NestJS) --> MongoDB Atlas (DATA_SOURCE=mongo) | in-memory mock (DATA_SOURCE=mock)
+Flutter (Riverpod 3, go_router 18, Dio) --REST--> server/ (NestJS 12, Mongoose 9) --> MongoDB Atlas (DATA_SOURCE=mongo) | in-memory (DATA_SOURCE=mock)
 ```
-- `lib/app` router+bootstrap · `lib/core` theme, accessibility (UiScale), icons, network, widgets, utils · `lib/features/*` · `lib/data` models/repositories/datasources.
-- `server/src/{providers,reviews,orders,users,notifications,categories,config,common,data}`; Mock and Mongo repository per module, chosen by `DATA_SOURCE`.
+- `lib/app` router/bootstrap/app (theme switch) · `lib/core` theme (AppPalette light/dark, typography, radius, spacing), accessibility (UiScale), icons, network, widgets, utils · `lib/features/{auth,chat,discovery,home,location,notifications,orders,profile,provider,reviews,safety,settings,shell}` · `lib/data` models/repositories/datasources.
+- `server/src/{accounts,attachments,categories,common(store),complaints,conversations,notifications,orders,privacy,providers,reviews,users}`; `Store<T>` abstraction with `MemoryStore` / `MongoStore` via `StoreFactory`.
 
-## Completed
-- [x] Flutter app + NestJS monolith, legacy Next.js/Capacitor/microservices removed (previous session).
-- [x] Map tab and `lib/features/map` removed. Location stays (GPS, city, coordinates, haversine distance, nearest sort, distance filter). "Yol Tarifi" opens an external maps URL (`ContactLauncher.directionsUri`), shown only when the usta has a shop address; otherwise "Hizmet bölgesi".
-- [x] Navigation: Ana Sayfa / Taleplerim / Profil. Search + categories + filters live inside Ana Sayfa (old "Ara" tab merged in).
-- [x] Design system: blue palette (`AppColors`), 8/12/16/24 radius (no pills), Inter 13–28 sp, `AppBorders`, `UiScale`/`UiMetrics` (text factor × OS text scale, tap target 48/56/64, button height, gutter, avatar), persisted in SharedPreferences, loaded in `bootstrap` before first frame.
-- [x] Icon family `lib/core/icons` (SVG path data, sync painter) incl. one icon per service; Phosphor removed.
-- [x] Gemini-generated, one-style blue illustrations for the 9 real services in `assets/services/*.webp` (~50 KB total), mapped by `serviceArtAsset()` (keyword based, case/diacritic-insensitive, category fallback).
-- [x] Provider card redesigned (identity, specialty, rating, district/distance, price signal, one action "Ustayı Gör"); detail page redesigned (primary "Ara", secondary "Mesaj Gönder" → sheet with SMS / hizmet talebi; price list, work photos, reviews, address/service area).
-- [x] Filters: simple sheet (Hizmet türü, Şehir, Uzaklık as plain choices), sort sheet, active filter count + "Temizle". Location notice never blocks.
-- [x] Backend taxonomy aligned with real data; `isVerified` is only `aiVerified` (premium = "Öne çıkan", never "doğrulanmış"); optional `serviceAreas`.
-- [x] `npm run db:check` (read-only diagnostics, classifies DNS/AUTH/TLS/IP failures, never prints secrets).
-- [x] Real-DB smoke test via API: health, categories, providers (filters, search, nearest + distance), detail, reviews.
-
-## In Progress
-- [ ] none
+## Completed (this phase)
+- [x] Navigation: Ana Sayfa / Taleplerim / **Ayarlar**. Fixed top bar (brand; notifications bell + profile button top-right). Arayüz Boyutu lives in Ayarlar only.
+- [x] Home: header, search, location row ("İlçe, İl" from reverse geocoding), single filtering model = 9 Gemini picture tiles (`kServices`; Elektrik/Su/Klima separate; no "Tüm hizmetler"), results header with `Sırala:` + `Uzaklık`, `Temizle` summary. Search clears the service.
+- [x] Location requested once automatically at first home open; "Konumumu kullan" notice only when not granted.
+- [x] Detail page: Adres + Yol Tarifi above Fiyat listesi; "Yeni usta" text removed; thumbnail frame unchanged.
+- [x] Onboarding (3 pages, Gemini art) + role choice: Usta arıyorum / Ustayım (3-step wizard, all fields mandatory except prices) / Giriş yap / Şimdilik göz at.
+- [x] Mock auth (client-side, salted SHA-256 registry, server `app_accounts` upsert). **Typing `admin` in any field of login/registration passes** (disable with `--dart-define=MOCK_AUTH=false`). Usta registration with admin creates a provider flagged `isDemo`.
+- [x] Chat: first message `Hizmet Talebi: <text>`, swipe-right reply, edit/delete own messages, photos, field-specific "Hazır mesajlar", Ara in header, WhatsApp/SMS options in contact sheet, soft delete, system messages, unread counters, status actions (kabul / iş bitti). Polling chat 3 s, requests 15 s.
+- [x] Taleplerim redesigned (request title large, provider secondary, status wording "Ustaya iletildi" etc., "Ustayı ara").
+- [x] Safety/legal: KVKK, Kullanıcı Sözleşmesi, Sorumluluk Reddi ("sahibinden usulü"), Güvenli iletişim rehberi, Şikayet ve resmi başvurular (e-Devlet Tüketici Hakem Heyeti, Ticaret Bakanlığı, ALO 175, 155), complaint form with reference number, Verilerimi indir (JSON via share sheet), Hesabımı sil (anonymises). **Legal texts are drafts: need a lawyer.**
+- [x] Dark theme + Görünüm setting (Telefonu izle / Açık / Koyu), persisted (`theme_mode`). `AppColors` reads the active `AppPalette`; `UstaApp` applies it and marks the tree dirty on change (const widgets included). Illustrations sit on `artPlate`. Palettes are WCAG-AA tested.
+- [x] Gemini assets: 9 service tiles, 3 onboarding illustrations, app icon + splash; app icon installed on iOS/Android.
+- [x] Bug fixes found by tests: top bar overflow at large text, price list row overflow at large text, light `borderStrong`/`danger`/`success` contrast raised to AA.
+- [x] README rewritten with screenshots (`docs/screenshots`).
 
 ## Remaining
-- [ ] Atlas data quality (not an app bug): some documents' `lat/lng` do not match their `city/district` (crawler search point), `subType` casing is lower-case, `openingFee`/`pricePerUnit` are identical placeholders (500/100) on all docs so they are NOT shown as prices, no portfolio photos / profile images / priceList in almost all docs → UI shows the service illustration and "Fiyat için arayın".
-- [ ] 2dsphere index `location_2dsphere` exists but `location` is set on 1 document only; nearest sorting uses `lat/lng` in an aggregation (fine at 9k docs; add a GeoJSON backfill + `$geoNear` if the collection grows).
-- [ ] Release (App Store) signing not configured; development signing works with team 8YVY52TTXP.
+- [ ] Real authentication (SMS/e-mail + JWT). Today the server trusts client ids (known limitation, README says so).
+- [ ] Push notifications (FCM/APNs); payments for "Öne çıkan" (currently info/mailto only).
+- [ ] Lawyer review of legal texts; App Store / Play signing.
+- [ ] Atlas data quality: coordinates vs city mismatches, almost no photos/prices (UI never invents them).
+- [ ] Atlas still holds test data with prefixes `simtest-`/`smoketest-` and demo providers: run `cd server && npm run db:cleanup-test simtest-` (and `smoketest-`) when finished testing.
+- [ ] Visual check of provider-register wizard steps 2–3 on a device (logic is unit-tested; typing "admin" is awkward in the simulator because paste needs an OS permission prompt).
 
 ## Product Decisions
-- No Map tab, ever. Location is infrastructure; directions are external.
-- Distance is straight-line, worded "… uzakta".
-- Premium = paid placement ("Öne çıkan"). Only "Doğrulanmış" is a trust mark.
-- Do not invent prices: only show what the data has.
-- No WhatsApp anywhere (none existed in this repo; verified by grep).
+- No Map tab, ever. Directions are external ("Yol Tarifi").
+- Premium = "Öne çıkan" paid placement, never "doğrulanmış". Verified only from `aiVerified`.
+- Never invent prices; `openingFee`/`pricePerUnit` (500/100 placeholders) are never shown.
+- Platform is a listing/communication service; disputes are between users (stated in-app; official channels linked).
+- Messages are stored server-side and may be disclosed in disputes; users are told in chat, sign-up and KVKK text.
 
 ## Design Decisions
-- Blue monochrome family; primary `#0F4C9A`, soft `#DDE9F8`, background `#F4F6FA`.
-- Selection = border + fill + check mark (never colour alone). Status = icon + words.
-- Specialties/metadata are plain text lines ("A · B"), not pill chips. Radius vocabulary only 8/12/16/24.
-- Big text: category grid goes 3 → 2 columns, rows wrap instead of overflow (covered by tests at 320 dp × 1.5 system font × Büyük / Çok büyük).
-- Service art is a white square thumbnail with hairline border (no transparency processing).
+- Blue family, primary `#0F4C9A` (dark: `#6AA6F0`), radii 8/12/16/24 only, Inter, custom icon family, selection = border + fill + check.
+- UiScale Normal/Büyük/Çok büyük × OS text scale; top bar wordmark and price rows adapt at very large text.
 
 ## Database State
-- Atlas cluster `cs306cluster`, database `usta_db`: `providers` 9 042, `reviews` 3, `orders` 6, `notifications` 9, `users` 0, `locations` 0, `categories` 0 (taxonomy is served from code).
-- Taxonomy in data: TECHNICAL (elektrikçi, su tesisatçısı, klima ve kombi servisi), CONSTRUCTION (boyacı, dekorasyon, marangoz), TECH (beyaz eşya tamiri, elektronik tamiri), LIFE (ev temizliği).
-- Indexes present: `isPremium_-1_rating_-1`, `location_2dsphere`, `city_1_subType_1`, `isPremium_-1_createdAt_-1`, `city_1_mainType_1`. Query patterns (mainType/subType/city filter + premium/rating sort) are covered by these; no new indexes added. No writes/migrations were run against Atlas by the agent.
-- Credentials live only in `server/.env` (gitignored, mode 600). `.env.example` has placeholders only (`DATABASE_NAME=usta_db`).
+Atlas `cs306cluster` / `usta_db`: providers 9 042 (+ a few demo/test), plus app collections created by the backend (`app_accounts`, conversations, messages, attachments, complaints, orders…). Credentials only in gitignored `server/.env`. Scripts: `npm run db:check`, `npm run db:cleanup-test <prefix>`.
 
 NEVER PUT CREDENTIALS OR SECRETS HERE.
 
-## Files / Areas Changed
-`lib/core/{theme,accessibility,icons,widgets}`, `lib/features/{discovery,provider,settings,orders,shell}`, `lib/data/models/{usta,filter_state}.dart`, `assets/{services,illustrations,brand}`, `server/src/{categories,providers,data}`, `server/scripts/db-check.js`, `test/**`, `README.md`.
-
-## Validation
-flutter analyze: no issues (last run after final edits)
-flutter test: 50 passed (incl. UI-size + large system font overflow tests, no Map tab, Gemini art wiring is covered through card/detail renders)
-Android build: `flutter build apk --debug` succeeded
-iOS validation: release build installed and launched on a physical iPhone (wireless) against the Mac backend (API_BASE_URL=LAN IP); also verified on the iPhone 16 Pro simulator
-backend build: `npm run build` ok
-backend tests: 15 passed
-real DB smoke test: ok (health `dataSource: mongo`, providers/categories/detail/reviews)
+## Validation (last run)
+- flutter analyze: only 8 pre-existing `curly_braces_in_flow_control_structures` infos
+- flutter test: 97 passed
+- server: `npm test` 23 passed, `npm run build` ok
+- Simulator (iPhone 16 Pro) verified: home, detail, contact sheet, chat, requests, notifications, settings, official page, welcome, dark theme live switch.
 
 ## Known Issues
-- Disk was ~99 % full on the dev machine; Xcode DerivedData and `build/` were cleared (regenerable). Keep ≥3 GB free for Android/iOS builds.
-- Gemini cannot be driven fully non-interactively; images were captured from the Gemini viewer (680 px) and compressed to 384 px WebP.
+- Keep ≥3 GB free disk for iOS/Android builds (regenerable caches: Xcode DerivedData, `build/`, ~/.gradle/caches).
+- Gemini images were captured from its viewer and processed with PIL (neutral-noise cleanup, WebP).
 
 ## Exact Next Steps
-1. If more services appear in Atlas, add keyword rules in `serviceArtAsset`/`serviceIcon` and one Gemini illustration in the same style.
-2. Optional: backfill GeoJSON `location` and use `$geoNear` if the dataset grows.
-3. Release signing for Android/iOS.
+1. Clean Atlas test data (command above). 2. Real auth + JWT guard on the API. 3. Push notifications. 4. Release signing and store listing.
 
 ## Last Known Good Commit
-49ad700 (branch flutter-rebuild)
+see `git log` (branch `flutter-rebuild`).

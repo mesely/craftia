@@ -1,5 +1,7 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { AccountsModule } from '../accounts/accounts.module';
+import { AttachmentsModule } from '../attachments/attachments.module';
 import { isMongo } from '../config/env';
 import { ProviderDoc, ProviderSchema } from './provider.schema';
 import { ProvidersController } from './providers.controller';
@@ -18,7 +20,11 @@ export class ProvidersModule {
     const mongo = isMongo();
     return (ProvidersModule.cached = {
       module: ProvidersModule,
-      imports: mongo ? [MongooseModule.forFeature([{ name: ProviderDoc.name, schema: ProviderSchema }])] : [],
+      imports: [
+        AccountsModule,
+        AttachmentsModule,
+        ...(mongo ? [MongooseModule.forFeature([{ name: ProviderDoc.name, schema: ProviderSchema }])] : []),
+      ],
       controllers: [ProvidersController],
       providers: [
         ProvidersService,

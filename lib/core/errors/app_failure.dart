@@ -34,3 +34,14 @@ class AppFailure implements Exception {
   @override
   String toString() => 'AppFailure($kind)';
 }
+
+/// Runs a repository call and turns anything that goes wrong into a user-presentable [AppFailure].
+Future<T> guarded<T>(Future<T> Function() action) async {
+  try {
+    return await action();
+  } on AppFailure {
+    rethrow;
+  } catch (_) {
+    throw AppFailure.unknown;
+  }
+}

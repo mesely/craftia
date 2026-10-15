@@ -13,11 +13,14 @@ import 'app_typography.dart';
 abstract final class AppTheme {
   static ThemeData get light => build(UiMetrics.normal);
 
-  static ThemeData build(UiMetrics m) {
+  /// Reads the colours from [AppColors], so call `AppColors.apply` first.
+
+  static ThemeData build(UiMetrics m, {Brightness? brightness}) {
+    final mode = brightness ?? AppColors.palette.brightness;
     final scheme =
         ColorScheme.fromSeed(
           seedColor: AppColors.primary,
-          brightness: Brightness.light,
+          brightness: mode,
         ).copyWith(
           primary: AppColors.primary,
           onPrimary: AppColors.onPrimary,
@@ -52,7 +55,7 @@ abstract final class AppTheme {
           TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
         },
       ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -143,28 +146,28 @@ abstract final class AppTheme {
           color: AppColors.danger,
           fontWeight: FontWeight.w500,
         ),
-        border: const OutlineInputBorder(
+        border: OutlineInputBorder(
           borderRadius: AppRadius.borderMd,
           borderSide: AppBorders.hairline,
         ),
-        enabledBorder: const OutlineInputBorder(
+        enabledBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderMd,
           borderSide: BorderSide(color: AppColors.borderStrong),
         ),
-        focusedBorder: const OutlineInputBorder(
+        focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderMd,
           borderSide: BorderSide(color: AppColors.primary, width: 2),
         ),
-        errorBorder: const OutlineInputBorder(
+        errorBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderMd,
           borderSide: BorderSide(color: AppColors.danger, width: 1.5),
         ),
-        focusedErrorBorder: const OutlineInputBorder(
+        focusedErrorBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderMd,
           borderSide: BorderSide(color: AppColors.danger, width: 2),
         ),
       ),
-      bottomSheetTheme: const BottomSheetThemeData(
+      bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.sheetTop),
@@ -184,7 +187,7 @@ abstract final class AppTheme {
               : AppColors.borderStrong,
         ),
       ),
-      dividerTheme: const DividerThemeData(
+      dividerTheme: DividerThemeData(
         color: AppColors.border,
         space: 1,
         thickness: 1,

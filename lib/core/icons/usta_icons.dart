@@ -172,7 +172,43 @@ abstract final class UstaIcons {
   static const sofa = UstaIconData(
     'M4 11V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3 M2 13a2 2 0 0 1 4 0v2h12v-2a2 2 0 0 1 4 0v5H2z M5 18v2 M19 18v2',
   );
+
+  /// A wrench: "usta", and the carpenter's tool glyph.
   static const hammer = UstaIconData(
-    'M13.500 4.500l6 6-3 3-6-6z M10.500 9.500L4.500 15.500a1.700 1.700 0 0 0 2.400 2.400l6-6',
+    'M14.500 9.500l-.4-2.600 2.600-.4L19 4.200A5 5 0 0 0 11.700 10.700L4.600 17.800a2.100 2.100 0 0 0 3 3l7.100-7.100A5 5 0 0 0 20.200 7z',
+  );
+
+  // Account, chat and safety
+  static const bell = UstaIconData(
+    'M12 3.500a6 6 0 0 0-6 6V14l-1.500 3h15L18 14V9.500a6 6 0 0 0-6-6z M10 20.500a2 2 0 0 0 4 0',
+  );
+  static const settings = UstaIconData(
+    'M12 9a3 3 0 1 0 0 6a3 3 0 0 0 0-6z M19.400 13.500l1.800 1.400-1.800 3.100-2.100-.8a6.500 6.500 0 0 1-1.800 1l-.4 2.200h-3.600l-.4-2.200a6.500 6.500 0 0 1-1.800-1l-2.100.8-1.800-3.100 1.800-1.400a6.500 6.500 0 0 1 0-2l-1.800-1.400 1.800-3.100 2.100.8a6.500 6.500 0 0 1 1.800-1l.4-2.200h3.600l.4 2.200a6.500 6.500 0 0 1 1.800 1l2.100-.8 1.800 3.100-1.800 1.400a6.500 6.500 0 0 1 0 2z',
+  );
+  static const moon = UstaIconData(
+    'M20 14.500A8 8 0 1 1 9.500 4a6.500 6.500 0 0 0 10.500 10.500z',
+  );
+  static const download = UstaIconData('M12 4v11 M7 11l5 5 5-5 M5 20h14');
+  static const logout = UstaIconData(
+    'M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3 M16 8l4 4-4 4 M20 12H9',
+  );
+  static const flag = UstaIconData('M5 21V4 M5 4h11l-2 4 2 4H5');
+  static const reply = UstaIconData('M9 7L4 12l5 5 M4 12h10a6 6 0 0 1 6 6v1');
+  static const send = UstaIconData('M21 3L10 14 M21 3l-7 18-4-8-8-4z');
+  static const copy = UstaIconData(
+    'M9 9h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1z M5 15V5a1 1 0 0 1 1-1h10',
+  );
+  static const info = UstaIconData(
+    'M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18z M12 11v6 M12 7.500v.01',
+  );
+  static const lock = UstaIconData(
+    'M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1z M8 11V8a4 4 0 0 1 8 0v3',
+  );
+  static const more = UstaIconData('M5 12v.01 M12 12v.01 M19 12v.01');
+  static const crown = UstaIconData(
+    'M4 18h16 M4.500 16L3 7l5 4 4-6 4 6 5-4-1.500 9z',
+  );
+  static const photoCamera = UstaIconData(
+    'M4 8h3l1.500-2.500h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z M12 10.500a3.500 3.500 0 1 0 0 7a3.500 3.500 0 0 0 0-7z',
   );
 }

@@ -35,7 +35,8 @@ export interface MessageEntity {
 
 export interface AttachmentEntity {
   id: string;
-  conversationId: string;
+  /** Null for photos that belong to an usta's page rather than a chat. */
+  conversationId: string | null;
   ownerId: string;
   contentType: string;
   /** Base64. Photos are downscaled on the phone, so this stays small. */

@@ -42,6 +42,37 @@ class ContactLauncher {
     return _launch(uri, mode: LaunchMode.externalApplication);
   }
 
+  /// Opens a web page in the browser (official application pages, etc.).
+  Future<bool> openUrl(String url) =>
+      _launch(Uri.parse(url), mode: LaunchMode.externalApplication);
+
+  /// "05321234567" / "+90 532 123 45 67" -> "905321234567", or null when it is not a usable number.
+  static String? whatsappNumber(String phone) {
+    var digits = phone.replaceAll(RegExp(r'\D'), '');
+    if (digits.startsWith('00')) digits = digits.substring(2);
+    if (digits.length == 11 && digits.startsWith('0')) {
+      digits = '90${digits.substring(1)}';
+    } else if (digits.length == 10 && digits.startsWith('5')) {
+      digits = '90$digits';
+    }
+    return digits.length >= 11 && digits.length <= 15 ? digits : null;
+  }
+
+  /// Universal WhatsApp link: opens the app when installed, otherwise WhatsApp Web / the store page.
+  static Uri? whatsappUri(String phone, {String? text}) {
+    final number = whatsappNumber(phone);
+    if (number == null) return null;
+    return Uri.https('wa.me', '/$number', {
+      if (text != null && text.isNotEmpty) 'text': text,
+    });
+  }
+
+  Future<bool> whatsapp(String phone, {String? text}) {
+    final uri = whatsappUri(phone, text: text);
+    if (uri == null) return Future.value(false);
+    return _launch(uri, mode: LaunchMode.externalApplication);
+  }
+
   Future<bool> _launch(
     Uri uri, {
     LaunchMode mode = LaunchMode.platformDefault,

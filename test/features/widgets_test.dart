@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:usta/core/constants/services.dart';
 import 'package:usta/core/errors/app_failure.dart';
 import 'package:usta/core/theme/app_theme.dart';
 import 'package:usta/data/models/filter_state.dart';
 import 'package:usta/data/models/user_location.dart';
 import 'package:usta/features/discovery/discovery_screen.dart';
+import 'package:usta/features/discovery/service_tile.dart';
 import 'package:usta/features/location/location_service.dart';
 import 'package:usta/features/provider/widgets/usta_card.dart';
 import 'package:usta/features/provider/widgets/usta_results.dart';
@@ -34,7 +37,20 @@ Future<void> settle(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 450));
 }
 
+/// The picture tile for a service (the same words also appear on provider cards).
+Finder tile(String label) =>
+    find.descendant(of: find.byType(ServiceTile), matching: find.text(label));
+
+Future<void> tapTile(WidgetTester tester, String label) async {
+  await tester.ensureVisible(tile(label));
+  await tester.pump();
+  await tester.tap(tile(label));
+  await tester.pump(const Duration(seconds: 1));
+}
+
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   group('UstaCard', () {
     testWidgets('shows the evaluation essentials and one clear action', (
       tester,
@@ -50,7 +66,6 @@ void main() {
       );
 
       expect(find.text('Yıldız Elektrik 1'), findsOneWidget);
-      expect(find.text('Elektrikçi'), findsOneWidget);
       expect(find.text('4,5'), findsOneWidget);
       expect(find.text('(12 yorum)'), findsOneWidget);
       expect(find.textContaining('Kadıköy, İstanbul'), findsOneWidget);
@@ -73,7 +88,7 @@ void main() {
       await tester.pumpWidget(
         host(UstaCard(usta: fakeUsta(2, rating: 0, withPrices: false))),
       );
-      expect(find.text('Yeni usta'), findsOneWidget);
+      expect(find.text('Yeni usta'), findsNothing);
       expect(find.text('Fiyat için arayın'), findsOneWidget);
       expect(find.textContaining('uzakta'), findsNothing);
     });
@@ -178,7 +193,7 @@ void main() {
           overrides: testOverrides(usta: repo, location: loc),
           child: MaterialApp(
             theme: AppTheme.light,
-            home: const DiscoveryScreen(),
+            home: const Scaffold(body: DiscoveryScreen()),
           ),
         );
 
@@ -188,78 +203,106 @@ void main() {
       ],
     );
 
-    testWidgets('starts with every service and no map', (tester) async {
+    testWidgets('one clear way to filter: the service tiles, and no map', (
+      tester,
+    ) async {
       tallScreen(tester);
       final repo = oneUsta();
       await tester.pumpWidget(discovery(repo));
       await settle(tester);
 
-      expect(repo.queries.last.filters.mainType, isNull);
+      expect(repo.queries.last.filters.subType, isNull);
       expect(find.text('Hangi ustaya ihtiyacın var?'), findsOneWidget);
-      expect(find.text('Ne hizmeti arıyorsun?'), findsOneWidget);
-      expect(find.text('Elektrik, Su & Klima'), findsOneWidget);
+      expect(find.text('Hizmet seç'), findsOneWidget);
+      for (final service in kServices) {
+        expect(tile(service.label), findsOneWidget);
+      }
+      expect(find.text('Tüm hizmetler'), findsNothing);
+      expect(find.text('Filtrele'), findsNothing);
       expect(find.textContaining('Harita'), findsNothing);
       expect(find.text('Yıldız Elektrik 1'), findsOneWidget);
     });
 
-    testWidgets('category, sub-type and sort re-query with the new filters', (
-      tester,
-    ) async {
+    testWidgets('a tile filters, a second tap clears it', (tester) async {
       tallScreen(tester);
       final repo = oneUsta();
       await tester.pumpWidget(discovery(repo));
       await settle(tester);
 
-      await tester.tap(find.text('Elektrik, Su & Klima'));
+      await tapTile(tester, 'Su Tesisatı');
       await settle(tester);
       expect(repo.queries.last.filters.mainType, 'TECHNICAL');
-
-      await tester.tap(find.text('Filtrele'));
-      await settle(tester);
-      await tester.tap(find.text('Su Tesisatçısı'));
-      await settle(tester);
       expect(repo.queries.last.filters.subType, 'Su Tesisatçısı');
-      await tester.tap(find.textContaining('ustayı göster'));
-      await settle(tester);
-      expect(find.text('Filtrele (1)'), findsOneWidget);
 
-      await tester.tap(find.textContaining('Sırala'));
+      await tapTile(tester, 'Temizlik');
+      await settle(tester);
+      expect(repo.queries.last.filters.mainType, 'LIFE');
+      expect(repo.queries.last.filters.subType, 'Ev Temizliği');
+
+      await tapTile(tester, 'Temizlik');
+      await settle(tester);
+      expect(repo.queries.last.filters.subType, isNull);
+    });
+
+    testWidgets('sorting sits with the results and re-queries', (tester) async {
+      tallScreen(tester);
+      final repo = oneUsta();
+      await tester.pumpWidget(discovery(repo));
+      await settle(tester);
+
+      await tester.tap(find.textContaining('Sırala:'));
       await settle(tester);
       await tester.tap(find.text('En yüksek puan').last);
       await settle(tester);
       expect(repo.queries.last.filters.sortMode, SortMode.rating);
-
-      await tester.tap(find.text('Temizlik'));
-      await settle(tester);
-      expect(repo.queries.last.filters.mainType, 'LIFE');
-      expect(
-        repo.queries.last.filters.subType,
-        isNull,
-        reason: 'sub-type resets with the category',
-      );
+      expect(find.text('Sırala: Puana göre'), findsOneWidget);
     });
 
-    testWidgets('searching spans all services and can be cleared', (
+    testWidgets('searching replaces the service and can be cleared', (
       tester,
     ) async {
       tallScreen(tester);
       final repo = oneUsta();
       await tester.pumpWidget(discovery(repo));
       await settle(tester);
-      await tester.tap(find.text('Beyaz Eşya & Elektronik'));
+      await tapTile(tester, 'Elektronik');
       await settle(tester);
       expect(repo.queries.last.filters.mainType, 'TECH');
 
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+      await settle(tester);
       await tester.enterText(find.byType(TextField), 'kombi');
       await tester.pump(const Duration(milliseconds: 500));
       await settle(tester);
       expect(repo.queries.last.filters.query, 'kombi');
-      expect(repo.queries.last.filters.mainType, isNull);
+      expect(repo.queries.last.filters.subType, isNull);
       expect(find.text('Arama sonuçları'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Aramayı temizle'));
       await settle(tester);
       expect(repo.queries.last.filters.query, '');
+    });
+
+    testWidgets('the location row names the district once the phone knows', (
+      tester,
+    ) async {
+      tallScreen(tester);
+      await tester.pumpWidget(
+        discovery(
+          oneUsta(),
+          loc: FakeLocationService(
+            const LocationFound(UserLocation(lat: 38.46, lng: 27.2)),
+          ),
+        ),
+      );
+      await settle(tester);
+      await settle(tester);
+      expect(find.text('Karşıyaka, İzmir'), findsOneWidget);
+      expect(
+        find.text('Konumumu kullan'),
+        findsNothing,
+        reason: 'no notice when location works',
+      );
     });
 
     testWidgets(

@@ -14,6 +14,14 @@ abstract final class AppConfig {
     return 'http://localhost:3000';
   }
 
+  /// Relative server paths (e.g. chat photos) become absolute URLs here.
+  static String resolve(String pathOrUrl) =>
+      pathOrUrl.startsWith('http') ? pathOrUrl : '$apiBaseUrl$pathOrUrl';
+
+  /// Mock sign-in while real authentication is not built: typing "admin" in a field gets past
+  /// onboarding and registration. Switch off with `--dart-define=MOCK_AUTH=false`.
+  static const mockAuth = bool.fromEnvironment('MOCK_AUTH', defaultValue: true);
+
   static const supportEmail = 'destek@usta.app';
   static const legalEmail = 'hukuk@ustaapp.com';
   static const appVersion = '2.0.0';

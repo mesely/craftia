@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/models/user_location.dart';
 import 'location_service.dart';
@@ -34,10 +35,25 @@ final locationServiceProvider = Provider<LocationService>(
 class LocationController extends Notifier<LocationState> {
   @override
   LocationState build() {
-    // Never block startup on GPS: quietly pick up the location only if the
-    // permission is already granted.
-    Future.microtask(() => _resolve(requestPermission: false));
+    // Never block startup on GPS. The very first time the home page opens we ask once
+    // (the system dialog explains itself); afterwards we only pick the location up quietly
+    // when the permission is already granted.
+    Future.microtask(_startup);
     return const LocationState(LocationStatus.unknown);
+  }
+
+  static const _promptedKey = 'location_prompted';
+
+  Future<void> _startup() async {
+    var firstTime = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      firstTime = !(prefs.getBool(_promptedKey) ?? false);
+      if (firstTime) await prefs.setBool(_promptedKey, true);
+    } catch (_) {
+      // No storage: behave like a returning visitor (never nag).
+    }
+    if (ref.mounted) await _resolve(requestPermission: firstTime);
   }
 
   /// Called from user actions ("Konumumu kullan"): may show the system prompt.

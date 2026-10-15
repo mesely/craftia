@@ -42,22 +42,41 @@ String initialsOf(String name) {
   return '$first$second'.toUpperCase();
 }
 
-/// "klima ve kombi servisi" (as crawled) -> "Klima ve Kombi". Known services use their app label;
-/// anything else just gets a capital first letter.
-String subTypeLabel(
-  String raw,
-  Iterable<({String value, String label})> known,
-) {
+/// "klima ve kombi servisi" -> "Klima ve kombi servisi" (Turkish-aware first letter).
+String capitalizeFirst(String raw) {
   final t = raw.trim();
   if (t.isEmpty) return t;
-  final key = t.toLowerCase().replaceAll('İ', 'i').replaceAll('I', 'ı');
-  for (final k in known) {
-    if (k.value.toLowerCase().replaceAll('İ', 'i').replaceAll('I', 'ı') ==
-        key) {
-      return k.label;
-    }
-  }
   final first = t.substring(0, 1);
   final upper = first == 'i' ? 'İ' : (first == 'ı' ? 'I' : first.toUpperCase());
   return '$upper${t.substring(1)}';
+}
+
+/// "Az önce", "14:32", "Dün", "12 Ekim": short, friendly times for lists and chat.
+String formatRelative(DateTime time, {DateTime? now}) {
+  final n = now ?? DateTime.now();
+  final today = DateTime(n.year, n.month, n.day);
+  final day = DateTime(time.year, time.month, time.day);
+  final diff = today.difference(day).inDays;
+  if (diff == 0) {
+    return n.difference(time).inMinutes < 1
+        ? 'Az önce'
+        : DateFormat('HH:mm', 'tr_TR').format(time);
+  }
+  if (diff == 1) return 'Dün';
+  if (diff < 7) return DateFormat('EEEE', 'tr_TR').format(time);
+  return DateFormat('d MMMM', 'tr_TR').format(time);
+}
+
+/// "14:32"
+String formatClock(DateTime time) => DateFormat('HH:mm', 'tr_TR').format(time);
+
+/// Day separator in chats: "Bugün", "Dün", "12 Ekim 2026".
+String formatDayLabel(DateTime time, {DateTime? now}) {
+  final n = now ?? DateTime.now();
+  final today = DateTime(n.year, n.month, n.day);
+  final day = DateTime(time.year, time.month, time.day);
+  final diff = today.difference(day).inDays;
+  if (diff == 0) return 'Bugün';
+  if (diff == 1) return 'Dün';
+  return DateFormat('d MMMM y', 'tr_TR').format(time);
 }

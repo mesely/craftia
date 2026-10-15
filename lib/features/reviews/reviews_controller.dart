@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/errors/app_failure.dart';
 import '../../data/models/review.dart';
 import '../../data/providers.dart';
+import '../auth/auth_controller.dart';
 
 class ReviewsState {
   const ReviewsState({
@@ -104,7 +105,7 @@ class ReviewsController extends Notifier<ReviewsState> {
     required String comment,
     required String authorName,
   }) async {
-    final userId = await ref.read(deviceIdProvider.future);
+    final userId = ref.read(authProvider).account?.id ?? '';
     await ref
         .read(reviewsRepositoryProvider)
         .create(

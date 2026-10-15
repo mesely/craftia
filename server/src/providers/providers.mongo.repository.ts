@@ -6,7 +6,7 @@ import { Page, toPage } from '../common/pagination';
 import { ProviderDoc, ProviderDocument } from './provider.schema';
 import { toProviderEntity } from './provider.mapper';
 import { ProviderEntity, ProviderQuery, ProviderView } from './provider.types';
-import { ProvidersRepository } from './providers.repository';
+import { ProviderProfilePatch, ProvidersRepository } from './providers.repository';
 
 const KM_PER_DEGREE = 111.32;
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -106,6 +106,22 @@ export class MongoProvidersRepository extends ProvidersRepository {
       ),
     });
     return toProviderEntity((doc as any).toObject());
+  }
+
+  async update(id: string, patch: ProviderProfilePatch): Promise<ProviderEntity | null> {
+    if (!/^[a-f\d]{24}$/i.test(id)) return null;
+    const set: Record<string, unknown> = {};
+    if (patch.about !== undefined) set.about = patch.about;
+    if (patch.address !== undefined) set.address = patch.address;
+    if (patch.serviceAreas !== undefined) set.serviceAreas = patch.serviceAreas;
+    if (patch.phoneNumber !== undefined) set.phoneNumber = patch.phoneNumber;
+    if (patch.portfolioImages !== undefined) set.portfolioImages = patch.portfolioImages;
+    if (patch.priceList !== undefined) {
+      // Same legacy shape as on create: { "service": "min-max" }.
+      set.priceList = Object.fromEntries(patch.priceList.map((p) => [p.serviceName, `${p.minPrice ?? ''}-${p.maxPrice ?? ''}`]));
+    }
+    const doc = await this.model.findByIdAndUpdate(id, { $set: set }, { new: true }).lean().exec();
+    return doc ? toProviderEntity(doc) : null;
   }
 
   async updateReviewStats(id: string, rating: number, reviewCount: number): Promise<void> {

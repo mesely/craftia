@@ -1,10 +1,10 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, PayloadTooLargeException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { AccountsService } from '../accounts/accounts.service';
+import { AttachmentsService } from '../attachments/attachments.service';
 import { Store, StoreFactory } from '../common/store';
 import { EditMessageDto, SendMessageDto, UploadAttachmentDto } from './conversations.dto';
-import { AttachmentEntity, ConversationEntity, MessageEntity } from './conversation.types';
+import { ConversationEntity, MessageEntity } from './conversation.types';
 
-const MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
 export const REQUEST_PREFIX = 'Hizmet Talebi: ';
 
 export interface OpenConversationInput {
@@ -22,12 +22,14 @@ export interface OpenConversationInput {
 export class ConversationsService {
   private readonly conversations: Store<ConversationEntity>;
   private readonly messages: Store<MessageEntity>;
-  private readonly attachments: Store<AttachmentEntity>;
 
-  constructor(stores: StoreFactory, private readonly accounts: AccountsService) {
+  constructor(
+    stores: StoreFactory,
+    private readonly accounts: AccountsService,
+    private readonly attachments: AttachmentsService,
+  ) {
     this.conversations = stores.collection<ConversationEntity>('conversations');
     this.messages = stores.collection<MessageEntity>('messages');
-    this.attachments = stores.collection<AttachmentEntity>('attachments');
   }
 
   /** Opens the chat for a new service request; its first message is always "Hizmet Talebi: …". */
@@ -186,23 +188,7 @@ export class ConversationsService {
   async upload(id: string, dto: UploadAttachmentDto): Promise<{ id: string }> {
     const conversation = await this.require(id);
     if (!(await this.roleOf(conversation, dto.senderId))) throw new ForbiddenException('Bu sohbete fotoğraf gönderemezsin.');
-    const size = Math.floor((dto.data.replace(/\s/g, '').length * 3) / 4);
-    if (size > MAX_ATTACHMENT_BYTES) throw new PayloadTooLargeException('Fotoğraf çok büyük (en fazla 3 MB).');
-    const a = await this.attachments.insert({
-      conversationId: id,
-      ownerId: dto.senderId,
-      contentType: dto.contentType,
-      data: dto.data.replace(/\s/g, ''),
-      size,
-      createdAt: new Date().toISOString(),
-    });
-    return { id: a.id };
-  }
-
-  async attachment(id: string): Promise<{ contentType: string; buffer: Buffer }> {
-    const a = await this.attachments.get(id);
-    if (!a) throw new NotFoundException('Fotoğraf bulunamadı.');
-    return { contentType: a.contentType, buffer: Buffer.from(a.data, 'base64') };
+    return { id: await this.attachments.save({ ownerId: dto.senderId, conversationId: id, contentType: dto.contentType, data: dto.data }) };
   }
 
   /** Everything the person is party to, for the "Verilerimi indir" export. */

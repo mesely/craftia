@@ -81,7 +81,7 @@ class ChoiceTile extends StatelessWidget {
                   ),
                   if (selected) ...[
                     const SizedBox(width: AppSpacing.sm),
-                    const UstaIcon(
+                    UstaIcon(
                       UstaIcons.check,
                       size: 22,
                       color: AppColors.primary,

@@ -1,59 +1,37 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/categories.dart';
+import '../../core/constants/services.dart';
 import '../../core/errors/app_failure.dart';
-import '../../data/models/category.dart';
 import '../../data/models/filter_state.dart';
 import '../../data/models/usta.dart';
 import '../../data/providers.dart';
 import '../location/location_controller.dart';
-
-// ── Categories: built-in list first, API refresh in the background ─────────
-class CategoriesController extends Notifier<List<ProviderCategory>> {
-  @override
-  List<ProviderCategory> build() {
-    Future.microtask(() async {
-      try {
-        final remote = await ref.read(ustaRepositoryProvider).fetchCategories();
-        if (ref.mounted && remote.isNotEmpty) state = remote;
-      } catch (_) {
-        // Keep the built-in taxonomy.
-      }
-    });
-    return kBuiltInCategories;
-  }
-}
-
-final categoriesProvider =
-    NotifierProvider<CategoriesController, List<ProviderCategory>>(
-      CategoriesController.new,
-    );
 
 // ── Filters ─────────────────────────────────────────────────────────────────
 class FiltersController extends Notifier<FilterState> {
   @override
   FilterState build() => const FilterState();
 
-  /// Tapping the selected category again goes back to "all services".
-  void selectCategory(String? id) {
-    if (id == null || id == state.mainType) {
+  /// Tapping the selected service again goes back to "all services".
+  void selectService(ServiceOption? service) {
+    if (service == null || service.subType == state.subType) {
       state = state.copyWith(clearMainType: true, clearSubType: true);
     } else {
-      state = state.copyWith(mainType: id, clearSubType: true, query: '');
+      state = state.copyWith(
+        mainType: service.mainType,
+        subType: service.subType,
+        query: '',
+      );
     }
   }
 
-  /// Search spans every service, so it replaces the category choice.
+  /// Search spans every service, so it replaces the service choice.
   void setQuery(String value) {
     final next = state.copyWith(query: value);
     state = next.searching
         ? next.copyWith(clearMainType: true, clearSubType: true)
         : next;
   }
-
-  void selectSubType(String? value) => state = value == null
-      ? state.copyWith(clearSubType: true)
-      : state.copyWith(subType: value);
 
   void setCity(String? city) => state = city == null
       ? state.copyWith(clearCity: true)
@@ -65,10 +43,7 @@ class FiltersController extends Notifier<FilterState> {
       ? state.copyWith(clearDistance: true)
       : state.copyWith(distanceKm: km);
 
-  /// Clears the sheet filters (subtype, city, distance); keeps category and sort.
-  void reset() =>
-      state = FilterState(mainType: state.mainType, sortMode: state.sortMode);
-
+  /// Clears service, search, city and distance; keeps the chosen sort.
   void clearAll() => state = FilterState(sortMode: state.sortMode);
 }
 

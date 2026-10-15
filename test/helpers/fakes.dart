@@ -3,18 +3,22 @@ import 'dart:async';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:mocktail/mocktail.dart';
 import 'package:usta/data/datasources/remote_data_source.dart';
-import 'package:usta/data/models/category.dart';
+import 'package:usta/data/models/account.dart';
 import 'package:usta/data/models/filter_state.dart';
 import 'package:usta/data/models/paged.dart';
 import 'package:usta/data/models/review.dart';
 import 'package:usta/data/models/service_price.dart';
 import 'package:usta/data/models/service_request.dart';
+import 'package:usta/data/models/user_location.dart';
 import 'package:usta/data/models/usta.dart';
 import 'package:usta/data/providers.dart';
 import 'package:usta/data/repositories/requests_repository.dart';
 import 'package:usta/data/repositories/reviews_repository.dart';
 import 'package:usta/data/repositories/usta_repository.dart';
+import 'package:usta/features/auth/auth_controller.dart';
+import 'package:usta/features/auth/auth_store.dart';
 import 'package:usta/features/location/location_controller.dart';
+import 'package:usta/features/location/place_name.dart';
 import 'package:usta/features/location/location_service.dart';
 
 class MockRemoteDataSource extends Mock implements RemoteDataSource {}
@@ -82,10 +86,6 @@ class FakeUstaRepository extends UstaRepository {
   @override
   Future<Usta> getById(String id) async =>
       pages.expand((p) => p).firstWhere((u) => u.id == id);
-
-  @override
-  Future<List<ProviderCategory>> fetchCategories() async =>
-      throw Exception('offline');
 }
 
 class FakeReviewsRepository extends ReviewsRepository {
@@ -118,7 +118,10 @@ class FakeRequestsRepository extends RequestsRepository {
   FakeRequestsRepository() : super(MockRemoteDataSource());
 
   @override
-  Future<List<ServiceRequest>> list(String userId) async => const [];
+  Future<List<ServiceRequest>> list({
+    String? userId,
+    String? providerId,
+  }) async => const [];
 }
 
 class FakeLocationService implements LocationService {
@@ -142,9 +145,34 @@ class FakeLocationService implements LocationService {
   Future<void> openLocationSettings() async {}
 }
 
+class FakePlaceNameService implements PlaceNameService {
+  @override
+  Future<String?> nameFor(UserLocation location) async => 'Karşıyaka, İzmir';
+}
+
+const testCustomer = Account(
+  id: 'test-customer-1',
+  role: AccountRole.customer,
+  name: 'Ayşe Yılmaz',
+  phone: '05321234567',
+  email: 'ayse@example.com',
+);
+
+const testUsta = Account(
+  id: 'test-usta-1',
+  role: AccountRole.provider,
+  name: 'Ali Usta',
+  phone: '05329998877',
+  email: 'ali@example.com',
+  providerId: 'u1',
+);
+
+/// [account] null = a guest who has already seen the welcome pages.
 List<Override> testOverrides({
   UstaRepository? usta,
   FakeLocationService? location,
+  Account? account,
+  bool onboardingSeen = true,
 }) => [
   ustaRepositoryProvider.overrideWithValue(
     usta ??
@@ -157,5 +185,8 @@ List<Override> testOverrides({
   reviewsRepositoryProvider.overrideWithValue(FakeReviewsRepository()),
   requestsRepositoryProvider.overrideWithValue(FakeRequestsRepository()),
   locationServiceProvider.overrideWithValue(location ?? FakeLocationService()),
-  deviceIdProvider.overrideWith((ref) async => 'test-device'),
+  placeNameServiceProvider.overrideWithValue(FakePlaceNameService()),
+  initialAuthProvider.overrideWithValue(
+    AuthSnapshot(account: account, onboardingSeen: onboardingSeen),
+  ),
 ];
