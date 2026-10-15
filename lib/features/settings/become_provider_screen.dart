@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
 import '../../core/constants/cities.dart';
 import '../../core/errors/app_failure.dart';
+import '../../core/icons/usta_icon.dart';
+import '../../core/icons/usta_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -124,7 +125,7 @@ class _BecomeProviderScreenState extends ConsumerState<BecomeProviderScreen> {
       appBar: AppBar(
         leading: IconButton(
           tooltip: 'Geri',
-          icon: const Icon(PhosphorIconsBold.arrowLeft),
+          icon: const UstaIcon(UstaIcons.arrowLeft, size: 26),
           onPressed: () =>
               context.canPop() ? context.pop() : context.go('/profile'),
         ),
@@ -257,7 +258,7 @@ class _BecomeProviderScreenState extends ConsumerState<BecomeProviderScreen> {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: TextButton.icon(
-                        icon: const Icon(PhosphorIconsRegular.plus, size: 18),
+                        icon: const UstaIcon(UstaIcons.plus, size: 20),
                         label: const Text('Hizmet ekle'),
                         onPressed: () =>
                             setState(() => _prices.add(_PriceRow())),
@@ -334,7 +335,7 @@ class _PriceRowEditor extends StatelessWidget {
                 if (onRemove != null)
                   IconButton(
                     tooltip: 'Satırı sil',
-                    icon: const Icon(PhosphorIconsRegular.trash, size: 20),
+                    icon: const UstaIcon(UstaIcons.trash, size: 22),
                     onPressed: onRemove,
                   ),
               ],
@@ -390,8 +391,8 @@ class _Success extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            PhosphorIconsFill.checkCircle,
+          const UstaIcon(
+            UstaIcons.checkCircle,
             size: 64,
             color: AppColors.success,
           ),

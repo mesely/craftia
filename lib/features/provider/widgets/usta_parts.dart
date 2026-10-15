@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
+import '../../../core/icons/usta_icon.dart';
+import '../../../core/icons/usta_icons.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/network_image.dart';
 import '../../../data/models/usta.dart';
+import '../../discovery/service_art.dart';
 
+/// Profile photo, or — when there is none — the trade's own symbol on a calm tint.
 class UstaAvatar extends StatelessWidget {
-  const UstaAvatar({super.key, required this.usta, this.size = 52});
+  const UstaAvatar({super.key, required this.usta, this.size = 56});
 
   final Usta usta;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(size * 0.28);
+    const radius = AppRadius.borderMd;
     if (usta.profileImage != null) {
       return AppNetworkImage(
         url: usta.profileImage!,
@@ -26,26 +30,15 @@ class UstaAvatar extends StatelessWidget {
         borderRadius: radius,
       );
     }
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppColors.primarySoft,
-        borderRadius: radius,
-      ),
-      child: Text(
-        initialsOf(usta.businessName),
-        style: AppTypography.titleSm.copyWith(
-          color: AppColors.primary,
-          fontSize: size * 0.32,
-        ),
-      ),
+    return ServiceArt(
+      size: size,
+      mainType: usta.mainType,
+      subType: usta.subType,
     );
   }
 }
 
-/// ★ 4,8 (12) — or a "Yeni" pill when nobody has reviewed yet. Never relies on colour alone.
+/// ★ 4,8 (12 yorum). A new provider says "Yeni usta" instead of a misleading 0.
 class RatingLabel extends StatelessWidget {
   const RatingLabel({
     super.key,
@@ -60,41 +53,31 @@ class RatingLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final style = (large ? AppTypography.titleSm : AppTypography.label);
     if (rating <= 0) {
       return Text(
-        'Yeni',
-        style: AppTypography.caption.copyWith(
+        'Yeni usta',
+        style: style.copyWith(
           color: AppColors.primary,
           fontWeight: FontWeight.w600,
         ),
       );
     }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: 2,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Icon(
-          PhosphorIconsFill.star,
-          size: large ? 18 : 14,
-          color: AppColors.amber,
-        ),
-        const SizedBox(width: 3),
-        Text(
-          formatRating(rating),
-          style: (large ? AppTypography.label : AppTypography.caption).copyWith(
-            color: AppColors.ink,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        if (reviewCount > 0) ...[
-          const SizedBox(width: 3),
-          Text('($reviewCount)', style: AppTypography.caption),
-        ],
+        UstaIcon(UstaIcons.star, size: large ? 22 : 18, color: AppColors.amber),
+        Text(formatRating(rating), style: style),
+        if (reviewCount > 0)
+          Text('($reviewCount yorum)', style: AppTypography.bodySm),
       ],
     );
   }
 }
 
-/// Paid/featured placement, labelled plainly — no crown, no pill.
+/// Paid placement, labelled plainly. It never claims quality or certification.
 class FeaturedLabel extends StatelessWidget {
   const FeaturedLabel({super.key});
 
@@ -104,44 +87,29 @@ class FeaturedLabel extends StatelessWidget {
       'Öne çıkan',
       style: AppTypography.caption.copyWith(
         color: AppColors.amberInk,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
       ),
     );
   }
 }
 
-class VerifiedMark extends StatelessWidget {
-  const VerifiedMark({super.key, this.size = 16});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: 'Doğrulanmış usta',
-      child: Icon(
-        PhosphorIconsFill.sealCheck,
-        size: size,
-        color: AppColors.primary,
-      ),
-    );
-  }
-}
-
-class InfoChip extends StatelessWidget {
-  const InfoChip({super.key, required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
+/// The one trust mark: icon + words (never colour alone).
+class VerifiedLabel extends StatelessWidget {
+  const VerifiedLabel({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: AppColors.inkMuted),
+        const UstaIcon(UstaIcons.verified, size: 18, color: AppColors.primary),
         const SizedBox(width: AppSpacing.xs),
-        Text(label, style: AppTypography.caption),
+        Flexible(
+          child: Text(
+            'Doğrulanmış',
+            style: AppTypography.label.copyWith(color: AppColors.primary),
+          ),
+        ),
       ],
     );
   }

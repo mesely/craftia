@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
+import '../../core/icons/usta_icon.dart';
+import '../../core/icons/usta_icons.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_typography.dart';
 
 /// Full-screen, swipeable, pinch-to-zoom viewer. Only the visible page decodes at full size.
@@ -75,10 +77,10 @@ class _ImageViewerState extends State<ImageViewer> {
                       color: Colors.white,
                     ),
                   ),
-                  errorWidget: (_, _, _) => const Icon(
-                    PhosphorIconsRegular.imageBroken,
+                  errorWidget: (_, _, _) => const UstaIcon(
+                    UstaIcons.image,
                     color: Colors.white54,
-                    size: 40,
+                    size: 44,
                   ),
                 ),
               ),
@@ -100,7 +102,7 @@ class _ImageViewerState extends State<ImageViewer> {
                       backgroundColor: Colors.black54,
                       foregroundColor: Colors.white,
                     ),
-                    icon: const Icon(PhosphorIconsBold.x),
+                    icon: const UstaIcon(UstaIcons.close, size: 24),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const Spacer(),
@@ -111,7 +113,7 @@ class _ImageViewerState extends State<ImageViewer> {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.black54,
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: AppRadius.borderSm,
                     ),
                     child: Text(
                       '${_index + 1} / ${widget.images.length}',

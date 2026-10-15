@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
+import '../../core/accessibility/ui_scale.dart';
 import '../../core/errors/app_failure.dart';
+import '../../core/icons/usta_icon.dart';
+import '../../core/icons/usta_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
@@ -20,8 +22,8 @@ import '../discovery/discovery_providers.dart';
 import '../location/location_controller.dart';
 import '../reviews/review_sheet.dart';
 import '../reviews/reviews_controller.dart';
+import 'contact_sheet.dart';
 import 'image_viewer.dart';
-import 'request_sheet.dart';
 import 'widgets/usta_parts.dart';
 
 class UstaDetailScreen extends ConsumerWidget {
@@ -61,7 +63,7 @@ class _BackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       tooltip: 'Geri',
-      icon: const Icon(PhosphorIconsBold.arrowLeft),
+      icon: const UstaIcon(UstaIcons.arrowLeft, size: 26),
       onPressed: () => context.canPop() ? context.pop() : context.go('/'),
     );
   }
@@ -78,21 +80,15 @@ class _DetailBody extends ConsumerWidget {
       locationProvider.select((s) => s.hasLocation ? s.location : null),
     );
     final distance = usta.distanceFrom(location);
+    final gutter = context.ui.gutter;
 
     return Scaffold(
       appBar: AppBar(leading: const _BackButton()),
       bottomNavigationBar: _ActionBar(usta: usta),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.gutter,
-          0,
-          AppSpacing.gutter,
-          AppSpacing.xxxl,
-        ),
+        padding: EdgeInsets.fromLTRB(gutter, 0, gutter, AppSpacing.xxxl),
         children: [
-          _Identity(usta: usta),
-          const SizedBox(height: AppSpacing.xl),
-          _Stats(usta: usta, distance: distance, hasLocation: location != null),
+          _Identity(usta: usta, distance: distance),
           if (usta.about.isNotEmpty) ...[
             const _SectionTitle('Hakkında'),
             Text(usta.about, style: AppTypography.body),
@@ -102,8 +98,7 @@ class _DetailBody extends ConsumerWidget {
           const _SectionTitle('Yapılan işler'),
           _Portfolio(images: usta.portfolioImages),
           _ReviewsSection(usta: usta),
-          const _SectionTitle('Adres'),
-          _AddressCard(usta: usta),
+          _Where(usta: usta),
         ],
       ),
     );
@@ -119,7 +114,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(
-        top: AppSpacing.xxl,
+        top: AppSpacing.xxxl,
         bottom: AppSpacing.md,
       ),
       child: Semantics(
@@ -131,178 +126,89 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _Identity extends StatelessWidget {
-  const _Identity({required this.usta});
-
-  final Usta usta;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        UstaAvatar(usta: usta, size: 72),
-        const SizedBox(width: AppSpacing.lg),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                usta.businessName,
-                style: AppTypography.title.copyWith(fontSize: 22),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(usta.subType, style: AppTypography.bodySm),
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                spacing: AppSpacing.md,
-                runSpacing: AppSpacing.xs,
-                children: [
-                  if (usta.isVerified)
-                    const _Badge(
-                      icon: PhosphorIconsFill.sealCheck,
-                      label: 'Doğrulanmış',
-                      color: AppColors.primary,
-                    ),
-                  if (usta.isPremium) const FeaturedLabel(),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Icon + text, no filled background.
-class _Badge extends StatelessWidget {
-  const _Badge({required this.icon, required this.label, required this.color});
-
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: AppTypography.caption.copyWith(
-            color: color,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _Stats extends StatelessWidget {
-  const _Stats({
-    required this.usta,
-    required this.distance,
-    required this.hasLocation,
-  });
+  const _Identity({required this.usta, required this.distance});
 
   final Usta usta;
   final double? distance;
-  final bool hasLocation;
 
   @override
   Widget build(BuildContext context) {
-    final price = usta.startingPrice;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.borderLg,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
+    final place = [
+      if (usta.locationLabel.isNotEmpty) usta.locationLabel,
+      if (distance != null) formatDistanceAway(distance!),
+    ].join(' · ');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            UstaAvatar(usta: usta, size: 92),
+            const SizedBox(width: AppSpacing.lg),
             Expanded(
-              child: _Stat(
-                label: 'Puan',
-                value: RatingLabel(
-                  rating: usta.rating,
-                  reviewCount: 0,
-                  large: true,
-                ),
-                caption: usta.reviewCount > 0
-                    ? '${usta.reviewCount} yorum'
-                    : 'Henüz yorum yok',
-              ),
-            ),
-            const VerticalDivider(),
-            Expanded(
-              child: _Stat(
-                label: 'Mesafe',
-                value: Text(
-                  distance != null ? formatDistance(distance!) : '—',
-                  style: AppTypography.label,
-                ),
-                caption: distance != null
-                    ? 'Sana uzaklık'
-                    : (hasLocation ? 'Konum yok' : 'Konum izni yok'),
-              ),
-            ),
-            const VerticalDivider(),
-            Expanded(
-              child: _Stat(
-                label: 'Başlangıç',
-                value: Text(
-                  price != null ? formatLira(price) : '—',
-                  style: AppTypography.label,
-                ),
-                caption: price != null ? 'En düşük fiyat' : 'Fiyat için arayın',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Semantics(
+                    header: true,
+                    child: Text(usta.businessName, style: AppTypography.title),
+                  ),
+                  if (usta.subTypeText.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      usta.subTypeText,
+                      style: AppTypography.body.copyWith(
+                        color: AppColors.inkMuted,
+                      ),
+                    ),
+                  ],
+                  if (usta.isVerified || usta.isPremium) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      spacing: AppSpacing.md,
+                      runSpacing: AppSpacing.xs,
+                      children: [
+                        if (usta.isVerified) const VerifiedLabel(),
+                        if (usta.isPremium) const FeaturedLabel(),
+                      ],
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat({
-    required this.label,
-    required this.value,
-    required this.caption,
-  });
-
-  final String label;
-  final Widget value;
-  final String caption;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: AppTypography.caption),
-          const SizedBox(height: AppSpacing.xs),
-          value,
-          const SizedBox(height: 2),
-          Text(
-            caption,
-            style: AppTypography.caption.copyWith(color: AppColors.inkSubtle),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+        const SizedBox(height: AppSpacing.lg),
+        RatingLabel(
+          rating: usta.rating,
+          reviewCount: usta.reviewCount,
+          large: true,
+        ),
+        if (place.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 1),
+                child: UstaIcon(
+                  UstaIcons.pin,
+                  size: 20,
+                  color: AppColors.inkMuted,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(child: Text(place, style: AppTypography.body)),
+            ],
           ),
         ],
-      ),
+      ],
     );
   }
 }
 
+/// Plain rows with hairlines: a price list reads like a list, not a stack of cards.
 class _PriceList extends StatelessWidget {
   const _PriceList({required this.usta});
 
@@ -312,113 +218,136 @@ class _PriceList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (usta.priceList.isEmpty) {
       return const _InlineEmpty(
-        icon: PhosphorIconsRegular.receipt,
         text: 'Bu usta henüz fiyat listesi eklememiş. Net fiyat için arayabilirsin.',
       );
     }
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.borderLg,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < usta.priceList.length; i++) ...[
-            if (i > 0) const Divider(),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.md + 2,
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      usta.priceList[i].serviceName,
-                      style: AppTypography.body,
-                    ),
+    return Column(
+      children: [
+        for (var i = 0; i < usta.priceList.length; i++) ...[
+          if (i > 0) const Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md + 2),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    usta.priceList[i].serviceName,
+                    style: AppTypography.body,
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Text(
-                    usta.priceList[i].priceLabel,
-                    style: usta.priceList[i].hasPrice
-                        ? AppTypography.label
-                        : AppTypography.bodySm,
-                    textAlign: TextAlign.end,
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Text(
+                  usta.priceList[i].priceLabel,
+                  style: usta.priceList[i].hasPrice
+                      ? AppTypography.titleSm
+                      : AppTypography.bodySm,
+                  textAlign: TextAlign.end,
+                ),
+              ],
             ),
-          ],
+          ),
         ],
-      ),
+        const Divider(),
+        const Padding(
+          padding: EdgeInsets.only(top: AppSpacing.sm),
+          child: Text(
+            'Fiyatlar tahminidir; kesin tutar için ustayla konuş.',
+            style: AppTypography.bodySm,
+          ),
+        ),
+      ],
     );
   }
 }
 
+/// Up to six thumbnails in a 3-up grid; the sixth says how many more there are.
 class _Portfolio extends StatelessWidget {
   const _Portfolio({required this.images});
 
   final List<String> images;
 
+  static const _maxShown = 6;
+  static const _columns = 3;
+
   @override
   Widget build(BuildContext context) {
     if (images.isEmpty) {
-      return const _InlineEmpty(
-        icon: PhosphorIconsRegular.image,
-        text: 'Henüz iş fotoğrafı eklenmemiş.',
-      );
+      return const _InlineEmpty(text: 'Henüz iş fotoğrafı eklenmemiş.');
     }
-    return SizedBox(
-      height: 140,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        clipBehavior: Clip.none,
-        itemCount: images.length,
-        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
-        itemBuilder: (context, i) => Semantics(
-          button: true,
-          label:
-              'İş fotoğrafı ${i + 1} / ${images.length}. Büyütmek için dokun',
-          child: GestureDetector(
-            onTap: () => openImageViewer(context, images, i),
-            child: AppNetworkImage(
-              url: images[i],
-              width: 186,
-              height: 140,
-              cacheWidth: 420,
-              borderRadius: AppRadius.borderMd,
-            ),
-          ),
-        ),
-      ),
+    final shown = images.take(_maxShown).toList();
+    final extra = images.length - shown.length;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = AppSpacing.sm;
+        final side = (constraints.maxWidth - gap * (_columns - 1)) / _columns;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (var i = 0; i < shown.length; i++)
+              Semantics(
+                button: true,
+                label:
+                    'İş fotoğrafı ${i + 1} / ${images.length}. Büyütmek için dokun',
+                excludeSemantics: true,
+                child: GestureDetector(
+                  onTap: () => openImageViewer(context, images, i),
+                  child: SizedBox.square(
+                    dimension: side,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        AppNetworkImage(
+                          url: shown[i],
+                          width: side,
+                          height: side,
+                          cacheWidth: (side * 2.5).round(),
+                          borderRadius: AppRadius.borderSm,
+                        ),
+                        if (i == shown.length - 1 && extra > 0)
+                          DecoratedBox(
+                            decoration: const BoxDecoration(
+                              color: AppColors.scrim,
+                              borderRadius: AppRadius.borderSm,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '+$extra',
+                                style: AppTypography.titleSm.copyWith(
+                                  color: AppColors.surface,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
 
 class _InlineEmpty extends StatelessWidget {
-  const _InlineEmpty({required this.icon, required this.text});
+  const _InlineEmpty({required this.text});
 
-  final IconData icon;
   final String text;
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surfaceMuted,
         borderRadius: AppRadius.borderMd,
       ),
-      child: Row(
-        children: [
-          Icon(icon, size: 22, color: AppColors.inkSubtle),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(child: Text(text, style: AppTypography.bodySm)),
-        ],
-      ),
+      child: Text(text, style: AppTypography.body.copyWith(fontSize: 15)),
     );
   }
 }
@@ -453,18 +382,16 @@ class _ReviewsSection extends ConsumerWidget {
       );
     } else if (state.items.isEmpty) {
       content = const _InlineEmpty(
-        icon: PhosphorIconsRegular.chatCircleText,
         text: 'Henüz yorum yok. Bu ustayla çalıştıysan ilk yorumu sen yaz.',
       );
     } else {
       content = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final r in state.items)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _ReviewTile(review: r),
-            ),
+          for (var i = 0; i < state.items.length; i++) ...[
+            if (i > 0) const Divider(),
+            _ReviewTile(review: state.items[i]),
+          ],
           if (state.hasMore)
             Align(
               alignment: Alignment.centerLeft,
@@ -484,22 +411,23 @@ class _ReviewsSection extends ConsumerWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(
-            top: AppSpacing.xxl,
-            bottom: AppSpacing.md,
+            top: AppSpacing.xxxl,
+            bottom: AppSpacing.sm,
           ),
-          child: Row(
+          // Wrap: with big text the button drops under the heading instead of overflowing.
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Expanded(
-                child: Semantics(
-                  header: true,
-                  child: Text(
-                    state.total > 0 ? 'Yorumlar (${state.total})' : 'Yorumlar',
-                    style: AppTypography.title,
-                  ),
+              Semantics(
+                header: true,
+                child: Text(
+                  state.total > 0 ? 'Yorumlar (${state.total})' : 'Yorumlar',
+                  style: AppTypography.title,
                 ),
               ),
               TextButton.icon(
-                icon: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
+                icon: const UstaIcon(UstaIcons.pencil, size: 20),
                 label: const Text('Yorum yaz'),
                 onPressed: () async {
                   final sent = await showReviewSheet(context, usta.id);
@@ -529,30 +457,20 @@ class _ReviewTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.borderMd,
-        border: Border.all(color: AppColors.border),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Expanded(
-                child: Text(review.authorName, style: AppTypography.label),
+                child: Text(review.authorName, style: AppTypography.titleSm),
               ),
               RatingLabel(rating: review.rating, reviewCount: 0),
             ],
           ),
-          const SizedBox(height: 2),
-          Text(
-            formatDate(review.createdAt),
-            style: AppTypography.caption.copyWith(color: AppColors.inkSubtle),
-          ),
+          Text(formatDate(review.createdAt), style: AppTypography.bodySm),
           if (review.comment.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.sm),
             Text(review.comment, style: AppTypography.body),
@@ -563,94 +481,74 @@ class _ReviewTile extends StatelessWidget {
   }
 }
 
-class _AddressCard extends ConsumerWidget {
-  const _AddressCard({required this.usta});
+/// Address + "Yol Tarifi" for ustas with a shop; "Hizmet bölgesi" for those who travel.
+/// Not every usta has a shop, so the page never pretends one exists.
+class _Where extends ConsumerWidget {
+  const _Where({required this.usta});
 
   final Usta usta;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final address = usta.address.isNotEmpty ? usta.address : usta.locationLabel;
-    final canOpenMap = usta.hasCoordinates || address.isNotEmpty;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.borderLg,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(
-                PhosphorIconsFill.mapPin,
-                size: 20,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Text(
-                  address.isEmpty ? 'Adres bilgisi eklenmemiş.' : address,
-                  style: AppTypography.body,
-                ),
-              ),
-            ],
+    final hasShop = usta.hasShopAddress;
+    final areas = usta.serviceAreas.isNotEmpty
+        ? usta.serviceAreas.join(' · ')
+        : usta.locationLabel;
+    final canNavigate =
+        hasShop && (usta.hasCoordinates || usta.address.isNotEmpty);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(hasShop ? 'Adres' : 'Hizmet bölgesi'),
+        if (hasShop)
+          Text(usta.address, style: AppTypography.body)
+        else ...[
+          Text(
+            areas.isEmpty ? 'Bölge bilgisi eklenmemiş.' : areas,
+            style: AppTypography.body,
           ),
-          if (canOpenMap) ...[
-            const SizedBox(height: AppSpacing.md),
-            OutlinedButton.icon(
-              icon: const Icon(PhosphorIconsRegular.mapTrifold, size: 20),
-              label: const Text('Haritada aç'),
-              onPressed: () async {
-                final ok = await ref
-                    .read(contactLauncherProvider)
-                    .maps(
-                      lat: usta.lat,
-                      lng: usta.lng,
-                      query: '${usta.businessName} $address',
-                    );
-                if (!ok && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Harita uygulaması açılamadı.'),
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
+          const SizedBox(height: AppSpacing.xs),
+          const Text(
+            'Bu usta için sabit bir adres paylaşılmamış. Size gelip gelemeyeceğini ustaya sorabilirsin.',
+            style: AppTypography.bodySm,
+          ),
         ],
-      ),
+        if (canNavigate) ...[
+          const SizedBox(height: AppSpacing.lg),
+          OutlinedButton.icon(
+            icon: const UstaIcon(UstaIcons.directions, size: 22),
+            label: const Text('Yol Tarifi'),
+            onPressed: () async {
+              final ok = await ref
+                  .read(contactLauncherProvider)
+                  .directions(
+                    lat: usta.lat,
+                    lng: usta.lng,
+                    query: '${usta.businessName} ${usta.address}',
+                  );
+              if (!ok && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Harita uygulaması açılamadı.')),
+                );
+              }
+            },
+          ),
+        ],
+      ],
     );
   }
 }
 
-/// Pinned primary actions: call, message, request.
+/// Pinned: one primary action (Ara) and one secondary (Mesaj Gönder → sheet).
 class _ActionBar extends ConsumerWidget {
   const _ActionBar({required this.usta});
 
   final Usta usta;
 
-  Future<void> _launch(
-    BuildContext context,
-    Future<bool> Function() action,
-    String failure,
-  ) async {
-    final ok = await action();
-    if (!ok && context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(failure)));
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final launcher = ref.read(contactLauncherProvider);
-    final unavailable =
-        'Bu cihazdan başlatılamadı. Numara: ${formatPhone(usta.phoneNumber)}';
 
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -660,60 +558,40 @@ class _ActionBar extends ConsumerWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.gutter,
+          padding: EdgeInsets.fromLTRB(
+            context.ui.gutter,
             AppSpacing.md,
-            AppSpacing.gutter,
+            context.ui.gutter,
             AppSpacing.md,
           ),
           child: Row(
             children: [
               Expanded(
-                flex: 3,
+                flex: 5,
                 child: FilledButton.icon(
-                  icon: const Icon(PhosphorIconsFill.phone, size: 20),
+                  icon: const UstaIcon(UstaIcons.phone, size: 22),
                   label: const Text('Ara'),
-                  onPressed: () => _launch(
-                    context,
-                    () => launcher.call(usta.phoneNumber),
-                    unavailable,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              SizedBox(
-                width: 52,
-                child: Semantics(
-                  button: true,
-                  label: 'Mesaj gönder',
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(padding: EdgeInsets.zero),
-                    onPressed: () => _launch(
-                      context,
-                      () => launcher.sms(usta.phoneNumber),
-                      unavailable,
-                    ),
-                    child: const Icon(PhosphorIconsRegular.chatText, size: 22),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                flex: 3,
-                child: OutlinedButton(
                   onPressed: () async {
-                    final sent = await showRequestSheet(context, usta);
-                    if (sent == true && context.mounted) {
+                    final ok = await launcher.call(usta.phoneNumber);
+                    if (!ok && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                        SnackBar(
                           content: Text(
-                            'Talebin iletildi. Taleplerim sekmesinden takip edebilirsin.',
+                            'Bu cihazdan arama başlatılamadı. Numara: ${formatPhone(usta.phoneNumber)}',
                           ),
                         ),
                       );
                     }
                   },
-                  child: const Text('Talep gönder'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                flex: 6,
+                child: OutlinedButton.icon(
+                  icon: const UstaIcon(UstaIcons.message, size: 22),
+                  label: const Text('Mesaj Gönder'),
+                  onPressed: () => showContactSheet(context, usta),
                 ),
               ),
             ],
@@ -729,32 +607,32 @@ class _DetailSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SkeletonScope(
+    return SkeletonScope(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
-        child: Column(
+        padding: EdgeInsets.symmetric(horizontal: context.ui.gutter),
+        child: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                SkeletonBox(width: 72, height: 72, radius: 20),
+                SkeletonBox(width: 92, height: 92, radius: 12),
                 SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SkeletonBox(width: 180, height: 20),
+                      SkeletonBox(width: 180, height: 22),
                       SizedBox(height: 10),
-                      SkeletonBox(width: 120, height: 14),
+                      SkeletonBox(width: 120, height: 16),
                     ],
                   ),
                 ),
               ],
             ),
             SizedBox(height: AppSpacing.xl),
-            SkeletonBox(height: 80, radius: 12),
+            SkeletonBox(width: 140, height: 18),
             SizedBox(height: AppSpacing.xl),
-            SkeletonBox(height: 160, radius: 16),
+            SkeletonBox(height: 160, radius: 12),
           ],
         ),
       ),

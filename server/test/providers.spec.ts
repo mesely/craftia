@@ -51,7 +51,7 @@ describe('runProviderQuery', () => {
   });
 
   it('searches by text (Turkish locale)', () => {
-    const res = runProviderQuery(SEED_PROVIDERS, { ...base, q: 'çilingir' });
+    const res = runProviderQuery(SEED_PROVIDERS, { ...base, q: 'marangoz' });
     expect(res.length).toBeGreaterThan(0);
   });
 });

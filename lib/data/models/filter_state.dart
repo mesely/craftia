@@ -1,18 +1,21 @@
 import 'package:equatable/equatable.dart';
 
 enum SortMode {
-  nearest('nearest', 'Yakın'),
-  rating('rating', 'Puan');
+  nearest('nearest', 'En yakın', 'En yakın'),
+  rating('rating', 'En yüksek puan', 'Puana göre');
 
-  const SortMode(this.apiValue, this.label);
+  const SortMode(this.apiValue, this.label, this.shortLabel);
   final String apiValue;
   final String label;
+
+  /// Fits inside the sort button on a small phone.
+  final String shortLabel;
 }
 
 /// What the user chose in the UI. Location is added separately (see [ProviderQuery]).
 class FilterState extends Equatable {
   const FilterState({
-    this.mainType = 'TECHNICAL',
+    this.mainType,
     this.subType,
     this.city,
     this.sortMode = SortMode.nearest,
@@ -20,7 +23,7 @@ class FilterState extends Equatable {
     this.query = '',
   });
 
-  /// `null` means every category (used by search).
+  /// `null` means every category.
   final String? mainType;
   final String? subType;
   final String? city;
@@ -48,8 +51,16 @@ class FilterState extends Equatable {
     query: query ?? this.query,
   );
 
-  bool get hasActiveRefinements =>
-      subType != null || city != null || distanceKm != null;
+  /// Search needs two characters to be meaningful; shorter text is ignored.
+  bool get searching => query.trim().length >= 2;
+
+  /// Filters chosen in the filter sheet (category and sort are shown separately).
+  int get activeFilterCount =>
+      (subType != null ? 1 : 0) +
+      (city != null ? 1 : 0) +
+      (distanceKm != null ? 1 : 0);
+
+  bool get hasActiveRefinements => activeFilterCount > 0;
 
   @override
   List<Object?> get props => [
@@ -89,7 +100,7 @@ class ProviderQuery extends Equatable {
       'distance': filters.distanceKm!.round(),
     if (hasLocation) 'userLat': userLat,
     if (hasLocation) 'userLng': userLng,
-    if (filters.query.trim().isNotEmpty) 'q': filters.query.trim(),
+    if (filters.searching) 'q': filters.query.trim(),
   };
 
   @override

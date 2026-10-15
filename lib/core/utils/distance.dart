@@ -28,3 +28,6 @@ String formatDistance(double km) {
   if (km < 10) return '${km.toStringAsFixed(1).replaceAll('.', ',')} km';
   return '${km.round()} km';
 }
+
+/// Straight-line proximity, worded so it is never mistaken for a driving distance.
+String formatDistanceAway(double km) => '${formatDistance(km)} uzakta';

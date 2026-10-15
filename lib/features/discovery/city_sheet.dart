@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
+import '../../core/accessibility/ui_scale.dart';
 import '../../core/constants/cities.dart';
+import '../../core/icons/usta_icon.dart';
+import '../../core/icons/usta_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
@@ -53,9 +55,13 @@ class _CitySheetState extends ConsumerState<_CitySheet> {
               textInputAction: TextInputAction.search,
               decoration: const InputDecoration(
                 hintText: 'Şehir ara',
-                prefixIcon: Icon(
-                  PhosphorIconsRegular.magnifyingGlass,
-                  size: 20,
+                prefixIcon: Padding(
+                  padding: EdgeInsets.all(AppSpacing.md + 2),
+                  child: UstaIcon(
+                    UstaIcons.search,
+                    size: 24,
+                    color: AppColors.inkMuted,
+                  ),
                 ),
               ),
               onChanged: (v) => setState(() => _search = v),
@@ -70,7 +76,7 @@ class _CitySheetState extends ConsumerState<_CitySheet> {
                 final city = isAll ? null : cities[needle.isEmpty ? i - 1 : i];
                 final isSelected = city == selected;
                 return ListTile(
-                  minTileHeight: AppSpacing.minTap,
+                  minTileHeight: context.ui.rowHeight,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.gutter,
                   ),
@@ -83,10 +89,10 @@ class _CitySheetState extends ConsumerState<_CitySheet> {
                     ),
                   ),
                   trailing: isSelected
-                      ? const Icon(
-                          PhosphorIconsBold.check,
+                      ? const UstaIcon(
+                          UstaIcons.check,
                           color: AppColors.primary,
-                          size: 20,
+                          size: 24,
                         )
                       : null,
                   onTap: () {
@@ -160,11 +166,12 @@ class _UseMyLocationTile extends ConsumerWidget {
                       height: 22,
                       child: CircularProgressIndicator(strokeWidth: 2.5),
                     )
-                  : Icon(
+                  : UstaIcon(
                       state.hasLocation
-                          ? PhosphorIconsFill.checkCircle
-                          : PhosphorIconsFill.crosshair,
+                          ? UstaIcons.checkCircle
+                          : UstaIcons.locate,
                       color: AppColors.primary,
+                      size: 26,
                     ),
               const SizedBox(width: AppSpacing.md),
               Expanded(

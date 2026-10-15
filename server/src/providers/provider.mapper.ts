@@ -19,10 +19,11 @@ export function toProviderEntity(doc: any): ProviderEntity {
     rating: typeof doc.rating === 'number' ? doc.rating : 0,
     reviewCount: typeof doc.reviewCount === 'number' ? doc.reviewCount : 0,
     isPremium: doc.isPremium === true,
-    isVerified: doc.aiVerified === true || doc.isPremium === true,
+    isVerified: doc.aiVerified === true,
     about: doc.about ?? '',
     profileImage: doc.profileImage || null,
     portfolioImages: Array.isArray(doc.portfolioImages) ? doc.portfolioImages.filter(Boolean) : [],
     priceList: parsePriceList(doc.priceList),
+    serviceAreas: Array.isArray(doc.serviceAreas) ? doc.serviceAreas.filter((a: unknown) => typeof a === 'string' && a.trim()) : [],
   };
 }

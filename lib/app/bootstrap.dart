@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../core/accessibility/ui_scale_controller.dart';
 import 'app.dart';
 
 /// Keeps startup light: no GPS, network or database work happens before the first frame.
@@ -18,5 +19,12 @@ Future<void> bootstrap() async {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(ProviderScope(retry: (_, _) => null, child: const UstaApp()));
+  final uiScale = await loadSavedUiScale();
+  runApp(
+    ProviderScope(
+      retry: (_, _) => null,
+      overrides: [initialUiScaleProvider.overrideWithValue(uiScale)],
+      child: const UstaApp(),
+    ),
+  );
 }

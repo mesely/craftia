@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
 import '../../core/constants/illustrations.dart';
+import '../../core/accessibility/ui_scale.dart';
 import '../../core/errors/app_failure.dart';
+import '../../core/icons/usta_icon.dart';
+import '../../core/icons/usta_icons.dart';
+import '../../core/theme/app_borders.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
@@ -32,15 +35,15 @@ class RequestsScreen extends ConsumerWidget {
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
-                    AppSpacing.gutter,
+                    context.ui.gutter,
                     AppSpacing.lg,
-                    AppSpacing.gutter,
+                    context.ui.gutter,
                     AppSpacing.lg,
                   ),
-                  child: Text('Taleplerim', style: AppTypography.display),
+                  child: const Text('Taleplerim', style: AppTypography.display),
                 ),
               ),
               requests.when(
@@ -57,16 +60,16 @@ class RequestsScreen extends ConsumerWidget {
                         child: StateView(
                           illustration: Illustrations.emptyRequests,
                           title: 'Henüz talebin yok',
-                          message: 'Bir ustanın sayfasından “Talep gönder” dersen burada takip edebilirsin.',
+                          message: 'Bir ustanın sayfasında “Mesaj Gönder” dersen talebini burada takip edebilirsin.',
                           actionLabel: 'Usta bul',
                           onAction: () => context.go('/'),
                         ),
                       )
                     : SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.gutter,
+                        padding: EdgeInsets.fromLTRB(
+                          context.ui.gutter,
                           0,
-                          AppSpacing.gutter,
+                          context.ui.gutter,
                           AppSpacing.xxl,
                         ),
                         sliver: SliverList.separated(
@@ -101,7 +104,7 @@ class _RequestCard extends ConsumerWidget {
         color: AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: AppRadius.borderLg,
-          side: const BorderSide(color: AppColors.border),
+          side: AppBorders.hairline,
         ),
         child: InkWell(
           borderRadius: AppRadius.borderLg,
@@ -133,14 +136,17 @@ class _RequestCard extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   request.description,
-                  style: AppTypography.bodySm,
+                  style: AppTypography.body.copyWith(
+                    color: AppColors.inkMuted,
+                    fontSize: 15,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   '${request.city} · ${formatDate(request.createdAt)}',
-                  style: AppTypography.caption,
+                  style: AppTypography.bodySm,
                 ),
               ],
             ),
@@ -151,6 +157,7 @@ class _RequestCard extends ConsumerWidget {
   }
 }
 
+/// Icon + words in the status colour: understandable without relying on colour.
 class _StatusPill extends StatelessWidget {
   const _StatusPill({required this.status});
 
@@ -158,45 +165,19 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (Color fg, Color bg, IconData icon) = switch (status) {
-      RequestStatus.pending => (
-        const Color(0xFF8A5B00),
-        AppColors.amberSoft,
-        PhosphorIconsFill.clock,
-      ),
-      RequestStatus.accepted => (
-        AppColors.primary,
-        AppColors.primarySoft,
-        PhosphorIconsFill.checkCircle,
-      ),
-      RequestStatus.completed => (
-        AppColors.success,
-        AppColors.successSoft,
-        PhosphorIconsFill.sealCheck,
-      ),
-      RequestStatus.cancelled => (
-        AppColors.danger,
-        AppColors.dangerSoft,
-        PhosphorIconsFill.xCircle,
-      ),
+    final (Color fg, UstaIconData icon) = switch (status) {
+      RequestStatus.pending => (AppColors.amberInk, UstaIcons.clock),
+      RequestStatus.accepted => (AppColors.primary, UstaIcons.checkCircle),
+      RequestStatus.completed => (AppColors.success, UstaIcons.verified),
+      RequestStatus.cancelled => (AppColors.danger, UstaIcons.closeCircle),
     };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: bg, borderRadius: AppRadius.borderPill),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: fg),
-          const SizedBox(width: 4),
-          Text(
-            status.label,
-            style: AppTypography.caption.copyWith(
-              color: fg,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        UstaIcon(icon, size: 18, color: fg),
+        const SizedBox(width: AppSpacing.xs),
+        Text(status.label, style: AppTypography.label.copyWith(color: fg)),
+      ],
     );
   }
 }
@@ -232,10 +213,10 @@ class _RequestDetailSheetState extends ConsumerState<_RequestDetailSheet> {
   Widget build(BuildContext context) {
     final r = widget.request;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.gutter,
+      padding: EdgeInsets.fromLTRB(
+        context.ui.gutter,
         0,
-        AppSpacing.gutter,
+        context.ui.gutter,
         AppSpacing.xxl,
       ),
       child: Column(
@@ -256,7 +237,7 @@ class _RequestDetailSheetState extends ConsumerState<_RequestDetailSheet> {
           const SizedBox(height: AppSpacing.xs),
           Text(
             '${r.city} · ${formatDate(r.createdAt)}',
-            style: AppTypography.caption,
+            style: AppTypography.bodySm,
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(r.description, style: AppTypography.body),
@@ -294,10 +275,10 @@ class _RequestsSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SkeletonScope(
+    return SkeletonScope(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
-        child: Column(
+        padding: EdgeInsets.symmetric(horizontal: context.ui.gutter),
+        child: const Column(
           children: [
             SkeletonBox(height: 92, radius: 16),
             SizedBox(height: AppSpacing.md),

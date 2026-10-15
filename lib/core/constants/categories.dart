@@ -1,58 +1,42 @@
 import '../../data/models/category.dart';
 
 /// Built-in taxonomy: lets the app render categories instantly (and offline).
-/// The API's /categories result silently replaces it when it arrives.
+/// It mirrors the services that exist in the database; the API's /categories result
+/// silently replaces it when it arrives.
 const kBuiltInCategories = <ProviderCategory>[
   ProviderCategory(
     id: 'TECHNICAL',
-    name: 'Elektrik, Isı & Su',
+    name: 'Elektrik, Su & Klima',
     shortName: 'Tamir',
     subTypes: [
-      SubType(label: 'Elektrik', value: 'Elektrikçi'),
-      SubType(label: 'Su Tesisat', value: 'Su Tesisatçısı'),
-      SubType(label: 'Çilingir', value: 'Çilingir'),
-      SubType(label: 'Kamera & Alarm', value: 'Kamera & Alarm'),
+      SubType(label: 'Elektrikçi', value: 'Elektrikçi'),
+      SubType(label: 'Su Tesisatçısı', value: 'Su Tesisatçısı'),
+      SubType(label: 'Klima ve Kombi', value: 'Klima ve Kombi Servisi'),
     ],
   ),
   ProviderCategory(
     id: 'CONSTRUCTION',
-    name: 'Yapı & Dekorasyon',
+    name: 'Boya & Dekorasyon',
     shortName: 'Tadilat',
     subTypes: [
       SubType(label: 'Boyacı', value: 'Boyacı'),
-      SubType(label: 'Alçıpan', value: 'Alçıpancı'),
-      SubType(label: 'Parkeci', value: 'Parkeci'),
-      SubType(label: 'Fayansçı', value: 'Fayansçı'),
-    ],
-  ),
-  ProviderCategory(
-    id: 'CLIMATE',
-    name: 'İklimlendirme',
-    shortName: 'İklim',
-    subTypes: [
-      SubType(label: 'Kombi', value: 'Kombi Tamiri'),
-      SubType(label: 'Klima', value: 'Klima Servisi'),
-      SubType(label: 'Petek', value: 'Petek Temizliği'),
+      SubType(label: 'Dekorasyon', value: 'Dekorasyon'),
+      SubType(label: 'Marangoz', value: 'Marangoz'),
     ],
   ),
   ProviderCategory(
     id: 'TECH',
-    name: 'Beyaz Eşya & Teknoloji',
+    name: 'Beyaz Eşya & Elektronik',
     shortName: 'Eşya',
     subTypes: [
-      SubType(label: 'Beyaz Eşya', value: 'Beyaz Eşya'),
-      SubType(label: 'TV Tamiri', value: 'TV Tamiri'),
-      SubType(label: 'Laptop/PC', value: 'Laptop/PC'),
+      SubType(label: 'Beyaz Eşya', value: 'Beyaz Eşya Tamiri'),
+      SubType(label: 'Elektronik', value: 'Elektronik Tamiri'),
     ],
   ),
   ProviderCategory(
     id: 'LIFE',
-    name: 'Temizlik & Bakım',
+    name: 'Temizlik',
     shortName: 'Hizmet',
-    subTypes: [
-      SubType(label: 'Ev Temizliği', value: 'Ev Temizliği'),
-      SubType(label: 'İlaçlama', value: 'İlaçlama'),
-      SubType(label: 'Koltuk Yıkama', value: 'Koltuk Yıkama'),
-    ],
+    subTypes: [SubType(label: 'Ev Temizliği', value: 'Ev Temizliği')],
   ),
 ];

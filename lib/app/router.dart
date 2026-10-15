@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/models/usta.dart';
-import '../features/categories/categories_screen.dart';
 import '../features/discovery/discovery_screen.dart';
-import '../features/map/map_screen.dart';
 import '../features/orders/requests_screen.dart';
 import '../features/provider/usta_detail_screen.dart';
 import '../features/settings/become_provider_screen.dart';
@@ -28,19 +26,6 @@ GoRouter buildRouter({String initialLocation = '/'}) {
           StatefulShellBranch(
             routes: [
               GoRoute(path: '/', builder: (_, _) => const DiscoveryScreen()),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(path: '/map', builder: (_, _) => const MapScreen()),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/categories',
-                builder: (_, _) => const CategoriesScreen(),
-              ),
             ],
           ),
           StatefulShellBranch(

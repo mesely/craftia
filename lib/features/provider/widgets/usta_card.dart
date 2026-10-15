@@ -1,40 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
+import '../../../core/accessibility/ui_scale.dart';
+import '../../../core/icons/usta_icon.dart';
+import '../../../core/icons/usta_icons.dart';
+import '../../../core/theme/app_borders.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/utils/contact_launcher.dart';
 import '../../../core/utils/distance.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../core/widgets/network_image.dart';
 import '../../../core/widgets/pressable.dart';
 import '../../../data/models/usta.dart';
 import '../../../data/models/user_location.dart';
 import 'usta_parts.dart';
 
-/// One provider in a list: identity, trust signals, price signal, work preview, quick call.
-class UstaCard extends ConsumerWidget {
+/// One usta in a list, readable in about two seconds:
+/// who (name, trade), how good (rating), where (district, distance), what it costs.
+/// The whole card is the button; the call/message actions live on the detail page.
+class UstaCard extends StatelessWidget {
   const UstaCard({super.key, required this.usta, this.userLocation});
 
   final Usta usta;
   final UserLocation? userLocation;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final distance = usta.distanceFrom(userLocation);
     final price = usta.startingPrice;
-    final photos = usta.portfolioImages;
 
     final semantics = [
       usta.businessName,
-      usta.subType,
-      if (usta.hasRating) 'puan ${formatRating(usta.rating)}',
-      if (distance != null) formatDistance(distance),
+      usta.subTypeText,
+      if (usta.hasRating)
+        'puan ${formatRating(usta.rating)}, ${usta.reviewCount} yorum',
+      usta.locationLabel,
+      if (distance != null) formatDistanceAway(distance),
       if (usta.isVerified) 'doğrulanmış',
+      if (usta.isPremium) 'öne çıkan',
+      price != null ? 'başlangıç ${formatLira(price)}' : 'fiyat için arayın',
+      'Ayrıntıları görmek için dokun',
     ].join(', ');
 
     return Pressable(
@@ -42,10 +48,10 @@ class UstaCard extends ConsumerWidget {
       onTap: () => context.push('/usta/${usta.id}', extra: usta),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppRadius.borderLg,
-          border: Border.all(color: AppColors.border),
+          border: Border.fromBorderSide(AppBorders.hairline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,204 +59,136 @@ class UstaCard extends ConsumerWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                UstaAvatar(usta: usta),
-                const SizedBox(width: AppSpacing.md),
+                UstaAvatar(usta: usta, size: context.ui.avatar),
+                const SizedBox(width: AppSpacing.md + 2),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              usta.businessName,
-                              style: AppTypography.titleSm,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (usta.isVerified) ...[
-                            const SizedBox(width: 4),
-                            const VerifiedMark(),
+                      if (usta.isVerified || usta.isPremium) ...[
+                        Wrap(
+                          spacing: AppSpacing.md,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            if (usta.isVerified) const VerifiedLabel(),
+                            if (usta.isPremium) const FeaturedLabel(),
                           ],
-                        ],
-                      ),
-                      const SizedBox(height: 2),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                      ],
                       Text(
-                        [
-                          usta.subType,
-                          usta.locationLabel,
-                        ].where((s) => s.isNotEmpty).join(' · '),
-                        style: AppTypography.bodySm,
-                        maxLines: 1,
+                        usta.businessName,
+                        style: AppTypography.titleSm,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Wrap(
-                        spacing: AppSpacing.md,
-                        runSpacing: AppSpacing.xs,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          RatingLabel(
-                            rating: usta.rating,
-                            reviewCount: usta.reviewCount,
+                      if (usta.subTypeText.isNotEmpty)
+                        Text(
+                          usta.subTypeText,
+                          style: AppTypography.body.copyWith(
+                            color: AppColors.inkMuted,
+                            fontSize: 15,
                           ),
-                          if (distance != null)
-                            InfoChip(
-                              icon: PhosphorIconsFill.navigationArrow,
-                              label: formatDistance(distance),
-                            ),
-                          if (usta.isPremium) const FeaturedLabel(),
-                        ],
+                        ),
+                      const SizedBox(height: AppSpacing.sm),
+                      RatingLabel(
+                        rating: usta.rating,
+                        reviewCount: usta.reviewCount,
                       ),
+                      const SizedBox(height: AppSpacing.xs),
+                      _Where(usta: usta, distance: distance),
                     ],
                   ),
                 ),
               ],
             ),
-            if (photos.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.md),
-              _PhotoStrip(photos: photos),
-            ],
             const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Expanded(
-                  child: price != null
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Başlangıç fiyatı',
-                              style: AppTypography.caption,
-                            ),
-                            Text(
-                              formatLira(price),
-                              style: AppTypography.titleSm,
-                            ),
-                          ],
-                        )
-                      : const Text(
-                          'Fiyat için arayın',
-                          style: AppTypography.bodySm,
-                        ),
-                ),
-                _CallButton(
-                  label: '${usta.businessName} ara',
-                  onPressed: () async {
-                    final ok = await ref
-                        .read(contactLauncherProvider)
-                        .call(usta.phoneNumber);
-                    if (!ok && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Arama başlatılamadı. Numara: ${formatPhone(usta.phoneNumber)}',
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PhotoStrip extends StatelessWidget {
-  const _PhotoStrip({required this.photos});
-
-  final List<String> photos;
-
-  @override
-  Widget build(BuildContext context) {
-    final shown = photos.take(3).toList();
-    final extra = photos.length - shown.length;
-    return SizedBox(
-      height: 76,
-      child: Row(
-        children: [
-          for (var i = 0; i < shown.length; i++) ...[
-            if (i > 0) const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: ClipRRect(
-                borderRadius: AppRadius.borderMd,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    AppNetworkImage(url: shown[i], cacheWidth: 240),
-                    if (i == shown.length - 1 && extra > 0)
-                      ColoredBox(
-                        color: AppColors.scrim,
-                        child: Center(
-                          child: Text(
-                            '+$extra',
-                            style: AppTypography.label.copyWith(
-                              color: AppColors.surface,
-                            ),
+            const Divider(),
+            const SizedBox(height: AppSpacing.md),
+            // Wrap: on a big text size the action drops under the price instead of overflowing.
+            SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  _Signal(price: price),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          'Ustayı Gör',
+                          style: AppTypography.button.copyWith(
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _CallButton extends StatelessWidget {
-  const _CallButton({required this.label, required this.onPressed});
-
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: label,
-      child: Material(
-        color: AppColors.primary,
-        borderRadius: AppRadius.borderPill,
-        child: InkWell(
-          borderRadius: AppRadius.borderPill,
-          onTap: onPressed,
-          child: const SizedBox(
-            height: AppSpacing.minTap,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg + 2),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    PhosphorIconsFill.phone,
-                    size: 18,
-                    color: AppColors.onPrimary,
-                  ),
-                  SizedBox(width: AppSpacing.sm),
-                  Text(
-                    'Ara',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.onPrimary,
-                    ),
+                      const SizedBox(width: AppSpacing.xs),
+                      const UstaIcon(
+                        UstaIcons.chevronRight,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
+  }
+}
+
+class _Where extends StatelessWidget {
+  const _Where({required this.usta, required this.distance});
+
+  final Usta usta;
+  final double? distance;
+
+  @override
+  Widget build(BuildContext context) {
+    final place = usta.locationLabel;
+    final text = [
+      if (place.isNotEmpty) place,
+      if (distance != null) formatDistanceAway(distance!),
+    ].join(' · ');
+    if (text.isEmpty) return const SizedBox.shrink();
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 1),
+          child: UstaIcon(UstaIcons.pin, size: 18, color: AppColors.inkMuted),
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        Expanded(child: Text(text, style: AppTypography.bodySm)),
+      ],
+    );
+  }
+}
+
+/// The single price hint at the bottom of a card.
+class _Signal extends StatelessWidget {
+  const _Signal({required this.price});
+
+  final double? price;
+
+  @override
+  Widget build(BuildContext context) {
+    if (price != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Başlangıç fiyatı', style: AppTypography.caption),
+          Text(formatLira(price!), style: AppTypography.titleSm),
+        ],
+      );
+    }
+    return const Text('Fiyat için arayın', style: AppTypography.bodySm);
   }
 }

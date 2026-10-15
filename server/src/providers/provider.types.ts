@@ -21,6 +21,8 @@ export interface ProviderEntity {
   profileImage: string | null;
   portfolioImages: string[];
   priceList: ServicePrice[];
+  /** Districts the provider travels to. Empty when the source data does not say. */
+  serviceAreas: string[];
 }
 
 export interface ProviderView extends ProviderEntity {

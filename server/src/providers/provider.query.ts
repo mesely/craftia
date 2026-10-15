@@ -26,8 +26,8 @@ export function runProviderQuery(all: ProviderEntity[], query: ProviderQuery): P
   }));
 
   views = views.filter((p) => {
-    if (query.mainType && p.mainType !== query.mainType) return false;
-    if (query.subType && p.subType !== query.subType) return false;
+    if (query.mainType && norm(p.mainType) !== norm(query.mainType)) return false;
+    if (query.subType && norm(p.subType) !== norm(query.subType)) return false;
     if (query.city && norm(p.city) !== norm(query.city)) return false;
     if (text) {
       const haystack = norm(`${p.businessName} ${p.subType} ${p.district} ${p.city}`);

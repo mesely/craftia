@@ -1,7 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
+import '../icons/usta_icon.dart';
+import '../icons/usta_icons.dart';
 import '../theme/app_colors.dart';
 
 /// Lazy, cached image with placeholder and graceful failure. [cacheWidth] keeps decoded size small.
@@ -37,10 +38,10 @@ class AppNetworkImage extends StatelessWidget {
       errorWidget: (_, _, _) => const ColoredBox(
         color: AppColors.surfaceMuted,
         child: Center(
-          child: Icon(
-            PhosphorIconsRegular.imageBroken,
+          child: UstaIcon(
+            UstaIcons.image,
             color: AppColors.inkSubtle,
-            size: 24,
+            size: 26,
           ),
         ),
       ),

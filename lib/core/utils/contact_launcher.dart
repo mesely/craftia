@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'distance.dart';
 import 'formatters.dart';
 
 /// Native call / SMS / maps / mail launching. Every method returns false instead of throwing
@@ -22,13 +23,23 @@ class ContactLauncher {
     ),
   );
 
-  Future<bool> maps({double? lat, double? lng, String? query}) {
-    final q = (lat != null && lng != null) ? '$lat,$lng' : (query ?? '');
-    if (q.isEmpty) return Future.value(false);
-    return _launch(
-      Uri.https('www.google.com', '/maps/search/', {'api': '1', 'query': q}),
-      mode: LaunchMode.externalApplication,
-    );
+  /// Universal Google Maps directions URL; the phone hands it to whichever maps app it prefers.
+  /// Null when there is neither a valid coordinate nor a text destination.
+  static Uri? directionsUri({double? lat, double? lng, String? query}) {
+    final destination = isValidCoordinate(lat, lng)
+        ? '$lat,$lng'
+        : (query ?? '').trim();
+    if (destination.isEmpty) return null;
+    return Uri.https('www.google.com', '/maps/dir/', {
+      'api': '1',
+      'destination': destination,
+    });
+  }
+
+  Future<bool> directions({double? lat, double? lng, String? query}) {
+    final uri = directionsUri(lat: lat, lng: lng, query: query);
+    if (uri == null) return Future.value(false);
+    return _launch(uri, mode: LaunchMode.externalApplication);
   }
 
   Future<bool> _launch(

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
+import '../../core/accessibility/ui_scale.dart';
+import '../../core/accessibility/ui_scale_controller.dart';
 import '../../core/config/app_config.dart';
+import '../../core/icons/usta_icon.dart';
+import '../../core/icons/usta_icons.dart';
+import '../../core/theme/app_borders.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/choice_tile.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -17,26 +23,32 @@ class ProfileScreen extends StatelessWidget {
       body: SafeArea(
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.gutter,
+          padding: EdgeInsets.fromLTRB(
+            context.ui.gutter,
             AppSpacing.lg,
-            AppSpacing.gutter,
+            context.ui.gutter,
             AppSpacing.xxl,
           ),
           children: [
             const Text('Profil', style: AppTypography.display),
             const SizedBox(height: AppSpacing.xl),
-            _HeroCard(onTap: () => context.push('/profile/become-provider')),
-            const SizedBox(height: AppSpacing.xl),
+            const _UiSizeSection(),
+            const SizedBox(height: AppSpacing.xxl),
             _Group(
               children: [
                 _Row(
-                  icon: PhosphorIconsRegular.lifebuoy,
+                  icon: UstaIcons.user,
+                  label: 'Usta olarak kaydol',
+                  caption: 'Çevrendeki müşteriler seni bulsun',
+                  onTap: () => context.push('/profile/become-provider'),
+                ),
+                _Row(
+                  icon: UstaIcons.help,
                   label: 'Destek',
                   onTap: () => context.push('/profile/support'),
                 ),
                 _Row(
-                  icon: PhosphorIconsRegular.compass,
+                  icon: UstaIcons.search,
                   label: 'Uygulama rehberi',
                   onTap: () => context.push('/profile/guide'),
                 ),
@@ -46,12 +58,12 @@ class ProfileScreen extends StatelessWidget {
             _Group(
               children: [
                 _Row(
-                  icon: PhosphorIconsRegular.fileText,
+                  icon: UstaIcons.document,
                   label: 'Kullanıcı sözleşmesi',
                   onTap: () => context.push('/profile/legal/agreement'),
                 ),
                 _Row(
-                  icon: PhosphorIconsRegular.shieldCheck,
+                  icon: UstaIcons.shield,
                   label: 'KVKK aydınlatma metni',
                   onTap: () => context.push('/profile/legal/kvkk'),
                 ),
@@ -61,9 +73,7 @@ class ProfileScreen extends StatelessWidget {
             Center(
               child: Text(
                 'Usta v${AppConfig.appVersion}',
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.inkSubtle,
-                ),
+                style: AppTypography.caption,
               ),
             ),
           ],
@@ -73,53 +83,51 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.onTap});
-
-  final VoidCallback onTap;
+/// "Arayüz Boyutu": text, buttons and spacing grow together. The phone's own font
+/// size setting still applies on top of this.
+class _UiSizeSection extends ConsumerWidget {
+  const _UiSizeSection();
 
   @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.primary,
-      borderRadius: AppRadius.borderLg,
-      child: InkWell(
-        borderRadius: AppRadius.borderLg,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Ustasın, işini büyütmek mi istiyorsun?',
-                      style: AppTypography.titleSm.copyWith(
-                        color: AppColors.onPrimary,
-                        fontSize: 17,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Hizmet veren olarak kaydol, çevrendeki müşteriler seni bulsun.',
-                      style: AppTypography.bodySm.copyWith(
-                        color: AppColors.primarySoft,
-                      ),
-                    ),
-                  ],
-                ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(uiScaleProvider);
+    final controller = ref.read(uiScaleProvider.notifier);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const UstaIcon(
+              UstaIcons.textSize,
+              size: 26,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: const Text('Arayüz Boyutu', style: AppTypography.title),
               ),
-              const SizedBox(width: AppSpacing.md),
-              const Icon(
-                PhosphorIconsBold.arrowRight,
-                color: AppColors.onPrimary,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ),
+        const SizedBox(height: AppSpacing.xs),
+        const Text(
+          'Yazıları ve düğmeleri sana uygun büyüklüğe getir.',
+          style: AppTypography.bodySm,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        for (final scale in UiScale.values) ...[
+          if (scale != UiScale.normal) const SizedBox(height: AppSpacing.sm),
+          ChoiceTile(
+            label: scale.label,
+            caption: scale.description,
+            selected: scale == current,
+            onTap: () => controller.select(scale),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -132,17 +140,16 @@ class _Group extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(color: AppColors.border),
+        border: Border.fromBorderSide(AppBorders.hairline),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           for (var i = 0; i < children.length; i++) ...[
-            if (i > 0)
-              const Divider(indent: AppSpacing.lg + 28 + AppSpacing.md),
+            if (i > 0) const Divider(indent: AppSpacing.lg),
             children[i],
           ],
         ],
@@ -152,10 +159,16 @@ class _Group extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.icon, required this.label, required this.onTap});
+  const _Row({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.caption,
+  });
 
-  final IconData icon;
+  final UstaIconData icon;
   final String label;
+  final String? caption;
   final VoidCallback onTap;
 
   @override
@@ -163,18 +176,30 @@ class _Row extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 56),
+        constraints: BoxConstraints(minHeight: context.ui.rowHeight),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
           child: Row(
             children: [
-              Icon(icon, size: 24, color: AppColors.inkMuted),
+              UstaIcon(icon, size: 24, color: AppColors.inkMuted),
               const SizedBox(width: AppSpacing.md),
-              Expanded(child: Text(label, style: AppTypography.body)),
-              const Icon(
-                PhosphorIconsBold.caretRight,
-                size: 16,
-                color: AppColors.inkSubtle,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: AppTypography.body),
+                    if (caption != null)
+                      Text(caption!, style: AppTypography.bodySm),
+                  ],
+                ),
+              ),
+              const UstaIcon(
+                UstaIcons.chevronRight,
+                size: 20,
+                color: AppColors.inkMuted,
               ),
             ],
           ),

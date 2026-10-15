@@ -46,6 +46,7 @@ export class ProvidersService {
       about: dto.about?.trim() ?? '',
       profileImage: null,
       portfolioImages: [],
+      serviceAreas: [],
       priceList: prices.map((p) => ({ serviceName: p.serviceName.trim(), minPrice: p.minPrice, maxPrice: p.maxPrice })),
     });
   }

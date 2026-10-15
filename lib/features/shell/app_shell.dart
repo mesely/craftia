@@ -1,42 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
+import '../../core/icons/usta_icon.dart';
+import '../../core/icons/usta_icons.dart';
 import '../../core/theme/app_colors.dart';
 
+/// Three destinations, each with a real job: find an usta, follow requests, settings.
+/// There is deliberately no map tab: location is infrastructure, not a destination.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
-  static const _destinations =
-      <({String label, IconData icon, IconData activeIcon})>[
-        (
-          label: 'Keşfet',
-          icon: PhosphorIconsRegular.compass,
-          activeIcon: PhosphorIconsFill.compass,
-        ),
-        (
-          label: 'Harita',
-          icon: PhosphorIconsRegular.mapTrifold,
-          activeIcon: PhosphorIconsFill.mapTrifold,
-        ),
-        (
-          label: 'Ara',
-          icon: PhosphorIconsRegular.magnifyingGlass,
-          activeIcon: PhosphorIconsBold.magnifyingGlass,
-        ),
-        (
-          label: 'Taleplerim',
-          icon: PhosphorIconsRegular.clipboardText,
-          activeIcon: PhosphorIconsFill.clipboardText,
-        ),
-        (
-          label: 'Profil',
-          icon: PhosphorIconsRegular.user,
-          activeIcon: PhosphorIconsFill.user,
-        ),
-      ];
+  static const _destinations = <({String label, UstaIconData icon})>[
+    (label: 'Ana Sayfa', icon: UstaIcons.home),
+    (label: 'Taleplerim', icon: UstaIcons.requests),
+    (label: 'Profil', icon: UstaIcons.user),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -55,11 +35,7 @@ class AppShell extends StatelessWidget {
           ),
           destinations: [
             for (final d in _destinations)
-              NavigationDestination(
-                icon: Icon(d.icon),
-                selectedIcon: Icon(d.activeIcon),
-                label: d.label,
-              ),
+              NavigationDestination(icon: UstaIcon(d.icon), label: d.label),
           ],
         ),
       ),

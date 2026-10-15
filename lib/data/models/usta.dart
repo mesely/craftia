@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 
+import '../../core/constants/categories.dart';
 import '../../core/utils/distance.dart';
+import '../../core/utils/formatters.dart';
 import 'service_price.dart';
 import 'user_location.dart';
 
@@ -25,6 +27,7 @@ class Usta extends Equatable {
     this.profileImage,
     this.portfolioImages = const [],
     this.priceList = const [],
+    this.serviceAreas = const [],
     this.distanceKm,
   });
 
@@ -47,10 +50,24 @@ class Usta extends Equatable {
   final List<String> portfolioImages;
   final List<ServicePrice> priceList;
 
+  /// Districts the usta travels to. Empty when the data does not say.
+  final List<String> serviceAreas;
+
   /// Distance reported by the server for the user's location, if one was sent.
   final double? distanceKm;
 
+  /// The service as people read it ("Klima ve Kombi"), whatever casing the database holds.
+  String get subTypeText => subTypeLabel(subType, [
+    for (final c in kBuiltInCategories)
+      for (final s in c.subTypes) (value: s.value, label: s.label),
+  ]);
+
   bool get hasRating => rating > 0;
+
+  /// Only providers that published an address have a place to navigate to.
+  /// Everyone else is shown by service area instead of a pin.
+  bool get hasShopAddress => address.trim().isNotEmpty;
+
   bool get hasCoordinates => isValidCoordinate(lat, lng);
 
   /// "Kadıköy, İstanbul"
@@ -90,7 +107,7 @@ class Usta extends Equatable {
       rating: (json['rating'] as num?)?.toDouble() ?? 0,
       reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
       isPremium: json['isPremium'] == true,
-      isVerified: json['isVerified'] == true || json['isPremium'] == true,
+      isVerified: json['isVerified'] == true,
       about: (json['about'] ?? '').toString(),
       profileImage: (json['profileImage'] as String?)?.isNotEmpty == true
           ? json['profileImage'] as String
@@ -102,6 +119,13 @@ class Usta extends Equatable {
                 .toList(growable: false)
           : const [],
       priceList: ServicePrice.parseList(json['priceList']),
+      serviceAreas: (json['serviceAreas'] is List)
+          ? (json['serviceAreas'] as List)
+                .whereType<String>()
+                .map((s) => s.trim())
+                .where((s) => s.isNotEmpty)
+                .toList(growable: false)
+          : const [],
       distanceKm: (json['distanceKm'] as num?)?.toDouble(),
     );
   }
@@ -116,5 +140,6 @@ class Usta extends Equatable {
     distanceKm,
     priceList,
     portfolioImages,
+    serviceAreas,
   ];
 }

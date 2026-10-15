@@ -581,6 +581,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.1"
+  path_drawing:
+    dependency: "direct main"
+    description:
+      name: path_drawing
+      sha256: bbb1934c0cbb03091af082a6389ca2080345291ef07a5fa6d6e078ba8682f977
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   path_parsing:
     dependency: transitive
     description:
@@ -645,14 +653,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.2"
-  phosphor_glyphs:
-    dependency: "direct main"
-    description:
-      name: phosphor_glyphs
-      sha256: b9e704e5601ac82697c2c149d4e54c39bf11c3dfae34195a056cf82576b9ef14
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.2+1"
   platform:
     dependency: transitive
     description:

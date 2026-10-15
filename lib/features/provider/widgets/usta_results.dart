@@ -40,6 +40,11 @@ class LoadMoreOnScroll extends ConsumerWidget {
   }
 }
 
+/// "42 ustayı göster" for the filter sheet's apply button.
+String ustaCountLabel(UstaListState state) => state.status == ListStatus.data
+    ? (state.total == 0 ? 'Usta bulunamadı' : '${state.total} ustayı göster')
+    : 'Ustaları göster';
+
 /// Sliver that renders one paginated provider list in all of its states.
 class UstaResultsSliver extends ConsumerWidget {
   const UstaResultsSliver({
@@ -80,6 +85,7 @@ class UstaResultsSliver extends ConsumerWidget {
       case ListStatus.error:
         return SliverToBoxAdapter(
           child: ErrorStateView(
+            title: 'Şu anda ustaları yükleyemedik',
             failure: state.failure!,
             onRetry: controller.refresh,
           ),

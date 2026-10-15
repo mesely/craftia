@@ -55,7 +55,11 @@ void main() {
       expect(page.hasMore, isTrue);
       final first = page.items.first;
       expect(first.isPremium, isTrue);
-      expect(first.isVerified, isTrue, reason: 'premium implies verified');
+      expect(
+        first.isVerified,
+        isFalse,
+        reason: 'premium is paid placement, not a verification',
+      );
       expect(first.hasCoordinates, isFalse, reason: '(0,0) is not a location');
       expect(first.portfolioImages, ['https://img/1.jpg']);
       expect(first.priceList.length, 2);

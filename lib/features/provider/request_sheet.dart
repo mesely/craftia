@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/accessibility/ui_scale.dart';
 import '../../core/errors/app_failure.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -68,10 +69,10 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.gutter,
+      padding: EdgeInsets.fromLTRB(
+        context.ui.gutter,
         0,
-        AppSpacing.gutter,
+        context.ui.gutter,
         AppSpacing.xxl,
       ),
       child: Form(
@@ -97,19 +98,23 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
               maxLength: 500,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
+                labelText: 'Ne yapılması gerekiyor?',
                 hintText:
                     'Örn. Mutfak musluğu damlatıyor, bu hafta bakılabilir mi?',
               ),
               validator: (v) => (v == null || v.trim().length < 10)
-                  ? 'Birkaç cümleyle anlat (en az 10 karakter).'
+                  ? 'Lütfen birkaç cümleyle anlat (en az 10 karakter).'
                   : null,
             ),
             const SizedBox(height: AppSpacing.md),
             TextFormField(
               controller: _phone,
               keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.done,
+              autofillHints: const [AutofillHints.telephoneNumber],
               decoration: const InputDecoration(
-                hintText: 'Telefon numaran (isteğe bağlı)',
+                labelText: 'Telefon numaran (isteğe bağlı)',
+                hintText: '05xx xxx xx xx',
               ),
             ),
             if (_error != null) ...[

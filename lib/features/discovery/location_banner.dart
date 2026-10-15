@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
+import '../../core/accessibility/ui_scale.dart';
+import '../../core/icons/usta_icon.dart';
+import '../../core/icons/usta_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../location/location_controller.dart';
 
-/// Honest, Turkish explanation of why "nearest" is not active, with the one action that fixes it.
+/// Calm Turkish explanation of why "nearest" is not active, with the one action that fixes it.
+/// The app keeps working without location, so this is a hint, never a gate.
 class LocationNotice extends ConsumerWidget {
   const LocationNotice({super.key});
 
@@ -26,12 +29,12 @@ class LocationNotice extends ConsumerWidget {
       VoidCallback onTap,
     ) = switch (state.status) {
       LocationStatus.deniedForever => (
-        'Yakındaki ustaları gösterebilmemiz için konum izni gerekiyor. İzni ayarlardan açabilirsin.',
+        'Konum izni kapalı. İstersen Ayarlar’dan açabilirsin; şimdilik puana göre sıralıyoruz.',
         'Ayarları aç',
         controller.openSettings,
       ),
       LocationStatus.serviceDisabled => (
-        'Konum servisi kapalı. Açarsan sana en yakın ustaları üste alırız.',
+        'Telefonunun konumu kapalı. Açarsan sana en yakın ustaları üste alırız.',
         'Konumu aç',
         controller.openSettings,
       ),
@@ -41,46 +44,71 @@ class LocationNotice extends ConsumerWidget {
         controller.request,
       ),
       _ => (
-        'Yakındaki ustaları gösterebilmemiz için konum izni gerekiyor.',
-        'İzin ver',
+        'Yakındaki ustaları gösterebilmemiz için konumunu kullanabiliriz.',
+        'Konumumu kullan',
         controller.request,
       ),
     };
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        AppSpacing.gutter,
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        context.ui.gutter,
         0,
-        AppSpacing.gutter,
+        context.ui.gutter,
         AppSpacing.md,
       ),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.sm,
-        AppSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.borderLg,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            PhosphorIconsFill.mapPin,
-            size: 22,
-            color: AppColors.primary,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Text(
-              text,
-              style: AppTypography.bodySm.copyWith(color: AppColors.ink),
+      child: Semantics(
+        button: true,
+        label: '$action. $text',
+        excludeSemantics: true,
+        child: Material(
+          color: AppColors.primarySoft,
+          borderRadius: AppRadius.borderMd,
+          child: InkWell(
+            borderRadius: AppRadius.borderMd,
+            onTap: onTap,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: context.ui.rowHeight),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
+                child: Row(
+                  children: [
+                    const UstaIcon(
+                      UstaIcons.locate,
+                      size: 26,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            action,
+                            style: AppTypography.label.copyWith(
+                              color: AppColors.primary,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            text,
+                            style: AppTypography.bodySm.copyWith(
+                              color: AppColors.ink,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-          TextButton(onPressed: onTap, child: Text(action)),
-        ],
+        ),
       ),
     );
   }

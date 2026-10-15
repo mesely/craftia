@@ -41,3 +41,23 @@ String initialsOf(String name) {
   final second = parts.length > 1 ? parts[1].substring(0, 1) : '';
   return '$first$second'.toUpperCase();
 }
+
+/// "klima ve kombi servisi" (as crawled) -> "Klima ve Kombi". Known services use their app label;
+/// anything else just gets a capital first letter.
+String subTypeLabel(
+  String raw,
+  Iterable<({String value, String label})> known,
+) {
+  final t = raw.trim();
+  if (t.isEmpty) return t;
+  final key = t.toLowerCase().replaceAll('İ', 'i').replaceAll('I', 'ı');
+  for (final k in known) {
+    if (k.value.toLowerCase().replaceAll('İ', 'i').replaceAll('I', 'ı') ==
+        key) {
+      return k.label;
+    }
+  }
+  final first = t.substring(0, 1);
+  final upper = first == 'i' ? 'İ' : (first == 'ı' ? 'I' : first.toUpperCase());
+  return '$upper${t.substring(1)}';
+}

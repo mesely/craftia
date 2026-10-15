@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
+import '../../core/accessibility/ui_scale.dart';
 import '../../core/errors/app_failure.dart';
+import '../../core/icons/usta_icon.dart';
+import '../../core/icons/usta_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -71,10 +73,10 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.gutter,
+      padding: EdgeInsets.fromLTRB(
+        context.ui.gutter,
         0,
-        AppSpacing.gutter,
+        context.ui.gutter,
         AppSpacing.xxl,
       ),
       child: Column(
@@ -99,12 +101,10 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
                     radius: 28,
                     onTap: () => setState(() => _rating = i),
                     child: SizedBox(
-                      width: AppSpacing.minTap,
-                      height: AppSpacing.minTap,
-                      child: Icon(
-                        i <= _rating
-                            ? PhosphorIconsFill.star
-                            : PhosphorIconsRegular.star,
+                      width: context.ui.tapTarget,
+                      height: context.ui.tapTarget,
+                      child: UstaIcon(
+                        i <= _rating ? UstaIcons.star : UstaIcons.starOutline,
                         size: 34,
                         color: i <= _rating
                             ? AppColors.amber
@@ -123,14 +123,15 @@ class _ReviewSheetState extends ConsumerState<_ReviewSheet> {
             maxLength: 500,
             textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(
-              hintText: 'Nasıl geçti? (isteğe bağlı)',
+              labelText: 'Yorumun (isteğe bağlı)',
+              hintText: 'Nasıl geçti?',
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextField(
             controller: _name,
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(hintText: 'Adın (isteğe bağlı)'),
+            decoration: const InputDecoration(labelText: 'Adın (isteğe bağlı)'),
           ),
           if (_error != null) ...[
             const SizedBox(height: AppSpacing.md),

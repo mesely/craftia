@@ -8,7 +8,8 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main.js",
-    "test": "jest"
+    "test": "jest",
+    "db:check": "node scripts/db-check.js"
   },
   "jest": {
     "moduleFileExtensions": [

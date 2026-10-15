@@ -47,21 +47,13 @@ interface SubDef {
 const SUBS: SubDef[] = [
   { mainType: 'TECHNICAL', subType: 'Elektrikçi', suffix: 'Elektrik', prices: [['Priz / Anahtar Değişimi', '150-300'], ['Avize Montajı', '250-500'], ['Sigorta Panosu Bakımı', '500-1000'], ['Kaçak Akım Arızası', '400-900']] },
   { mainType: 'TECHNICAL', subType: 'Su Tesisatçısı', suffix: 'Tesisat', prices: [['Musluk Değişimi', '200-400'], ['Gider Açma', '300-700'], ['Kaçak Tespiti', '600-1500'], ['Batarya Montajı', '250-500']] },
-  { mainType: 'TECHNICAL', subType: 'Çilingir', suffix: 'Çilingir', prices: [['Kapı Açma', '400-800'], ['Kilit Değişimi', '500-1200'], ['Çelik Kapı Kilidi', '900-2000']] },
-  { mainType: 'TECHNICAL', subType: 'Kamera & Alarm', suffix: 'Güvenlik Sistemleri', prices: [['4 Kameralı Set Kurulumu', '4500-8000'], ['Alarm Sistemi Kurulumu', '3000-7000'], ['Kamera Bakımı', '500-1200']] },
-  { mainType: 'CONSTRUCTION', subType: 'Boyacı', suffix: 'Boya & Dekor', prices: [['Boya Badana (2+1)', '12000-20000'], ['Tavan Boyası', '3000-6000'], ['Dış Cephe Boyası', '15000-30000']] },
-  { mainType: 'CONSTRUCTION', subType: 'Alçıpancı', suffix: 'Alçıpan', prices: [['Asma Tavan (m²)', '450-750'], ['Bölme Duvar (m²)', '500-850'], ['Kartonpiyer (mt)', '120-250']] },
-  { mainType: 'CONSTRUCTION', subType: 'Parkeci', suffix: 'Parke', prices: [['Laminat Parke Döşeme (m²)', '120-220'], ['Parke Cilalama (m²)', '150-300'], ['Süpürgelik Montajı (mt)', '40-90']] },
-  { mainType: 'CONSTRUCTION', subType: 'Fayansçı', suffix: 'Seramik', prices: [['Fayans Döşeme (m²)', '350-650'], ['Banyo Yenileme', '25000-50000'], ['Derz Yenileme (m²)', '80-160']] },
-  { mainType: 'CLIMATE', subType: 'Kombi Tamiri', suffix: 'Kombi Servisi', prices: [['Kombi Bakımı', '700-1200'], ['Kombi Arıza Tespiti', '400-800'], ['Eşanjör Değişimi', '2500-4500']] },
-  { mainType: 'CLIMATE', subType: 'Klima Servisi', suffix: 'Klima Servisi', prices: [['Klima Bakımı', '600-1000'], ['Klima Montajı', '2000-3500'], ['Gaz Dolumu', '900-1800']] },
-  { mainType: 'CLIMATE', subType: 'Petek Temizliği', suffix: 'Petek Temizliği', prices: [['Petek Temizliği (daire)', '3000-6000'], ['Kolektör Bakımı', '1000-2500']] },
-  { mainType: 'TECH', subType: 'Beyaz Eşya', suffix: 'Beyaz Eşya Servisi', prices: [['Çamaşır Makinesi Tamiri', '600-1500'], ['Bulaşık Makinesi Tamiri', '600-1500'], ['Buzdolabı Gaz Dolumu', '1000-2200']] },
-  { mainType: 'TECH', subType: 'TV Tamiri', suffix: 'TV Servisi', prices: [['Ekran Arıza Tespiti', '300-600'], ['Anakart Tamiri', '1200-3000'], ['Duvara TV Montajı', '350-700']] },
-  { mainType: 'TECH', subType: 'Laptop/PC', suffix: 'Bilgisayar Servisi', prices: [['Format & Kurulum', '500-900'], ['SSD Yükseltme', '700-1500'], ['Isıl Macun & Bakım', '400-800']] },
+  { mainType: 'TECHNICAL', subType: 'Klima ve Kombi Servisi', suffix: 'Klima & Kombi Servisi', prices: [['Kombi Bakımı', '700-1200'], ['Klima Bakımı', '600-1000'], ['Klima Montajı', '2000-3500'], ['Petek Temizliği (daire)', '3000-6000']] },
+  { mainType: 'CONSTRUCTION', subType: 'Boyacı', suffix: 'Boya & Badana', prices: [['Boya Badana (2+1)', '12000-20000'], ['Tavan Boyası', '3000-6000'], ['Dış Cephe Boyası', '15000-30000']] },
+  { mainType: 'CONSTRUCTION', subType: 'Dekorasyon', suffix: 'Dekorasyon', prices: [['Asma Tavan (m²)', '450-750'], ['Duvar Kağıdı (m²)', '120-250'], ['Banyo Yenileme', '25000-50000']] },
+  { mainType: 'CONSTRUCTION', subType: 'Marangoz', suffix: 'Marangoz', prices: [['Mutfak Dolabı Montajı', '3000-7000'], ['Kapı Ayarı', '300-700'], ['Ölçüye Dolap', '8000-20000']] },
+  { mainType: 'TECH', subType: 'Beyaz Eşya Tamiri', suffix: 'Beyaz Eşya Servisi', prices: [['Çamaşır Makinesi Tamiri', '600-1500'], ['Bulaşık Makinesi Tamiri', '600-1500'], ['Buzdolabı Gaz Dolumu', '1000-2200']] },
+  { mainType: 'TECH', subType: 'Elektronik Tamiri', suffix: 'Elektronik Servisi', prices: [['Ekran Arıza Tespiti', '300-600'], ['Anakart Tamiri', '1200-3000'], ['Duvara TV Montajı', '350-700']] },
   { mainType: 'LIFE', subType: 'Ev Temizliği', suffix: 'Temizlik', prices: [['2+1 Detaylı Temizlik', '1800-3200'], ['3+1 Detaylı Temizlik', '2500-4500'], ['Taşınma Sonrası Temizlik', '3000-6000']] },
-  { mainType: 'LIFE', subType: 'İlaçlama', suffix: 'İlaçlama', prices: [['Daire İlaçlama', '800-1800'], ['Hamam Böceği Uygulaması', '1000-2200']] },
-  { mainType: 'LIFE', subType: 'Koltuk Yıkama', suffix: 'Koltuk Yıkama', prices: [['Üçlü Koltuk', '500-900'], ['Halı Yıkama (m²)', '40-90'], ['Yatak Temizliği', '400-800']] },
 ];
 
 const NAMES = ['Yıldız', 'Güven', 'Özkan', 'Demir', 'Atlas', 'Mavi', 'Yücel', 'Bora', 'Kaya', 'Çınar', 'Efe', 'Aksoy', 'Uzman', 'Ay', 'Kardeşler', 'Doğan'];
@@ -95,6 +87,8 @@ function buildSeed() {
       const n = providers.length + 1;
       const id = `p${String(n).padStart(3, '0')}`;
       const isPremium = rand() < 0.22;
+      // Roughly a third travel to the customer and publish no shop address.
+      const mobile = n % 3 === 0;
       const lat = c.lat + (rand() - 0.5) * 0.12;
       const lng = c.lng + (rand() - 0.5) * 0.16;
       const businessName = `${pick(NAMES)} ${sub.suffix}`;
@@ -138,17 +132,18 @@ function buildSeed() {
         subType: sub.subType,
         city: c.city,
         district,
-        address: `${pick(STREETS)} No:${1 + Math.floor(rand() * 90)}, ${district}/${c.city}`,
+        address: mobile ? '' : `${pick(STREETS)} No:${1 + Math.floor(rand() * 90)}, ${district}/${c.city}`,
         lat,
         lng,
         rating: avg,
         reviewCount: providerReviews.length,
         isPremium,
-        isVerified: isPremium || rand() < 0.5,
+        isVerified: rand() < 0.45,
         about: `${6 + seeds * 3} yıllık tecrübeyle ${district} ve çevresinde ${sub.subType.toLocaleLowerCase('tr-TR')} hizmeti veriyoruz. Keşif ücretsiz, fiyatlar işe başlamadan önce netleştirilir.`,
         profileImage: n % 5 === 0 ? `https://picsum.photos/seed/usta-logo${n}/200/200` : null,
         portfolioImages: portfolio,
         priceList: parsePriceList(rawPrices),
+        serviceAreas: mobile ? c.districts.slice(0, 3) : [],
       });
     });
   });

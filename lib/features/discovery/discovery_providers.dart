@@ -34,15 +34,21 @@ class FiltersController extends Notifier<FilterState> {
   @override
   FilterState build() => const FilterState();
 
-  void selectCategory(String id) {
-    if (id == state.mainType && state.subType == null) return;
-    state = state.copyWith(mainType: id, clearSubType: true);
+  /// Tapping the selected category again goes back to "all services".
+  void selectCategory(String? id) {
+    if (id == null || id == state.mainType) {
+      state = state.copyWith(clearMainType: true, clearSubType: true);
+    } else {
+      state = state.copyWith(mainType: id, clearSubType: true, query: '');
+    }
   }
 
-  void selectCategoryAndSubType(String id, String? subType) {
-    state = subType == null
-        ? state.copyWith(mainType: id, clearSubType: true)
-        : state.copyWith(mainType: id, subType: subType);
+  /// Search spans every service, so it replaces the category choice.
+  void setQuery(String value) {
+    final next = state.copyWith(query: value);
+    state = next.searching
+        ? next.copyWith(clearMainType: true, clearSubType: true)
+        : next;
   }
 
   void selectSubType(String? value) => state = value == null
@@ -59,8 +65,11 @@ class FiltersController extends Notifier<FilterState> {
       ? state.copyWith(clearDistance: true)
       : state.copyWith(distanceKm: km);
 
+  /// Clears the sheet filters (subtype, city, distance); keeps category and sort.
   void reset() =>
       state = FilterState(mainType: state.mainType, sortMode: state.sortMode);
+
+  void clearAll() => state = FilterState(sortMode: state.sortMode);
 }
 
 final filtersProvider = NotifierProvider<FiltersController, FilterState>(

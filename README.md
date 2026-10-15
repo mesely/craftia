@@ -1,19 +1,22 @@
 # Usta
 
-Yakındaki ustaları (elektrik, tesisat, tadilat, klima, beyaz eşya, temizlik…) keşfet, filtrele, fiyat listesine, yapılan işlere ve yorumlara bak, tek dokunuşla ara veya talep gönder.
+Yakınındaki ustaları (elektrik, su tesisatı, klima, boya, marangoz, beyaz eşya, temizlik…) bul, filtrele, fiyatlarına, yapılan işlere ve yorumlara bak; tek dokunuşla ara, mesaj gönder ya da hizmet talebi bırak.
 
 ## Mimari
 
 ```
-Flutter uygulaması  ──HTTPS/REST──▶  server (NestJS)  ──▶  MongoDB   (ya da DATA_SOURCE=mock)
+Flutter uygulaması ──HTTPS/REST──▶ server (NestJS) ──▶ MongoDB Atlas   (ya da DATA_SOURCE=mock)
 ```
 
-- **`lib/`** — Flutter istemcisi. Riverpod (state), go_router (navigasyon), Dio (ağ).
+- **`lib/`** — Flutter istemcisi: Riverpod (state), go_router (navigasyon), Dio (ağ).
   `UI → Notifier → Repository → RemoteDataSource → ApiClient`. Widget'lar ham HTTP çağırmaz.
-  Tasarım sistemi `lib/core/theme/` altında (renk, boşluk, radius, tipografi, gölge, süre).
-- **`server/`** — tek parça (modular monolith) NestJS API: `providers`, `reviews`, `orders` (hizmet talepleri), `users`, `notifications`, `categories`.
-  Her modülün bir repository'si var: `Mock…` (bellekte örnek veri) ve `Mongo…` (Mongoose). Hangisinin kullanılacağını yalnızca `DATA_SOURCE` belirler.
-- MongoDB bilgileri yalnızca backend'de durur. Flutter uygulaması sadece `API_BASE_URL` bilir.
+- **`server/`** — tek parça NestJS API (`providers`, `reviews`, `orders`, `users`, `notifications`, `categories`).
+  Her modülün `Mock…` ve `Mongo…` repository'si var; hangisinin kullanılacağını yalnızca `DATA_SOURCE` belirler.
+- MongoDB bilgileri **yalnızca** backend'de durur. Flutter uygulaması sadece `API_BASE_URL` bilir.
+
+### Navigasyon
+
+Üç sekme: **Ana Sayfa** (ara, hizmet seç, filtrele, ustaları gör), **Taleplerim**, **Profil**. Harita sekmesi yok: konum (GPS, şehir, koordinat, mesafe, "en yakın" sıralaması) altyapı olarak duruyor; usta sayfasındaki **Yol Tarifi** düğmesi telefonun harita uygulamasını açıyor. Dükkânı olmayan ustalarda adres yerine **Hizmet bölgesi** gösterilir.
 
 ### API
 
@@ -24,88 +27,64 @@ Flutter uygulaması  ──HTTPS/REST──▶  server (NestJS)  ──▶  Mong
 | `GET /providers` | `page, limit, mainType, subType, city, sortMode (nearest\|rating), distance, userLat, userLng, q` |
 | `GET /providers/:id` | usta detayı |
 | `POST /providers` | usta başvurusu (premium/doğrulama istemciden ayarlanamaz) |
-| `GET/POST /providers/:id/reviews` | yorumlar (sayfalı) / yorum yaz |
-| `POST /service-requests`, `GET /service-requests?userId=`, `PATCH /service-requests/:id/status` | hizmet talepleri (yalnızca iptal) |
-| `GET /users/:id`, `GET /notifications?userId=` | kullanıcı, bildirim kayıtları |
+| `GET/POST /providers/:id/reviews` | yorumlar / yorum yaz |
+| `POST /service-requests`, `GET /service-requests?userId=`, `PATCH /service-requests/:id/status` | hizmet talepleri |
+| `GET /users/:id`, `GET /notifications?userId=` | kullanıcı, bildirim |
 
-## Harita
+## Tasarım sistemi
 
-**Harita** sekmesi `lib/features/map/` altında. Harita API anahtarı gerektirmeyen şematik bir yüzey kullanır (koordinatlardan çizilen pinler, kullanıcı etrafında mesafe halkaları, yakınlaştır/kaydır). Yüzey bir arayüzün (`MapSurfaceBuilder`) arkasında durur.
-
-Gerçek harita SDK'sı (Google Maps, Mapbox, MapLibre…) hazır olduğunda:
-1. `MapSurfaceBuilder`'ı SDK widget'ıyla uygula (`MapSurfaceData.pins` → marker, `user` → kullanıcı noktası, tıklamada `onPinTap`).
-2. `lib/features/map/map_surface.dart` içindeki `mapSurfaceBuilderProvider`'dan yeni uygulamayı döndür.
-
-Başka hiçbir dosya değişmez. API anahtarı gerekiyorsa Flutter'a `--dart-define` ile ver; Mongo bilgileri gibi sunucu sırları asla uygulamaya girmez.
-
-## Varlıklar
-
-- `assets/brand/` — uygulama ikonu ve açılış logosu (pin içinde "U"). Yeniden üretmek için: `dart run flutter_launcher_icons` ve `dart run flutter_native_splash:create`.
-- `assets/illustrations/` — boş durum ve hata çizimleri (SVG, marka paletinde, birkaç yüz bayt).
-- Yazı tipi: Inter (`assets/fonts/`), ikonlar: Phosphor.
+- `lib/core/theme/` — renk (mavi palet), boşluk, radius (8/12/16/24, hap şekli yok), tipografi (Inter), süre, kenarlık, gölge.
+- **Arayüz Boyutu** (Profil → Normal / Büyük / Çok büyük): yazı, dokunma alanı, düğme yüksekliği ve kenar boşluğunu birlikte büyütür (`lib/core/accessibility/`). Telefonun kendi yazı boyutu ayarıyla *çarpılır*, onu devre dışı bırakmaz. Seçim cihazda saklanır.
+- **İkonlar:** `lib/core/icons/usta_icons.dart` — Usta'ya özel, 24×24 ızgarada 2 px çizgili SVG yol verisi; senkron çizilir (yüklenme titremesi yok).
+- **Hizmet görselleri:** `assets/services/*.webp` — her hizmet türü için (elektrikçi, su tesisatçısı, klima ve kombi, boyacı, dekorasyon, marangoz, beyaz eşya, elektronik, ev temizliği) tek sanat yönünde, mavi tonlu, Gemini ile üretilmiş düz illüstrasyonlar (~5 KB). Usta fotoğrafı yoksa kartta ve detayda bu görsel görünür. Eşleme: `lib/features/discovery/service_art.dart`.
+- Boş durum / hata çizimleri: `assets/illustrations/`.
 
 ## Gereksinimler
 
-Flutter 3.47+, Node.js 20+, (Android için Android SDK, iOS için Xcode). MongoDB sadece `DATA_SOURCE=mongo` iken gerekir.
+Flutter 3.47+, Node.js 20+; Android için Android SDK, iOS için Xcode. MongoDB yalnızca `DATA_SOURCE=mongo` iken gerekir.
 
 ## Çalıştırma
 
-**Backend (mock modda, veritabanı gerekmez):**
+**Backend**
 
 ```bash
 cd server
-cp .env.example .env
+cp .env.example .env     # sonra .env içini doldur (aşağıya bak)
 npm install
-npm run start:dev      # http://localhost:3000
+npm run start:dev        # http://localhost:3000
 ```
 
-**Flutter:**
+`server/.env` (git'e girmez; `.env.example` yalnızca boş yer tutucular içerir):
+
+```
+NODE_ENV=development
+PORT=3000
+DATA_SOURCE=mongo        # mock = bellekte örnek veri, veritabanı gerekmez
+MONGODB_URI=             # mongodb+srv://<kullanici>:<sifre>@<cluster>/  — yalnızca burada
+DATABASE_NAME=usta_db
+```
+
+Bağlantıyı salt-okunur sınamak için: `npm run db:check` (DNS / kimlik / TLS / Atlas IP izni gibi hata türlerini ayırt eder, şifreyi yazdırmaz).
+
+**Flutter**
 
 ```bash
 flutter pub get
 flutter run --dart-define=API_BASE_URL=http://localhost:3000
 ```
 
-`API_BASE_URL` verilmezse Android emülatörde `http://10.0.2.2:3000`, diğerlerinde `http://localhost:3000` kullanılır.
-Gerçek cihazda bilgisayarının yerel IP'sini ver (`http://192.168.x.x:3000`). Üretimde `https://` kullan.
+Android emülatörü bilgisayara `10.0.2.2` ile ulaşır (varsayılan zaten odur). Gerçek telefonda `API_BASE_URL`'e bilgisayarın yerel IP'sini ya da yayındaki API adresini ver.
 
-## Yapılandırma
+## Testler
 
-`server/.env` (örnek: `server/.env.example`):
-
+```bash
+dart format . && flutter analyze && flutter test
+cd server && npm run build && npm test
 ```
-NODE_ENV=development
-PORT=3000
-DATA_SOURCE=mock        # mock | mongo
-MONGODB_URI=
-DATABASE_NAME=usta
-```
-
-`.env` dosyaları git'e girmez. Kaynak kodda hiçbir bağlantı dizesi veya anahtar yoktur.
-
-## Mock mod
-
-`DATA_SOURCE=mock`: 8 şehirde, 5 kategoride 51 örnek usta; premium/normal, farklı puanlar, koordinatlar, fiyat listeleri, iş fotoğrafları ve yorumlar. Veriler bellektedir; sunucu yeniden başlayınca sıfırlanır.
-
-## MongoDB'yi bağlamak
-
-1. `server/.env` içinde `MONGODB_URI=` değerini ve gerekirse `DATABASE_NAME=` değerini doldur.
-2. `DATA_SOURCE=mongo` yap.
-3. Sunucuyu yeniden başlat. Flutter tarafında hiçbir değişiklik gerekmez.
-
-Koleksiyon adları eski şemayla aynıdır (`providers`, `reviews`, `orders`, `users`, `notifications`), mevcut veriler okunabilir. `priceList` eski `{"Hizmet": "min-max"}` biçiminde olabilir; okunurken normalize edilir.
 
 ## Derleme
 
 ```bash
-flutter build apk --debug            # Android
-flutter build ios --simulator --debug  # iOS simülatör
-```
-
-## Test
-
-```bash
-flutter analyze
-flutter test
-cd server && npm run build && npm test
+flutter build apk --debug          # Android
+flutter build ios --simulator      # iOS (Xcode gerekir)
 ```

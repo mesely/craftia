@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
 import '../constants/illustrations.dart';
 import '../errors/app_failure.dart';
+import '../icons/usta_icon.dart';
+import '../icons/usta_icons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
@@ -21,7 +22,7 @@ class StateView extends StatelessWidget {
     this.compact = false,
   });
 
-  final IconData? icon;
+  final UstaIconData? icon;
   final String? illustration;
   final String title;
   final String? message;
@@ -33,7 +34,7 @@ class StateView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.xxxl,
+        horizontal: AppSpacing.xxl,
         vertical: compact ? AppSpacing.xxl : AppSpacing.huge,
       ),
       child: Column(
@@ -47,7 +48,7 @@ class StateView extends StatelessWidget {
               excludeFromSemantics: true,
             )
           else if (icon != null)
-            Icon(icon, size: 40, color: AppColors.inkSubtle),
+            UstaIcon(icon!, size: 44, color: AppColors.inkSubtle),
           const SizedBox(height: AppSpacing.lg),
           Text(
             title,
@@ -58,7 +59,10 @@ class StateView extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               message!,
-              style: AppTypography.bodySm,
+              style: AppTypography.body.copyWith(
+                color: AppColors.inkMuted,
+                fontSize: 15,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -78,9 +82,11 @@ class ErrorStateView extends StatelessWidget {
     required this.failure,
     required this.onRetry,
     this.compact = false,
+    this.title = 'Şu anda yükleyemedik',
   });
 
   final AppFailure failure;
+  final String title;
   final VoidCallback onRetry;
   final bool compact;
 
@@ -89,8 +95,10 @@ class ErrorStateView extends StatelessWidget {
     final offline = failure.kind == FailureKind.network;
     return StateView(
       illustration: offline ? Illustrations.offline : null,
-      icon: offline ? null : PhosphorIconsRegular.warningCircle,
-      title: offline ? 'Bağlantı yok' : 'Bir sorun oluştu',
+      icon: offline ? null : UstaIcons.warning,
+      title: offline
+          ? 'İnternet bağlantısı yok'
+          : 'Şu anda ustaları yükleyemedik',
       message: failure.message,
       actionLabel: 'Tekrar dene',
       onAction: onRetry,

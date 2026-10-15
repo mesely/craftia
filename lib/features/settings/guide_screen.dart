@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
 import '../../core/config/app_config.dart';
+import '../../core/icons/usta_icon.dart';
+import '../../core/icons/usta_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
@@ -13,24 +14,24 @@ class GuideScreen extends StatelessWidget {
 
   static const _steps = [
     (
-      PhosphorIconsRegular.squaresFour,
+      UstaIcons.grid,
       'Hizmeti seç',
-      'Ana sayfadan kategoriyi ve alt hizmeti seç. Şehrini ya da konumunu belirt.',
+      'Ana sayfadan ihtiyacın olan hizmete dokun ya da arama kutusuna yaz. Şehrini seç ya da konumunu kullan.',
     ),
     (
-      PhosphorIconsRegular.slidersHorizontal,
+      UstaIcons.sliders,
       'Filtrele',
-      'Yakınlığa veya puana göre sırala, mesafe sınırı koy.',
+      'Yakınlığa veya puana göre sırala, hizmet türünü ve uzaklığı seç.',
     ),
     (
-      PhosphorIconsRegular.listMagnifyingGlass,
+      UstaIcons.search,
       'İncele',
       'Fiyat listesine, yapılan işlere ve yorumlara bak.',
     ),
     (
-      PhosphorIconsRegular.phoneCall,
+      UstaIcons.phone,
       'Ulaş',
-      'Doğrudan ara, mesaj at ya da talep gönder.',
+      'Ara, mesaj gönder ya da hizmet talebi bırak. Dükkânı olan ustalar için Yol Tarifi de var.',
     ),
   ];
 
@@ -40,7 +41,7 @@ class GuideScreen extends StatelessWidget {
       appBar: AppBar(
         leading: IconButton(
           tooltip: 'Geri',
-          icon: const Icon(PhosphorIconsBold.arrowLeft),
+          icon: const UstaIcon(UstaIcons.arrowLeft, size: 26),
           onPressed: () =>
               context.canPop() ? context.pop() : context.go('/profile'),
         ),
@@ -80,7 +81,7 @@ class GuideScreen extends StatelessWidget {
                         color: AppColors.primarySoft,
                         borderRadius: AppRadius.borderMd,
                       ),
-                      child: Icon(s.$1, color: AppColors.primary, size: 24),
+                      child: UstaIcon(s.$1, color: AppColors.primary, size: 26),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
@@ -89,7 +90,13 @@ class GuideScreen extends StatelessWidget {
                         children: [
                           Text(s.$2, style: AppTypography.titleSm),
                           const SizedBox(height: 2),
-                          Text(s.$3, style: AppTypography.bodySm),
+                          Text(
+                            s.$3,
+                            style: AppTypography.body.copyWith(
+                              color: AppColors.inkMuted,
+                              fontSize: 15,
+                            ),
+                          ),
                         ],
                       ),
                     ),

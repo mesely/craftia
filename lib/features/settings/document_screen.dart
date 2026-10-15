@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_glyphs/phosphor_glyphs.dart';
 
 import '../../core/config/app_config.dart';
+import '../../core/icons/usta_icon.dart';
+import '../../core/icons/usta_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -81,7 +82,7 @@ class DocumentScreen extends StatelessWidget {
       appBar: AppBar(
         leading: IconButton(
           tooltip: 'Geri',
-          icon: const Icon(PhosphorIconsBold.arrowLeft),
+          icon: const UstaIcon(UstaIcons.arrowLeft, size: 26),
           onPressed: () =>
               context.canPop() ? context.pop() : context.go('/profile'),
         ),
