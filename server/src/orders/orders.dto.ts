@@ -4,6 +4,7 @@ import { IsIn, IsNumber, IsOptional, IsString, MaxLength, MinLength } from 'clas
 export class CreateServiceRequestDto {
   @IsString() @MinLength(1) @MaxLength(80) userId: string;
   @IsString() @IsOptional() providerId?: string;
+  @IsString() @MaxLength(80) @IsOptional() customerName?: string;
   @IsString() mainType: string;
   @IsString() @IsOptional() subType?: string;
   @IsString() @MinLength(2) city: string;
@@ -14,6 +15,7 @@ export class CreateServiceRequestDto {
 }
 
 export class UpdateStatusDto {
-  /** Without accounts the public API only lets a request be cancelled. */
-  @IsIn(['CANCELLED']) status: 'CANCELLED';
+  @IsIn(['ACCEPTED', 'COMPLETED', 'CANCELLED']) status: 'ACCEPTED' | 'COMPLETED' | 'CANCELLED';
+  /** Who is acting: the customer who made the request, or the usta's account. */
+  @IsString() @MaxLength(64) actorId: string;
 }

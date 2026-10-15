@@ -1,6 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import {
-  ArrayMaxSize, IsArray, IsIn, IsInt, IsNumber, IsOptional, IsString, Max, MaxLength, Min, MinLength, ValidateNested,
+  ArrayMaxSize, IsArray, IsBoolean, IsIn, IsInt, IsNumber, IsOptional, IsString, Max, MaxLength, Min, MinLength, ValidateNested,
 } from 'class-validator';
 
 const emptyToUndefined = ({ value }: { value: unknown }) =>
@@ -41,6 +41,9 @@ export class CreateProviderDto {
   @IsString() @MinLength(2) district: string;
   @IsString() @MaxLength(200) @IsOptional() address?: string;
   @IsString() @MaxLength(500) @IsOptional() about?: string;
+  @IsArray() @ArrayMaxSize(12) @IsString({ each: true }) @MaxLength(40, { each: true }) @IsOptional() serviceAreas?: string[];
+  /** Test accounts created with the mock sign-in. Stored with `isDemo` so they are easy to clean up. */
+  @IsBoolean() @IsOptional() demo?: boolean;
   @IsArray() @ArrayMaxSize(30) @ValidateNested({ each: true }) @Type(() => PriceItemDto) @IsOptional()
   priceList?: PriceItemDto[];
 }

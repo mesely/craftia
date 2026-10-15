@@ -1,5 +1,10 @@
 import { Controller, Get, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AccountsModule } from './accounts/accounts.module';
+import { StoresModule } from './common/stores.module';
+import { ComplaintsModule } from './complaints/complaints.module';
+import { ConversationsModule } from './conversations/conversations.module';
+import { PrivacyModule } from './privacy/privacy.module';
 import { CategoriesController } from './categories/categories.controller';
 import { DatabaseModule } from './config/database.module';
 import { loadConfig } from './config/env';
@@ -23,6 +28,11 @@ class HealthController {
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [loadConfig] }),
     DatabaseModule.register(),
+    StoresModule,
+    AccountsModule,
+    ConversationsModule,
+    ComplaintsModule,
+    PrivacyModule,
     ProvidersModule.register(),
     ReviewsModule.register(),
     OrdersModule.register(),

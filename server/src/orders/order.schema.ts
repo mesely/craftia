@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 /** Collection and legacy field names (categoryId/cityId) are kept so old orders stay readable. */
@@ -13,7 +13,8 @@ export class OrderDoc {
   @Prop() providerName: string;
   @Prop() subType: string;
   @Prop() contactPhone: string;
-  @Prop({ type: { type: String, enum: ['Point'] }, coordinates: { type: [Number] } }, )
+  /** GeoJSON point; left unset (not an empty object) when the request has no coordinates. */
+  @Prop(raw({ type: { type: String, enum: ['Point'] }, coordinates: { type: [Number], default: undefined } }))
   location?: { type: 'Point'; coordinates: number[] };
 }
 

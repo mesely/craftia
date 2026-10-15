@@ -46,7 +46,8 @@ export class ProvidersService {
       about: dto.about?.trim() ?? '',
       profileImage: null,
       portfolioImages: [],
-      serviceAreas: [],
+      serviceAreas: (dto.serviceAreas ?? []).map((a) => a.trim()).filter(Boolean),
+      ...(dto.demo && process.env.NODE_ENV !== 'production' ? { isDemo: true } : {}),
       priceList: prices.map((p) => ({ serviceName: p.serviceName.trim(), minPrice: p.minPrice, maxPrice: p.maxPrice })),
     });
   }

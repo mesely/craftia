@@ -23,6 +23,8 @@ export interface ProviderEntity {
   priceList: ServicePrice[];
   /** Districts the provider travels to. Empty when the source data does not say. */
   serviceAreas: string[];
+  /** Present only on test records created through the demo sign-in. */
+  isDemo?: boolean;
 }
 
 export interface ProviderView extends ProviderEntity {

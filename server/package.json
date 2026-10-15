@@ -27,7 +27,11 @@
         }
       ]
     },
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@nestjs/common$": "<rootDir>/test/shims/nestjs-common.ts",
+      "^@nestjs/mongoose$": "<rootDir>/test/shims/nestjs-mongoose.ts"
+    }
   },
   "dependencies": {
     "@nestjs/common": "^12.1.3",

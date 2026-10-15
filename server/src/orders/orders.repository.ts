@@ -11,6 +11,7 @@ export type NewServiceRequest = Omit<ServiceRequestEntity, 'id' | 'createdAt' | 
 export abstract class OrdersRepository {
   abstract create(data: NewServiceRequest): Promise<ServiceRequestEntity>;
   abstract listByUser(userId: string): Promise<ServiceRequestEntity[]>;
+  abstract listByProvider(providerId: string): Promise<ServiceRequestEntity[]>;
   abstract findById(id: string): Promise<ServiceRequestEntity | null>;
   abstract setStatus(id: string, status: RequestStatus): Promise<ServiceRequestEntity | null>;
 }
@@ -27,6 +28,10 @@ export class MockOrdersRepository extends OrdersRepository {
 
   async listByUser(userId: string) {
     return this.items.filter((i) => i.userId === userId);
+  }
+
+  async listByProvider(providerId: string) {
+    return this.items.filter((i) => i.providerId === providerId);
   }
 
   async findById(id: string) {
@@ -65,6 +70,11 @@ export class MongoOrdersRepository extends OrdersRepository {
 
   async listByUser(userId: string) {
     const docs = await this.model.find({ userId }).sort({ createdAt: -1 }).limit(100).lean().exec();
+    return docs.map((d) => this.toEntity(d));
+  }
+
+  async listByProvider(providerId: string) {
+    const docs = await this.model.find({ providerId }).sort({ createdAt: -1 }).limit(100).lean().exec();
     return docs.map((d) => this.toEntity(d));
   }
 

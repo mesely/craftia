@@ -12,12 +12,12 @@ export class OrdersController {
   }
 
   @Get()
-  list(@Query('userId') userId?: string) {
-    return this.orders.listByUser(userId);
+  list(@Query('userId') userId?: string, @Query('providerId') providerId?: string) {
+    return this.orders.list(userId, providerId);
   }
 
   @Patch(':id/status')
-  updateStatus(@Param('id') id: string, @Body() _body: UpdateStatusDto) {
-    return this.orders.cancel(id);
+  updateStatus(@Param('id') id: string, @Body() body: UpdateStatusDto) {
+    return this.orders.changeStatus(id, body);
   }
 }

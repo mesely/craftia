@@ -23,6 +23,7 @@ export class ProviderDoc {
   @Prop([String]) portfolioImages: string[];
   /** Optional: districts a mobile provider (plumber, electrician, HVAC…) travels to. */
   @Prop([String]) serviceAreas: string[];
+  @Prop() isDemo: boolean;
   /** Legacy shape is a map of "service" -> "min-max"; normalised on read. */
   @Prop({ type: Object }) priceList: unknown;
 }
