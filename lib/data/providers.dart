@@ -13,7 +13,19 @@ import 'repositories/requests_repository.dart';
 import 'repositories/reviews_repository.dart';
 import 'repositories/usta_repository.dart';
 
-final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
+final apiClientProvider = Provider<ApiClient>(
+  (ref) => ApiClient(
+    // Read lazily on every call, so a new sign-in is picked up without rebuilding the client.
+    token: () => ref.read(sessionTokenProvider),
+    onUnauthorized: () => ref.read(sessionExpiredProvider)(),
+  ),
+);
+
+/// The signed session token; set by the auth controller (see `auth_controller.dart`).
+final sessionTokenProvider = Provider<String?>((ref) => null);
+
+/// Called when the server refuses the session; wired to sign-out.
+final sessionExpiredProvider = Provider<void Function()>((ref) => () {});
 final remoteDataSourceProvider = Provider<RemoteDataSource>(
   (ref) => RemoteDataSource(ref.watch(apiClientProvider)),
 );

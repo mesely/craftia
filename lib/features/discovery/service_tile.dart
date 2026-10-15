@@ -20,6 +20,7 @@ class ServiceTile extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.horizontal = false,
+    this.compact = false,
   });
 
   final ServiceOption service;
@@ -29,9 +30,12 @@ class ServiceTile extends StatelessWidget {
   /// Picture beside the label (used when text is large and columns are fewer).
   final bool horizontal;
 
+  /// Smaller picture and label, so the first screen also shows ustas.
+  final bool compact;
+
   @override
   Widget build(BuildContext context) {
-    final art = horizontal ? 56.0 : 60.0;
+    final art = horizontal ? 56.0 : (compact ? 32.0 : 60.0);
     final image = ClipRRect(
       borderRadius: AppRadius.borderSm,
       child: ArtImage(
@@ -47,6 +51,7 @@ class ServiceTile extends StatelessWidget {
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
       style: AppTypography.label.copyWith(
+        fontSize: compact && !horizontal ? 12.5 : null,
         fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
       ),
     );
@@ -66,12 +71,16 @@ class ServiceTile extends StatelessWidget {
           onTap: onTap,
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: horizontal ? context.ui.rowHeight + 16 : 108,
+              minHeight: horizontal
+                  ? context.ui.rowHeight + 16
+                  : (compact ? 68 : 108),
             ),
             child: Stack(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(AppSpacing.sm + 2),
+                  padding: EdgeInsets.all(
+                    compact ? AppSpacing.sm : AppSpacing.sm + 2,
+                  ),
                   child: horizontal
                       ? Row(
                           children: [
@@ -123,8 +132,10 @@ class ServiceGrid extends StatelessWidget {
     super.key,
     required this.selectedId,
     required this.onSelect,
+    this.compact = false,
   });
 
+  final bool compact;
   final String? selectedId;
   final ValueChanged<ServiceOption> onSelect;
 
@@ -138,19 +149,20 @@ class ServiceGrid extends StatelessWidget {
           service: s,
           selected: s.id == selectedId,
           horizontal: roomy,
+          compact: compact,
           onTap: () => onSelect(s),
         ),
     ];
     return Column(
       children: [
         for (var i = 0; i < tiles.length; i += columns) ...[
-          if (i > 0) const SizedBox(height: AppSpacing.sm),
+          if (i > 0) SizedBox(height: compact ? 6 : AppSpacing.sm),
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (var j = 0; j < columns; j++) ...[
-                  if (j > 0) const SizedBox(width: AppSpacing.sm),
+                  if (j > 0) SizedBox(width: compact ? 6 : AppSpacing.sm),
                   Expanded(
                     child: i + j < tiles.length
                         ? tiles[i + j]

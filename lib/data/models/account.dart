@@ -21,7 +21,6 @@ class Account extends Equatable {
     this.phone = '',
     this.email = '',
     this.providerId,
-    this.isDemo = false,
   });
 
   final String id;
@@ -32,9 +31,6 @@ class Account extends Equatable {
 
   /// The `providers` listing this usta manages.
   final String? providerId;
-
-  /// Created through the mock "admin" sign-in.
-  final bool isDemo;
 
   bool get isProvider => role == AccountRole.provider;
 
@@ -47,7 +43,6 @@ class Account extends Equatable {
     phone: phone ?? this.phone,
     email: email ?? this.email,
     providerId: providerId,
-    isDemo: isDemo,
   );
 
   factory Account.fromJson(Map<String, dynamic> json) => Account(
@@ -57,7 +52,6 @@ class Account extends Equatable {
     phone: (json['phone'] ?? '').toString(),
     email: (json['email'] ?? '').toString(),
     providerId: json['providerId'] as String?,
-    isDemo: json['isDemo'] == true,
   );
 
   Map<String, dynamic> toJson() => {
@@ -67,7 +61,6 @@ class Account extends Equatable {
     'phone': phone,
     'email': email,
     'providerId': providerId,
-    'isDemo': isDemo,
   };
 
   @override

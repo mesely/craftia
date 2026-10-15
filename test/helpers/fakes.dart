@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:mocktail/mocktail.dart';
 import 'package:usta/data/datasources/remote_data_source.dart';
+import 'package:usta/core/errors/app_failure.dart';
 import 'package:usta/data/models/account.dart';
+import 'package:usta/data/models/session.dart';
+import 'package:usta/data/repositories/accounts_repository.dart';
 import 'package:usta/data/models/filter_state.dart';
 import 'package:usta/data/models/paged.dart';
 import 'package:usta/data/models/review.dart';
@@ -134,6 +137,105 @@ class FakeRequestsRepository extends RequestsRepository {
   }) async => const [];
 }
 
+/// Behaves like the server's account rules, in memory: unique e-mail and phone, password check.
+class FakeAccountsRepository extends AccountsRepository {
+  FakeAccountsRepository() : super(MockRemoteDataSource());
+
+  final accounts = <Account>[];
+  final _passwords = <String, String>{};
+  final applications = <ProviderApplication>[];
+  String? deleted;
+  var _next = 0;
+
+  static String _norm(String v) =>
+      v.trim().toLowerCase().replaceAll(RegExp(r'\s'), '');
+
+  Session _create(
+    AccountRole role,
+    String name,
+    String phone,
+    String email,
+    String password, {
+    String? providerId,
+  }) {
+    final dup = accounts.any(
+      (a) => _norm(a.email) == _norm(email) || _norm(a.phone) == _norm(phone),
+    );
+    if (dup) {
+      throw const AppFailure(
+        FailureKind.invalid,
+        'Bu e-posta ile zaten bir hesap var. Giriş yapabilirsin.',
+      );
+    }
+    final account = Account(
+      id: 'acc-${_next++}',
+      role: role,
+      name: name,
+      phone: phone,
+      email: email.trim().toLowerCase(),
+      providerId: providerId,
+    );
+    accounts.add(account);
+    _passwords[account.id] = password;
+    return Session(account: account, token: 'token-${account.id}');
+  }
+
+  @override
+  Future<Session> registerCustomer({
+    required String name,
+    required String phone,
+    required String email,
+    required String password,
+  }) async => _create(AccountRole.customer, name, phone, email, password);
+
+  @override
+  Future<Session> registerProvider({
+    required String name,
+    required String phone,
+    required String email,
+    required String password,
+    required ProviderApplication application,
+  }) async {
+    applications.add(application);
+    return _create(
+      AccountRole.provider,
+      name,
+      phone,
+      email,
+      password,
+      providerId: 'listing-${applications.length}',
+    );
+  }
+
+  @override
+  Future<Session> login(String identifier, String password) async {
+    final id = _norm(identifier);
+    final match = accounts.where(
+      (a) => _norm(a.email) == id || _norm(a.phone) == id,
+    );
+    if (match.isEmpty) {
+      throw const AppFailure(
+        FailureKind.invalid,
+        'Bu bilgilerle kayıtlı hesap bulamadık. Önce kayıt olabilirsin.',
+      );
+    }
+    final a = match.first;
+    if (_passwords[a.id] != password) {
+      throw const AppFailure(
+        FailureKind.invalid,
+        'Şifre yanlış. Lütfen tekrar dene.',
+      );
+    }
+    return Session(account: a, token: 'token-${a.id}');
+  }
+
+  @override
+  Future<void> deleteAccount(String accountId) async {
+    deleted = accountId;
+    accounts.removeWhere((a) => a.id == accountId);
+  }
+}
+
 class FakePromotionsRepository extends PromotionsRepository {
   FakePromotionsRepository() : super(MockRemoteDataSource());
 
@@ -226,6 +328,7 @@ List<Override> testOverrides({
   Account? account,
   bool onboardingSeen = true,
   FakePromotionsRepository? promotions,
+  FakeAccountsRepository? accountsRepo,
 }) => [
   ustaRepositoryProvider.overrideWithValue(
     usta ??
@@ -237,6 +340,9 @@ List<Override> testOverrides({
   ),
   reviewsRepositoryProvider.overrideWithValue(FakeReviewsRepository()),
   requestsRepositoryProvider.overrideWithValue(FakeRequestsRepository()),
+  accountsRepositoryProvider.overrideWithValue(
+    accountsRepo ?? FakeAccountsRepository(),
+  ),
   promotionsRepositoryProvider.overrideWithValue(
     promotions ?? FakePromotionsRepository(),
   ),

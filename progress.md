@@ -36,8 +36,16 @@ Flutter (Riverpod 3, go_router 18, Dio) --REST--> server/ (NestJS 12, Mongoose 9
 - [x] Store readiness: version 2.1.0+3, Android release signing via `android/key.properties` + R8, `docs/RELEASE.md`, `docs/store/listing-tr.md`.
 - [x] Tests: 107 Flutter, 28 server.
 
+## v2.2 (this session)
+- [x] REAL accounts: server `auth` module (`POST /auth/register|login|upgrade`, `GET /auth/me`), scrypt password hashes in `app_accounts`, HMAC-SHA256 session tokens (`AUTH_SECRET`, 90 days), global `AuthGuard` (public reads whitelisted; acting ids must equal the session; inbox only for the managing account), login lockout after 8 failures. Client sends `Authorization: Bearer`, signs out on 401. **Mock/admin bypass removed** (`MOCK_AUTH`, `isDemo`, `demo` gone). No SMS/e-mail verification yet (by request).
+- [x] Home: compact first screen (small tiles, small title/search), results header = sort (left half) + distance (right half), no "Yakınında" label; card: distance is "30 km" (no "uzakta"), address on one shrinking line, price inline. Guest "Giriş yap" ends at right margin.
+- [x] Settings: "Telefon varsayılanı", one-line captions, symmetric gear icon.
+- [x] Lütfi Yılmaz seeded from the user's own photos (`server/seed-media`, gitignored): portrait from ~/Downloads/lutfi_usta.jpg + 10 work photos, reviewers Tuncay K. / Ahmet D.
+- [x] Release artifacts (gitignored `release/`): usta-2.1.0.apk/.aab (debug-signed until `android/key.properties` exists), iOS installed on the iPhone.
+- Tests: 111 Flutter, 37 server.
+
 ## Remaining
-- [ ] Real authentication (SMS/e-mail + JWT). Today the server trusts client ids (known limitation, README says so).
+- [ ] SMS / e-mail verification and password reset (accounts and sessions are real now).
 - [ ] Push notifications (FCM/APNs); payments for "Öne çıkan" (currently info/mailto only).
 - [ ] Lawyer review of legal texts; App Store / Play signing.
 - [ ] Atlas data quality: coordinates vs city mismatches, almost no photos/prices (UI never invents them).
@@ -62,8 +70,8 @@ NEVER PUT CREDENTIALS OR SECRETS HERE.
 
 ## Validation (last run)
 - flutter analyze: no issues
-- flutter test: 107 passed
-- server: `npm test` 28 passed, `npm run build` ok
+- flutter test: 111 passed
+- server: `npm test` 37 passed, `npm run build` ok
 - Simulator (iPhone 16 Pro) verified: home, detail, contact sheet, chat, requests, notifications, settings, official page, welcome, dark theme live switch.
 
 ## Known Issues

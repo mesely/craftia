@@ -6,6 +6,7 @@ import '../core/accessibility/ui_scale_controller.dart';
 import '../core/theme/theme_mode_controller.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/auth_store.dart';
+import '../data/providers.dart';
 import 'app.dart';
 
 /// Keeps startup light: no GPS, network or database work happens before the first frame.
@@ -22,6 +23,14 @@ Future<void> bootstrap() async {
         initialUiScaleProvider.overrideWithValue(uiScale),
         initialThemeModeProvider.overrideWithValue(themeMode),
         initialAuthProvider.overrideWithValue(auth),
+        // The API client sends the signed session and signs out when it is refused.
+        sessionTokenProvider.overrideWith(
+          (ref) => ref.watch(authProvider.select((s) => s.token)),
+        ),
+        sessionExpiredProvider.overrideWith(
+          (ref) =>
+              () => ref.read(authProvider.notifier).sessionExpired(),
+        ),
       ],
       child: const UstaApp(),
     ),

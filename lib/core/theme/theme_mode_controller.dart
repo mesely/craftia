@@ -6,9 +6,9 @@ const _prefsKey = 'theme_mode';
 
 /// The in-app "Görünüm" setting. [system] follows the phone.
 enum AppThemeMode {
-  system('system', 'Telefonu izle', 'Telefonun açık ya da koyu ayarına uyar.'),
+  system('system', 'Telefon varsayılanı', 'Telefonun ayarına uyar.'),
   light('light', 'Açık', 'Aydınlık ortamlar için.'),
-  dark('dark', 'Koyu', 'Gece ve loş ortamlar için, gözü yormaz.');
+  dark('dark', 'Koyu', 'Gece ve loş ortamlar için.');
 
   const AppThemeMode(this.storageKey, this.label, this.description);
 

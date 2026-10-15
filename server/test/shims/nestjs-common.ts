@@ -18,3 +18,17 @@ export class BadRequestException extends HttpError {}
 export class ForbiddenException extends HttpError {}
 export class NotFoundException extends HttpError {}
 export class PayloadTooLargeException extends HttpError {}
+export class ConflictException extends HttpError {}
+export class UnauthorizedException extends HttpError {}
+export class HttpException extends HttpError {
+  constructor(message?: string, readonly status?: number) {
+    super(message);
+  }
+}
+export const HttpStatus = { TOO_MANY_REQUESTS: 429, PAYMENT_REQUIRED: 402 };
+export class Logger {
+  constructor(readonly context?: string) {}
+  warn(): void {}
+  log(): void {}
+}
+export const CanActivate = undefined;

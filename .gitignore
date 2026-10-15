@@ -38,3 +38,7 @@ server/dist/
 android/key.properties
 *.jks
 *.keystore
+
+# Real photos used to seed a demo listing stay local
+server/seed-media/
+release/

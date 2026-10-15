@@ -75,7 +75,12 @@ class ChoiceTile extends StatelessWidget {
                           style: AppTypography.label.copyWith(color: ink),
                         ),
                         if (caption != null)
-                          Text(caption!, style: AppTypography.bodySm),
+                          Text(
+                            caption!,
+                            style: AppTypography.bodySm,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                       ],
                     ),
                   ),

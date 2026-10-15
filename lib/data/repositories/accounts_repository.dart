@@ -1,22 +1,81 @@
 import '../../core/errors/app_failure.dart';
 import '../datasources/remote_data_source.dart';
+import '../models/provider_application.dart';
+import '../models/session.dart';
 import '../models/account.dart';
 
-/// Profile + KVKK rights. Passwords never leave the phone in the current (mock sign-in) stage.
+/// Sign-up, sign-in and the KVKK rights (data export, deletion), all against the database.
 class AccountsRepository {
   AccountsRepository(this._remote);
 
   final RemoteDataSource _remote;
 
-  Future<void> upsert(Account account) => guarded(
-    () => _remote.upsertAccount({
-      'id': account.id,
-      'role': account.role.apiValue,
-      'name': account.name,
-      if (account.phone.isNotEmpty) 'phone': account.phone,
-      if (account.email.isNotEmpty) 'email': account.email,
-      if (account.providerId != null) 'providerId': account.providerId,
-    }),
+  Future<Session> registerCustomer({
+    required String name,
+    required String phone,
+    required String email,
+    required String password,
+  }) => guarded(
+    () async => Session.fromJson(
+      await _remote.register({
+        'role': 'customer',
+        'name': name.trim(),
+        'phone': phone.trim(),
+        'email': email.trim(),
+        'password': password,
+      }),
+    ),
+  );
+
+  /// Creates the account and the usta listing in one step.
+  Future<Session> registerProvider({
+    required String name,
+    required String phone,
+    required String email,
+    required String password,
+    required ProviderApplication application,
+  }) => guarded(
+    () async => Session.fromJson(
+      await _remote.register({
+        'role': 'provider',
+        'name': name.trim(),
+        'phone': phone.trim(),
+        'email': email.trim(),
+        'password': password,
+        'provider': application.toJson(),
+      }),
+    ),
+  );
+
+  Future<Session> login(String identifier, String password) => guarded(
+    () async => Session.fromJson(
+      await _remote.login({
+        'identifier': identifier.trim(),
+        'password': password,
+      }),
+    ),
+  );
+
+  /// A signed-in customer who starts offering services.
+  Future<Session> upgrade(ProviderApplication application) => guarded(
+    () async => Session.fromJson(
+      await _remote.upgrade({'provider': application.toJson()}),
+    ),
+  );
+
+  Future<Account> updateProfile(
+    String id, {
+    String? name,
+    String? phone,
+    String? email,
+  }) => guarded(
+    () async => Account.fromJson(
+      await _remote.updateAccount(id, {
+        'name': ?name,
+        'phone': ?phone,
+        'email': ?email,
+      }),
+    ),
   );
 
   /// Everything stored about the person, as JSON-encodable data.

@@ -5,7 +5,7 @@ Usta v2.1 is feature-complete and tested. These are the things that stay *outsid
 ## 1. Must do before the first store build
 | # | Item | Why / how |
 |---|---|---|
-| 1 | **Real authentication** | Sign-in is a client-side mock (`MOCK_AUTH`). Add SMS/e-mail verification and a signed session (JWT) and make the API check it; today the server trusts the ids the app sends. Build with `--dart-define=MOCK_AUTH=false`. |
+| 1 | **Verification + password reset** | Accounts, scrypt hashes, signed sessions and the server guard exist. Add SMS / e-mail verification and a reset flow. Set a strong `AUTH_SECRET` (required in production). |
 | 2 | **HTTPS API + hosting** | Deploy `server/` (any Node host) behind HTTPS, set `DATA_SOURCE=mongo`, `MONGODB_URI`, `DATABASE_NAME`, `NODE_ENV=production`; build the app with `--dart-define=API_BASE_URL=https://api.<your-domain>`. Rotate the Atlas password that was used during development. |
 | 3 | **Payments for "Öne çıkan"** | `server/src/promotions` sells plans in `PAYMENTS_MODE=test` (no charge). For `live`: sell the three plans as consumable in-app purchases (App Store Connect / Google Play Console, product ids `usta.promo.week|month|quarter`), send the receipt in `receipt`, and implement `verifyReceipt()` against the store server APIs. Both stores require in-app purchase for digital visibility sold inside the app. |
 | 4 | **Legal texts** | KVKK Aydınlatma Metni, Kullanıcı Sözleşmesi and Sorumluluk Reddi in `lib/features/settings/document_screen.dart` are drafts. A lawyer must review them; also publish them on a public URL (stores require a privacy-policy link). |
@@ -14,14 +14,14 @@ Usta v2.1 is feature-complete and tested. These are the things that stay *outsid
 
 ## 2. Build
 ```bash
-flutter build appbundle --release --dart-define=API_BASE_URL=https://api.example.com --dart-define=MOCK_AUTH=false
-flutter build ipa --release --dart-define=API_BASE_URL=https://api.example.com --dart-define=MOCK_AUTH=false
+flutter build appbundle --release --dart-define=API_BASE_URL=https://api.example.com
+flutter build ipa --release --dart-define=API_BASE_URL=https://api.example.com
 ```
 Bump `version:` in `pubspec.yaml` (`name+build`) for every upload.
 
 ## 3. Store listing
 Text, keywords and the privacy answers are drafted in `docs/store/listing-tr.md`. Screenshots: `docs/screenshots/`.
-- **Apple**: App Privacy = Contact info (name, phone, e-mail), Location (coarse/precise, app functionality), User content (messages, photos), Identifiers; not used for tracking. Age rating 4+. Review notes need a test account (use mock `admin` only in a build that still has `MOCK_AUTH`).
+- **Apple**: App Privacy = Contact info (name, phone, e-mail), Location (coarse/precise, app functionality), User content (messages, photos), Identifiers; not used for tracking. Age rating 4+. Review notes need a test account (create a real test account).
 - **Google Play**: Data safety form with the same data types; account deletion URL/instructions (in-app: Ayarlar → Hesabımı sil).
 - Both stores: user-generated content needs in-app **report** (Şikayet et) and **block/delete** paths: present.
 

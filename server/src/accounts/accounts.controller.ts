@@ -1,19 +1,19 @@
-import { Body, Controller, Get, Param, Put } from '@nestjs/common';
-import { UpsertAccountDto } from './accounts.dto';
+import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
+import { UpdateProfileDto } from './accounts.dto';
 import { AccountsService } from './accounts.service';
 
+/** The auth guard only lets a person reach their own account (`:id` must match the session). */
 @Controller('accounts')
 export class AccountsController {
   constructor(private readonly accounts: AccountsService) {}
 
-  /** Creates or updates the profile of the signed-in person. */
-  @Put()
-  upsert(@Body() body: UpsertAccountDto) {
-    return this.accounts.upsert(body);
-  }
-
   @Get(':id')
   get(@Param('id') id: string) {
     return this.accounts.get(id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() body: UpdateProfileDto) {
+    return this.accounts.updateProfile(id, body);
   }
 }

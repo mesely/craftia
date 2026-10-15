@@ -1,6 +1,6 @@
 export type AccountRole = 'customer' | 'provider';
 
-/** A person using the app. Passwords never reach the server in the current (mock sign-in) stage. */
+/** A person using the app, as the API shows them. Credentials never leave the server. */
 export interface AccountEntity {
   id: string;
   role: AccountRole;
@@ -11,4 +11,10 @@ export interface AccountEntity {
   providerId: string | null;
   termsAcceptedAt: string;
   createdAt: string;
+}
+
+/** What is stored: the account plus a salted scrypt hash of the password. */
+export interface AccountRecord extends AccountEntity {
+  passwordHash?: string;
+  passwordSalt?: string;
 }

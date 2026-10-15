@@ -27,7 +27,12 @@ class AppTopBar extends ConsumerWidget {
     final compact = MediaQuery.textScalerOf(context).scale(16) > 20;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(gutter, AppSpacing.xs, gutter - 6, 0),
+      padding: EdgeInsets.fromLTRB(
+        gutter,
+        AppSpacing.xs,
+        account == null ? gutter : gutter - 6,
+        0,
+      ),
       child: SizedBox(
         height: context.ui.tapTarget + 8,
         child: Row(
@@ -52,18 +57,27 @@ class AppTopBar extends ConsumerWidget {
                 ),
               ),
             ],
-            const Spacer(),
             if (account == null)
-              Flexible(
-                child: TextButton(
-                  onPressed: () => context.push('/login'),
-                  child: const Text(
-                    'Giriş yap',
-                    overflow: TextOverflow.ellipsis,
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      // Its text ends exactly at the page margin, like "Değiştir" below.
+                      padding: const EdgeInsets.only(left: 12),
+                      alignment: Alignment.centerRight,
+                    ),
+                    onPressed: () => context.push('/login'),
+                    child: const Text(
+                      'Giriş yap',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               )
             else ...[
+              const Spacer(),
               _BellButton(unread: unread),
               const SizedBox(width: AppSpacing.xs),
               _ProfileButton(initials: _initials(account.name)),

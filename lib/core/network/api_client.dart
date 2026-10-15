@@ -5,18 +5,44 @@ import '../errors/app_failure.dart';
 
 /// Thin Dio wrapper. Returns decoded JSON and converts every failure to [AppFailure].
 class ApiClient {
-  ApiClient({Dio? dio, String? baseUrl})
-    : _dio =
-          dio ??
-          Dio(
-            BaseOptions(
-              baseUrl: baseUrl ?? AppConfig.apiBaseUrl,
-              connectTimeout: const Duration(seconds: 8),
-              sendTimeout: const Duration(seconds: 10),
-              receiveTimeout: const Duration(seconds: 12),
-              headers: {'Accept': 'application/json'},
-            ),
+  ApiClient({
+    Dio? dio,
+    String? baseUrl,
+    String? Function()? token,
+    void Function()? onUnauthorized,
+  }) : _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               baseUrl: baseUrl ?? AppConfig.apiBaseUrl,
+               connectTimeout: const Duration(seconds: 8),
+               sendTimeout: const Duration(seconds: 10),
+               receiveTimeout: const Duration(seconds: 12),
+               headers: {'Accept': 'application/json'},
+             ),
+           ) {
+    // The signed-in session rides along on every call; a rejected session signs the person out.
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final t = token?.call();
+          if (t != null && t.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $t';
+          }
+          handler.next(options);
+        },
+        onError: (e, handler) {
+          final hadSession = e.requestOptions.headers.containsKey(
+            'Authorization',
           );
+          if (e.response?.statusCode == 401 && hadSession) {
+            onUnauthorized?.call();
+          }
+          handler.next(e);
+        },
+      ),
+    );
+  }
 
   final Dio _dio;
 

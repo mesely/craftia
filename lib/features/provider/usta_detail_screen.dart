@@ -140,7 +140,7 @@ class _Identity extends StatelessWidget {
   Widget build(BuildContext context) {
     final place = [
       if (usta.locationLabel.isNotEmpty) usta.locationLabel,
-      if (distance != null) formatDistanceAway(distance!),
+      if (distance != null) formatDistance(distance!),
     ].join(' · ');
 
     return Column(

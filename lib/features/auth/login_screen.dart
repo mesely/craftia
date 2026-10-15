@@ -33,10 +33,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    // Mock stage: "admin" in either field signs in without further checks.
-    final admin =
-        isAdminToken(_identifier.text) || isAdminToken(_password.text);
-    if (!admin && !_form.currentState!.validate()) return;
+    if (!_form.currentState!.validate()) return;
     setState(() {
       _busy = true;
       _error = null;

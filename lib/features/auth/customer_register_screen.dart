@@ -43,28 +43,21 @@ class _CustomerRegisterScreenState
   }
 
   Future<void> _submit() async {
-    final admin = _all.any((c) => isAdminToken(c.text));
-    if (!admin) {
-      final valid = _form.currentState!.validate();
-      setState(() => _consentError = !_consent);
-      if (!valid || !_consent) return;
-    }
+    final valid = _form.currentState!.validate();
+    setState(() => _consentError = !_consent);
+    if (!valid || !_consent) return;
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
       final auth = ref.read(authProvider.notifier);
-      if (admin) {
-        await auth.signIn('admin', 'admin');
-      } else {
-        await auth.registerCustomer(
-          name: _name.text,
-          phone: _phone.text,
-          email: _email.text,
-          password: _password.text,
-        );
-      }
+      await auth.registerCustomer(
+        name: _name.text,
+        phone: _phone.text,
+        email: _email.text,
+        password: _password.text,
+      );
       if (mounted) context.go('/');
     } catch (e) {
       if (mounted) {

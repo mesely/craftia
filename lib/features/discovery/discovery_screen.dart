@@ -71,15 +71,13 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
               padding: EdgeInsets.symmetric(horizontal: gutter),
               sliver: SliverList(
                 delegate: SliverChildListDelegate.fixed([
-                  const SizedBox(height: AppSpacing.md),
-                  const _Header(),
-                  const SizedBox(height: AppSpacing.lg),
-                  const _SearchField(),
                   const SizedBox(height: AppSpacing.xs),
+                  const _Header(),
+                  const SizedBox(height: AppSpacing.sm),
+                  const _SearchField(),
                   const _LocationRow(),
-                  const SizedBox(height: AppSpacing.md),
                   const _ServiceTiles(),
-                  const SizedBox(height: AppSpacing.xxl),
+                  const SizedBox(height: AppSpacing.lg),
                   KeyedSubtree(key: _resultsKey, child: const _ResultsHeader()),
                 ]),
               ),
@@ -109,7 +107,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Text(
       'Hangi ustaya ihtiyacın var?',
-      style: AppTypography.display,
+      style: AppTypography.titleSm.copyWith(fontSize: 19),
     );
     final roomy = MediaQuery.textScalerOf(context).scale(16) > 17.5;
     return Semantics(
@@ -159,7 +157,7 @@ class _SearchFieldState extends ConsumerState<_SearchField> {
     return TextField(
       controller: _controller,
       textInputAction: TextInputAction.search,
-      style: AppTypography.body,
+      style: AppTypography.body.copyWith(fontSize: 15),
       onChanged: (v) {
         setState(() {});
         _debouncer.run(() {
@@ -168,11 +166,17 @@ class _SearchFieldState extends ConsumerState<_SearchField> {
       },
       decoration: InputDecoration(
         hintText: 'Usta ya da hizmet ara',
+        isDense: true,
+        constraints: BoxConstraints(minHeight: context.ui.tapTarget - 6),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.sm + 2,
+        ),
         prefixIcon: Padding(
-          padding: EdgeInsets.all(AppSpacing.md + 2),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: UstaIcon(
             UstaIcons.search,
-            size: 24,
+            size: 20,
             color: AppColors.inkMuted,
           ),
         ),
@@ -213,7 +217,7 @@ class _LocationRow extends ConsumerWidget {
         borderRadius: AppRadius.borderMd,
         onTap: () => showCitySheet(context),
         child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: context.ui.tapTarget),
+          constraints: BoxConstraints(minHeight: context.ui.tapTarget - 8),
           child: Row(
             // Either side shrinks (with an ellipsis) before anything overflows.
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -269,12 +273,11 @@ class _ServiceTiles extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Semantics(
-          header: true,
-          child: Text('Hizmet seç', style: AppTypography.titleSm),
+        ServiceGrid(
+          selectedId: id,
+          onSelect: notifier.selectService,
+          compact: true,
         ),
-        const SizedBox(height: AppSpacing.sm),
-        ServiceGrid(selectedId: id, onSelect: notifier.selectService),
       ],
     );
   }
@@ -288,80 +291,39 @@ class _ResultsHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final query = ref.watch(providerQueryProvider);
     final filters = query.filters;
-    final total = ref.watch(
-      ustaListProvider(query)
-          .select((s) => s.status == ListStatus.data ? s.total : null),
-    );
 
-    final heading = filters.searching
-        ? 'Arama sonuçları'
-        : (query.hasLocation ? 'Yakınındaki ustalar' : 'Ustalar');
     final summary = _summary(filters);
 
+    final sortLabel = filters.sortMode.shortLabel;
+    final distanceLabel = filters.distanceKm == null
+        ? 'Uzaklık'
+        : '${filters.distanceKm!.round()} km';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Expanded(
-              child: Semantics(
-                header: true,
-                child: Text(heading, style: AppTypography.title),
-              ),
-            ),
-            if (total != null) Text('$total usta', style: AppTypography.bodySm),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
+        // Sort on the left half, distance on the right half: a balanced pair.
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
-                style: _compact,
-                onPressed: () => showSortSheet(context),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        'Sırala: ${filters.sortMode.shortLabel}',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    const UstaIcon(UstaIcons.chevronDown, size: 18),
-                  ],
-                ),
+              child: _MiniButton(
+                label: sortLabel,
+                semantic: 'Sırala: $sortLabel',
+                onTap: () => showSortSheet(context),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: OutlinedButton(
-                style: _compact,
-                onPressed: () => showDistanceSheet(context),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        filters.distanceKm == null
-                            ? 'Uzaklık'
-                            : '${filters.distanceKm!.round()} km içinde',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    const UstaIcon(UstaIcons.chevronDown, size: 18),
-                  ],
-                ),
+              child: _MiniButton(
+                label: distanceLabel,
+                semantic: filters.distanceKm == null
+                    ? 'Uzaklık seç'
+                    : '${filters.distanceKm!.round()} kilometre içinde',
+                onTap: () => showDistanceSheet(context),
               ),
             ),
           ],
         ),
-        if (summary.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.xs),
+        if (summary.isNotEmpty)
           Row(
             children: [
               Expanded(child: Text(summary, style: AppTypography.bodySm)),
@@ -371,15 +333,9 @@ class _ResultsHeader extends ConsumerWidget {
               ),
             ],
           ),
-        ] else
-          const SizedBox(height: AppSpacing.sm),
       ],
     );
   }
-
-  static final _compact = OutlinedButton.styleFrom(
-    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-  );
 
   /// "Klima & Kombi · İzmir · 10 km içinde"
   static String _summary(FilterState f) {
@@ -390,5 +346,45 @@ class _ResultsHeader extends ConsumerWidget {
       ?f.city,
       if (f.distanceKm != null) '${f.distanceKm!.round()} km içinde',
     ].join(' · ');
+  }
+}
+
+/// A small outlined control with a chevron: "En yakın ⌄".
+class _MiniButton extends StatelessWidget {
+  const _MiniButton({
+    required this.label,
+    required this.semantic,
+    required this.onTap,
+  });
+
+  final String label;
+  final String semantic;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: semantic,
+      excludeSemantics: true,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          minimumSize: Size(double.infinity, context.ui.tapTarget - 6),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          textStyle: AppTypography.button.copyWith(fontSize: 14),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+            const SizedBox(width: 2),
+            const UstaIcon(UstaIcons.chevronDown, size: 16),
+          ],
+        ),
+      ),
+    );
   }
 }

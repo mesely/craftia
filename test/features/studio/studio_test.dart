@@ -16,12 +16,18 @@ import 'package:usta/features/location/location_service.dart';
 import 'package:usta/features/studio/profile_completeness.dart';
 
 import '../../helpers/fakes.dart';
-import '../auth/auth_test.dart' show FakeAccountsRepository;
 
 Future<void> settle(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 100));
   await tester.pump(const Duration(milliseconds: 500));
+}
+
+Future<void> tapVisible(WidgetTester tester, Finder finder) async {
+  await tester.ensureVisible(finder);
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.tap(finder);
+  await tester.pump(const Duration(milliseconds: 100));
 }
 
 void phone(WidgetTester tester) {
@@ -44,7 +50,6 @@ Widget app({
       location: location,
       promotions: promotions,
     ),
-    accountsRepositoryProvider.overrideWithValue(FakeAccountsRepository()),
   ],
   child: const UstaApp(),
 );
@@ -230,38 +235,69 @@ void main() {
     });
   });
 
-  group('mock admin registration', () {
+  group('usta registration', () {
     testWidgets(
-      'takes city, district and coordinates from the phone, not a made-up address',
+      'fills place from the phone, saves coordinates, and signs the new usta in',
       (tester) async {
         phone(tester);
-        final repo = FakeUstaRepository();
+        final accounts = FakeAccountsRepository();
         await tester.pumpWidget(
-          app(
-            usta: repo,
-            location: FakeLocationService(
-              const LocationFound(UserLocation(lat: 38.46, lng: 27.2)),
+          ProviderScope(
+            retry: (_, _) => null,
+            overrides: testOverrides(
+              account: null,
+              accountsRepo: accounts,
+              location: FakeLocationService(
+                const LocationFound(UserLocation(lat: 38.46, lng: 27.2)),
+              ),
             ),
+            child: const UstaApp(),
           ),
         );
         await settle(tester);
-        final ctx = tester.element(find.byType(Scaffold).first);
-        GoRouter.of(ctx).go('/register/provider');
+        GoRouter.of(tester.element(find.byType(Scaffold).first))
+            .go('/register/provider');
         await settle(tester);
 
-        await tester.enterText(find.byType(TextFormField).first, 'admin');
+        final fields = find.byType(TextFormField);
+        await tester.enterText(fields.at(0), 'Ali Usta');
+        await tester.enterText(fields.at(1), '05329998877');
+        await tester.enterText(fields.at(2), 'ali@example.com');
+        await tester.enterText(fields.at(3), 'gizli123');
         await tester.tap(find.text('Devam'));
         await settle(tester);
+
+        await tester.enterText(
+          find.byType(TextFormField).first,
+          'Ali Elektrik',
+        );
+        await tester.tap(find.text('Konumumu kullan'));
+        await settle(tester);
+        await settle(tester);
+        expect(find.text('İzmir'), findsWidgets);
+        await tapVisible(tester, find.text('Elektrik').first);
+        await tapVisible(tester, find.text('Dükkânım ya da ofisim var'));
+        await settle(tester);
+        await tester.enterText(
+          find.byType(TextFormField).last,
+          'Yıllardır bölgede elektrik işleri yapıyorum, keşif ücretsiz.',
+        );
+        await tapVisible(tester, find.text('Devam'));
         await settle(tester);
 
-        final application = repo.applications.single;
-        expect(application.demo, isTrue);
+        await tapVisible(tester, find.byType(Checkbox));
+        await settle(tester);
+        await tapVisible(tester, find.text('Kaydı tamamla'));
+        await settle(tester);
+        await settle(tester);
+
+        final application = accounts.applications.single;
         expect(application.city, 'İzmir');
         expect(application.district, 'Karşıyaka');
         expect(application.address, contains('Bostanlı'));
         expect(application.lat, closeTo(38.46, 0.001));
         expect(application.lng, closeTo(27.2, 0.001));
-        expect(application.address, isNot(contains('Moda')));
+        expect(accounts.accounts.single.role, AccountRole.provider);
       },
     );
   });

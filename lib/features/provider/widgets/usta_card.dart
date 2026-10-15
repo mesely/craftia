@@ -47,7 +47,7 @@ class UstaCard extends StatelessWidget {
       semanticLabel: semantics,
       onTap: () => context.push('/usta/${usta.id}', extra: usta),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.md + 2),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppRadius.borderLg,
@@ -59,85 +59,58 @@ class UstaCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                UstaAvatar(usta: usta, size: context.ui.avatar),
-                const SizedBox(width: AppSpacing.md + 2),
+                UstaAvatar(usta: usta, size: context.ui.avatar - 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (usta.isVerified || usta.isPremium) ...[
-                        Wrap(
-                          spacing: AppSpacing.md,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            if (usta.isVerified) const VerifiedLabel(),
-                            if (usta.isPremium) const FeaturedLabel(),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                      ],
                       Text(
                         usta.businessName,
                         style: AppTypography.titleSm,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (usta.subTypeText.isNotEmpty)
-                        Text(
-                          usta.subTypeText,
-                          style: AppTypography.body.copyWith(
-                            color: AppColors.inkMuted,
-                            fontSize: 15,
-                          ),
-                        ),
-                      const SizedBox(height: AppSpacing.sm),
-                      if (usta.hasRating) ...[
-                        RatingLabel(
-                          rating: usta.rating,
-                          reviewCount: usta.reviewCount,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                      ],
+                      const SizedBox(height: 2),
+                      // Trade, rating and the two marks share one wrapping line.
+                      Wrap(
+                        spacing: AppSpacing.md,
+                        runSpacing: 2,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          if (usta.subTypeText.isNotEmpty)
+                            Text(
+                              usta.subTypeText,
+                              style: AppTypography.bodySm.copyWith(
+                                color: AppColors.inkMuted,
+                              ),
+                            ),
+                          if (usta.hasRating)
+                            RatingLabel(
+                              rating: usta.rating,
+                              reviewCount: usta.reviewCount,
+                            ),
+                          if (usta.isVerified) const VerifiedLabel(),
+                          if (usta.isPremium) const FeaturedLabel(),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
                       _Where(usta: usta, distance: distance),
+                      const SizedBox(height: 2),
+                      _Signal(price: price),
                     ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            const Divider(),
-            const SizedBox(height: AppSpacing.md),
-            // Wrap: on a big text size the action drops under the price instead of overflowing.
-            SizedBox(
-              width: double.infinity,
-              child: Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: AppSpacing.md,
-                runSpacing: AppSpacing.sm,
-                children: [
-                  _Signal(price: price),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          'Ustayı Gör',
-                          style: AppTypography.button.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      UstaIcon(
-                        UstaIcons.chevronRight,
-                        size: 20,
-                        color: AppColors.primary,
-                      ),
-                    ],
+                const SizedBox(width: AppSpacing.xs),
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.xs),
+                  child: UstaIcon(
+                    UstaIcons.chevronRight,
+                    size: 22,
+                    color: AppColors.primary,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
@@ -146,6 +119,7 @@ class UstaCard extends StatelessWidget {
   }
 }
 
+/// "Güzelbahçe, İzmir · 27 km" on one line: the text shrinks a little instead of wrapping.
 class _Where extends StatelessWidget {
   const _Where({required this.usta, required this.distance});
 
@@ -157,24 +131,26 @@ class _Where extends StatelessWidget {
     final place = usta.locationLabel;
     final text = [
       if (place.isNotEmpty) place,
-      if (distance != null) formatDistanceAway(distance!),
+      if (distance != null) formatDistance(distance!),
     ].join(' · ');
     if (text.isEmpty) return const SizedBox.shrink();
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: EdgeInsets.only(top: 1),
-          child: UstaIcon(UstaIcons.pin, size: 18, color: AppColors.inkMuted),
-        ),
+        UstaIcon(UstaIcons.pin, size: 16, color: AppColors.inkMuted),
         const SizedBox(width: AppSpacing.xs),
-        Expanded(child: Text(text, style: AppTypography.bodySm)),
+        Expanded(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(text, style: AppTypography.bodySm, maxLines: 1),
+          ),
+        ),
       ],
     );
   }
 }
 
-/// The single price hint at the bottom of a card.
+/// The single price hint: "Başlangıç 1.000 ₺", or an invitation to call.
 class _Signal extends StatelessWidget {
   const _Signal({required this.price});
 
@@ -182,15 +158,20 @@ class _Signal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (price != null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Başlangıç fiyatı', style: AppTypography.caption),
-          Text(formatLira(price!), style: AppTypography.titleSm),
-        ],
-      );
+    if (price == null) {
+      return Text('Fiyat için arayın', style: AppTypography.bodySm);
     }
-    return Text('Fiyat için arayın', style: AppTypography.bodySm);
+    return Text.rich(
+      TextSpan(
+        style: AppTypography.bodySm,
+        children: [
+          const TextSpan(text: 'Başlangıç '),
+          TextSpan(
+            text: formatLira(price!),
+            style: AppTypography.label.copyWith(color: AppColors.ink),
+          ),
+        ],
+      ),
+    );
   }
 }

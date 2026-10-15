@@ -39,7 +39,7 @@ class _UstaAppState extends ConsumerState<UstaApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  /// "Telefonu izle" follows the phone live, including the evening switch to dark.
+  /// "Telefon varsayılanı" follows the phone live, including the evening switch to dark.
   @override
   void didChangePlatformBrightness() {
     if (ref.read(themeModeProvider) == AppThemeMode.system) setState(() {});

@@ -68,22 +68,6 @@ class _ProviderRegisterScreenState
   bool _busy = false;
   String? _error;
 
-  List<TextEditingController> get _fields => [
-    _name,
-    _phone,
-    _email,
-    _password,
-    _business,
-    _district,
-    _address,
-    _areas,
-    _about,
-    for (final p in _prices) p.name,
-  ];
-
-  /// Mock stage: "admin" in any field skips the checks and fills sensible demo values.
-  bool get _admin => _fields.any((c) => isAdminToken(c.text));
-
   int get _firstStep => _upgrade ? 1 : 0;
 
   @override
@@ -116,10 +100,6 @@ class _ProviderRegisterScreenState
   }
 
   void _next() {
-    if (_admin) {
-      _submit();
-      return;
-    }
     setState(() => _showErrors = true);
     final ok = switch (_step) {
       0 => _accountForm.currentState!.validate(),
@@ -156,10 +136,14 @@ class _ProviderRegisterScreenState
 
   /// Fills province, district and address from where the phone is, and remembers the coordinates
   /// so customers nearby can find this usta. Returns false when the phone could not say.
-  Future<bool> _fillFromLocation({required bool fillAddress}) async {
+  Future<bool> _fillFromLocation({
+    required bool fillAddress,
+    bool requestPermission = true,
+    bool keepTyped = false,
+  }) async {
     final found = await ref
         .read(locationServiceProvider)
-        .getCurrentLocation(requestPermission: true);
+        .getCurrentLocation(requestPermission: requestPermission);
     if (found is! LocationFound) return false;
     final place = await ref
         .read(placeNameServiceProvider)
@@ -168,7 +152,7 @@ class _ProviderRegisterScreenState
     setState(() {
       _lat = found.location.lat;
       _lng = found.location.lng;
-      if (place != null) {
+      if (place != null && !keepTyped) {
         _city = _matchCity(place.city) ?? _city;
         _district.text = place.district;
         if (fillAddress && place.address.isNotEmpty) {
@@ -201,48 +185,37 @@ class _ProviderRegisterScreenState
       _service != null && _city != null && _hasShop != null;
 
   Future<void> _submit() async {
-    final admin = _admin;
     setState(() {
       _busy = true;
       _error = null;
     });
-    // The demo sign-in takes its place from the phone, not from a made-up address.
-    if (admin && _lat == null) {
-      await _fillFromLocation(fillAddress: _address.text.trim().isEmpty);
+    // Customers near the shop find it by distance: take the phone's position if it is allowed.
+    if (_lat == null) {
+      await _fillFromLocation(
+        fillAddress: false,
+        requestPermission: false,
+        keepTyped: true,
+      );
     }
     final service = _service ?? kServices.first;
     final shop = _hasShop ?? true;
-    final city = _city ?? 'İstanbul';
     final application = ProviderApplication(
-      businessName: admin && _business.text.trim().length < 3
-          ? 'Admin Usta'
-          : _business.text.trim(),
-      phoneNumber: admin && _phone.text.trim().length < 10
-          ? '05550000000'
-          : _phone.text.trim(),
+      businessName: _business.text.trim(),
+      phoneNumber: _phone.text.trim(),
       mainType: service.mainType,
       subType: service.subType,
-      city: city,
-      district: admin && _district.text.trim().length < 2
-          ? 'Kadıköy'
-          : _district.text.trim(),
-      address: shop
-          ? (admin && _address.text.trim().isEmpty
-                ? 'Moda Caddesi No:1, Kadıköy'
-                : _address.text.trim())
-          : '',
-      about: admin && _about.text.trim().length < 20
-          ? 'Bu bir demo usta hesabıdır.'
-          : _about.text.trim(),
+      city: _city ?? '',
+      district: _district.text.trim(),
+      address: shop ? _address.text.trim() : '',
+      about: _about.text.trim(),
       serviceAreas: shop
           ? const []
           : _areas.text
                 .split(',')
                 .map((s) => s.trim())
-                .where((s) => s.isNotEmpty && !isAdminToken(s))
+                .where((s) => s.isNotEmpty)
                 .toList(),
-      priceList: _admin ? const [] : collectPrices(_prices),
-      demo: admin,
+      priceList: collectPrices(_prices),
       lat: _lat,
       lng: _lng,
     );
@@ -252,16 +225,10 @@ class _ProviderRegisterScreenState
         await auth.upgradeToProvider(application);
       } else {
         await auth.registerProvider(
-          name: admin && _name.text.trim().length < 5
-              ? 'Admin Usta'
-              : _name.text,
+          name: _name.text,
           phone: application.phoneNumber,
-          email: admin && !_email.text.contains('@')
-              ? 'admin@usta.app'
-              : _email.text,
-          password: admin && _password.text.length < 6
-              ? 'admin'
-              : _password.text,
+          email: _email.text,
+          password: _password.text,
           application: application,
         );
       }

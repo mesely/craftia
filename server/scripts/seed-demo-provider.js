@@ -1,7 +1,8 @@
 /* Fills in one listing so the interface can be tested with a complete page:
  *   npm run db:seed-demo -- <providerId>
  * Sets the service type, introduction, a profile photo, four work photos and a few reviews.
- * Photos are the generated images in seed-media/. Safe to run again (it replaces its own records). */
+ * Photos are read from seed-media/ (kept out of git: they are the usta's own photos).
+ * Safe to run again (it replaces its own records). */
 require('dotenv/config');
 const fs = require('fs');
 const path = require('path');
@@ -37,14 +38,15 @@ const media = (name) => fs.readFileSync(path.join(__dirname, '..', 'seed-media',
   };
   const profileImage = await save('lutfi-portre.jpg');
   const portfolioImages = [];
-  for (const f of ['pano.jpg', 'priz.jpg', 'spot.jpg', 'tesisat.jpg']) portfolioImages.push(await save(f));
+  for (const f of fs.readdirSync(path.join(__dirname, '..', 'seed-media')).filter((n) => n.endsWith('.jpg') && n !== 'lutfi-portre.jpg').sort()) {
+    portfolioImages.push(await save(f));
+  }
 
   await reviews.deleteMany({ orderId: new RegExp(`^seed-${providerId}-`) });
   const now = Date.now();
   const sample = [
-    ['Ayşe K.', 5, 'Sigorta panosunu aynı gün yeniledi, çok temiz iş çıkardı.'],
-    ['Murat D.', 5, 'Zamanında geldi, fiyatı baştan net söyledi. Tavsiye ederim.'],
-    ['Selin T.', 4.5, 'Spot aydınlatmaları düzgün monte etti, ortalığı da topladı.'],
+    ['Tuncay K.', 5, 'Sigorta panosunu aynı gün yeniledi, çok temiz iş çıkardı.'],
+    ['Ahmet D.', 4.5, 'Zamanında geldi, fiyatı baştan net söyledi. Tavsiye ederim.'],
   ];
   await reviews.insertMany(sample.map(([authorName, rating, comment], i) => ({
     orderId: `seed-${providerId}-${i + 1}`, userId: `seed-${providerId}`, providerId, authorName, rating, comment,

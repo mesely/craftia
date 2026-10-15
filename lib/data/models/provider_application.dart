@@ -13,7 +13,6 @@ class ProviderApplication {
     this.about = '',
     this.priceList = const [],
     this.serviceAreas = const [],
-    this.demo = false,
     this.lat,
     this.lng,
   });
@@ -31,9 +30,6 @@ class ProviderApplication {
   /// Districts served by an usta who travels to customers (no shop address).
   final List<String> serviceAreas;
 
-  /// Created through the mock sign-in; flagged so the record is easy to clean up.
-  final bool demo;
-
   /// Where the shop (or the usta's phone) is, when the device could tell.
   final double? lat;
   final double? lng;
@@ -48,7 +44,6 @@ class ProviderApplication {
     if (address.isNotEmpty) 'address': address,
     if (about.isNotEmpty) 'about': about,
     if (serviceAreas.isNotEmpty) 'serviceAreas': serviceAreas,
-    if (demo) 'demo': true,
     if (lat != null && lng != null) ...{'lat': lat, 'lng': lng},
     'priceList': [
       for (final p in priceList)

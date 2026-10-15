@@ -69,11 +69,11 @@ void main() {
       expect(find.text('4,5'), findsOneWidget);
       expect(find.text('(12 yorum)'), findsOneWidget);
       expect(find.textContaining('Kadıköy, İstanbul'), findsOneWidget);
-      expect(find.textContaining('uzakta'), findsOneWidget);
-      expect(find.text('150 ₺'), findsOneWidget);
+      expect(find.textContaining(' km'), findsOneWidget);
+      expect(find.textContaining('150 ₺'), findsOneWidget);
       expect(find.text('Öne çıkan'), findsOneWidget);
       expect(find.text('Doğrulanmış'), findsOneWidget);
-      expect(find.text('Ustayı Gör'), findsOneWidget);
+      expect(find.textContaining('Başlangıç'), findsOneWidget);
       expect(
         find.text('Ara'),
         findsNothing,
@@ -90,7 +90,7 @@ void main() {
       );
       expect(find.text('Yeni usta'), findsNothing);
       expect(find.text('Fiyat için arayın'), findsOneWidget);
-      expect(find.textContaining('uzakta'), findsNothing);
+      expect(find.textContaining(' km'), findsNothing);
     });
   });
 
@@ -213,7 +213,6 @@ void main() {
 
       expect(repo.queries.last.filters.subType, isNull);
       expect(find.text('Hangi ustaya ihtiyacın var?'), findsOneWidget);
-      expect(find.text('Hizmet seç'), findsOneWidget);
       for (final service in kServices) {
         expect(tile(service.label), findsOneWidget);
       }
@@ -250,12 +249,12 @@ void main() {
       await tester.pumpWidget(discovery(repo));
       await settle(tester);
 
-      await tester.tap(find.textContaining('Sırala:'));
+      await tester.tap(find.text('En yakın').first);
       await settle(tester);
       await tester.tap(find.text('En yüksek puan').last);
       await settle(tester);
       expect(repo.queries.last.filters.sortMode, SortMode.rating);
-      expect(find.text('Sırala: Puana göre'), findsOneWidget);
+      expect(find.text('Puana göre'), findsOneWidget);
     });
 
     testWidgets('searching replaces the service and can be cleared', (
@@ -276,7 +275,6 @@ void main() {
       await settle(tester);
       expect(repo.queries.last.filters.query, 'kombi');
       expect(repo.queries.last.filters.subType, isNull);
-      expect(find.text('Arama sonuçları'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Aramayı temizle'));
       await settle(tester);

@@ -111,10 +111,8 @@ class _Header extends StatelessWidget {
               ),
               if (account.phone.isNotEmpty)
                 Text(formatPhone(account.phone), style: AppTypography.bodySm),
-              if (account.email.isNotEmpty && !account.isDemo)
+              if (account.email.isNotEmpty)
                 Text(account.email, style: AppTypography.bodySm),
-              if (account.isDemo)
-                Text('Demo hesabı', style: AppTypography.bodySm),
             ],
           ),
         ),

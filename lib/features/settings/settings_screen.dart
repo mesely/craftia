@@ -381,7 +381,12 @@ class _Row extends StatelessWidget {
                       style: AppTypography.body.copyWith(color: color),
                     ),
                     if (caption != null)
-                      Text(caption!, style: AppTypography.bodySm),
+                      Text(
+                        caption!,
+                        style: AppTypography.bodySm,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                   ],
                 ),
               ),

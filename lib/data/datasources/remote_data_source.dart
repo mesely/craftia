@@ -93,8 +93,19 @@ class RemoteDataSource {
   );
 
   // ── accounts / privacy ────────────────────────────────────────────────────
-  Future<Map<String, dynamic>> upsertAccount(Map<String, dynamic> body) async =>
-      _asMap(await _api.put('/accounts', body: body));
+  Future<Map<String, dynamic>> register(Map<String, dynamic> body) async =>
+      _asMap(await _api.post('/auth/register', body: body));
+
+  Future<Map<String, dynamic>> login(Map<String, dynamic> body) async =>
+      _asMap(await _api.post('/auth/login', body: body));
+
+  Future<Map<String, dynamic>> upgrade(Map<String, dynamic> body) async =>
+      _asMap(await _api.post('/auth/upgrade', body: body));
+
+  Future<Map<String, dynamic>> updateAccount(
+    String id,
+    Map<String, dynamic> body,
+  ) async => _asMap(await _api.patch('/accounts/$id', body: body));
 
   Future<Map<String, dynamic>> exportData(String accountId) async => _asMap(
     await _api.get('/privacy/export', query: {'accountId': accountId}),

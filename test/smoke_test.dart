@@ -6,6 +6,8 @@ import 'package:usta/app/app.dart';
 import 'package:usta/core/accessibility/ui_scale.dart';
 import 'package:usta/core/accessibility/ui_scale_controller.dart';
 import 'package:usta/core/theme/app_colors.dart';
+import 'package:usta/data/models/user_location.dart';
+import 'package:usta/features/location/location_service.dart';
 import 'package:usta/core/theme/theme_mode_controller.dart';
 import 'package:usta/data/models/account.dart';
 
@@ -115,6 +117,43 @@ void main() {
       await tester.tap(find.byTooltip('Geri'));
       await settle(tester);
       expect(find.text('Yıldız Elektrik 1'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'the first screen shows the services and two ustas without scrolling',
+    (tester) async {
+      tester.view.physicalSize = const Size(1170, 2532); // 390 x 844 dp
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ProviderScope(
+          retry: (_, _) => null,
+          overrides: testOverrides(
+            usta: FakeUstaRepository(
+              pages: [
+                [fakeUsta(1), fakeUsta(2), fakeUsta(3)],
+              ],
+            ),
+            location: FakeLocationService(
+              const LocationFound(UserLocation(lat: 40.99, lng: 29.03)),
+            ),
+          ),
+          child: const UstaApp(),
+        ),
+      );
+      await settle(tester);
+      await settle(tester);
+
+      final navTop = tester.getTopLeft(find.byType(NavigationBar)).dy;
+      expect(find.text('Elektrik'), findsWidgets);
+      final second = tester.getRect(find.text('Yıldız Elektrik 2'));
+      expect(
+        second.bottom,
+        lessThan(navTop),
+        reason:
+            'the second usta card starts and its title fits above the tab bar',
+      );
     },
   );
 
