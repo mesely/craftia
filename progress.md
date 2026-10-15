@@ -59,7 +59,7 @@ NEVER PUT CREDENTIALS OR SECRETS HERE.
 ## Validation
 flutter analyze: no issues (last run after final edits)
 flutter test: 50 passed (incl. UI-size + large system font overflow tests, no Map tab, Gemini art wiring is covered through card/detail renders)
-Android build: see "Exact Next Steps" if not marked done
+Android build: `flutter build apk --debug` succeeded
 iOS validation: iOS simulator debug build + run verified manually (iPhone 16 Pro) against the real backend
 backend build: `npm run build` ok
 backend tests: 15 passed
@@ -75,4 +75,4 @@ real DB smoke test: ok (health `dataSource: mongo`, providers/categories/detail/
 3. Release signing for Android/iOS.
 
 ## Last Known Good Commit
-see `git log` on branch `flutter-rebuild`
+49ad700 (branch flutter-rebuild)
