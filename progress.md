@@ -29,7 +29,7 @@ Flutter (Riverpod, go_router, Dio) --HTTPS/REST--> server/ (NestJS) --> MongoDB 
 ## Remaining
 - [ ] Atlas data quality (not an app bug): some documents' `lat/lng` do not match their `city/district` (crawler search point), `subType` casing is lower-case, `openingFee`/`pricePerUnit` are identical placeholders (500/100) on all docs so they are NOT shown as prices, no portfolio photos / profile images / priceList in almost all docs → UI shows the service illustration and "Fiyat için arayın".
 - [ ] 2dsphere index `location_2dsphere` exists but `location` is set on 1 document only; nearest sorting uses `lat/lng` in an aggregation (fine at 9k docs; add a GeoJSON backfill + `$geoNear` if the collection grows).
-- [ ] iOS physical-device / release signing not configured.
+- [ ] Release (App Store) signing not configured; development signing works with team 8YVY52TTXP.
 
 ## Product Decisions
 - No Map tab, ever. Location is infrastructure; directions are external.
@@ -60,7 +60,7 @@ NEVER PUT CREDENTIALS OR SECRETS HERE.
 flutter analyze: no issues (last run after final edits)
 flutter test: 50 passed (incl. UI-size + large system font overflow tests, no Map tab, Gemini art wiring is covered through card/detail renders)
 Android build: `flutter build apk --debug` succeeded
-iOS validation: iOS simulator debug build + run verified manually (iPhone 16 Pro) against the real backend
+iOS validation: release build installed and launched on a physical iPhone (wireless) against the Mac backend (API_BASE_URL=LAN IP); also verified on the iPhone 16 Pro simulator
 backend build: `npm run build` ok
 backend tests: 15 passed
 real DB smoke test: ok (health `dataSource: mongo`, providers/categories/detail/reviews)

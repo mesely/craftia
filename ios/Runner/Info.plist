@@ -75,6 +75,8 @@
 			<string>mailto</string>
 			<string>https</string>
 		</array>
+		<key>NSLocalNetworkUsageDescription</key>
+		<string>Geliştirme sırasında bilgisayardaki Usta sunucusuna bağlanmak için gerekir.</string>
 		<key>NSAppTransportSecurity</key>
 		<dict>
 			<key>NSAllowsLocalNetworking</key>
