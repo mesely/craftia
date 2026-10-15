@@ -15,7 +15,10 @@ export interface ProviderEntity {
   lng: number | null;
   rating: number;
   reviewCount: number;
+  /** Paid placement: legacy flag, or an active promotion (see `featuredUntil`). */
   isPremium: boolean;
+  /** ISO time the paid promotion ends; null when none is running. */
+  featuredUntil: string | null;
   isVerified: boolean;
   about: string;
   profileImage: string | null;
@@ -42,4 +45,6 @@ export interface ProviderQuery {
   userLat?: number;
   userLng?: number;
   q?: string;
+  /** An usta never sees their own listing among the results. */
+  excludeId?: string;
 }

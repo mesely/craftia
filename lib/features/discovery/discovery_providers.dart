@@ -5,6 +5,7 @@ import '../../core/errors/app_failure.dart';
 import '../../data/models/filter_state.dart';
 import '../../data/models/usta.dart';
 import '../../data/providers.dart';
+import '../auth/auth_controller.dart';
 import '../location/location_controller.dart';
 
 // ── Filters ─────────────────────────────────────────────────────────────────
@@ -61,6 +62,7 @@ final providerQueryProvider = Provider<ProviderQuery>((ref) {
     filters: filters,
     userLat: location?.lat,
     userLng: location?.lng,
+    excludeId: ref.watch(authProvider.select((s) => s.account?.providerId)),
   );
 });
 

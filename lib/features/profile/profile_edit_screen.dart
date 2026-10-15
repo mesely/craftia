@@ -62,22 +62,31 @@ class ProfileEditScreen extends ConsumerWidget {
                           ref.invalidate(ustaDetailProvider(providerId)),
                     ),
                   ),
-                  data: (usta) => _EditForm(usta: usta),
+                  data: (usta) => ProfileEditForm(usta: usta),
                 ),
     );
   }
 }
 
-class _EditForm extends ConsumerStatefulWidget {
-  const _EditForm({required this.usta});
+/// The editing form. On its own page it closes after saving; inside the "Sayfam" tab ([embedded])
+/// it stays, with [header] shown above it.
+class ProfileEditForm extends ConsumerStatefulWidget {
+  const ProfileEditForm({
+    super.key,
+    required this.usta,
+    this.embedded = false,
+    this.header = const [],
+  });
 
   final Usta usta;
+  final bool embedded;
+  final List<Widget> header;
 
   @override
-  ConsumerState<_EditForm> createState() => _EditFormState();
+  ConsumerState<ProfileEditForm> createState() => _EditFormState();
 }
 
-class _EditFormState extends ConsumerState<_EditForm> {
+class _EditFormState extends ConsumerState<ProfileEditForm> {
   final _form = GlobalKey<FormState>();
   late final _phone = TextEditingController(text: widget.usta.phoneNumber);
   late final _about = TextEditingController(text: widget.usta.about);
@@ -90,6 +99,8 @@ class _EditFormState extends ConsumerState<_EditForm> {
   late List<String> _photos = widget.usta.portfolioImages;
   bool _saving = false;
   bool _photoBusy = false;
+  bool _profileBusy = false;
+  late String? _profileImage = widget.usta.profileImage;
 
   List<PriceRowData> _initialPrices() {
     final rows = <PriceRowData>[
@@ -142,8 +153,11 @@ class _EditFormState extends ConsumerState<_EditForm> {
           );
       ref.invalidate(ustaDetailProvider(widget.usta.id));
       if (mounted) {
+        setState(() => _saving = false);
         _toast('Sayfan güncellendi.');
-        context.canPop() ? context.pop() : context.go('/profile');
+        if (!widget.embedded) {
+          context.canPop() ? context.pop() : context.go('/profile');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -151,6 +165,43 @@ class _EditFormState extends ConsumerState<_EditForm> {
         _toast(AppFailure.from(e).message);
       }
     }
+  }
+
+  Future<void> _changeProfilePhoto() async {
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 900,
+      maxHeight: 900,
+      imageQuality: 80,
+    );
+    if (file == null) return;
+    setState(() => _profileBusy = true);
+    try {
+      final bytes = await file.readAsBytes();
+      final updated = await ref
+          .read(ustaRepositoryProvider)
+          .setProfilePhoto(
+            widget.usta.id,
+            actorId: _me,
+            contentType: _contentTypeOf(file.name),
+            base64Data: base64Encode(bytes),
+          );
+      ref.invalidate(ustaDetailProvider(widget.usta.id));
+      if (mounted) setState(() => _profileImage = updated.profileImage);
+    } catch (e) {
+      if (mounted) _toast(AppFailure.from(e).message);
+    } finally {
+      if (mounted) setState(() => _profileBusy = false);
+    }
+  }
+
+  static String _contentTypeOf(String fileName) {
+    final name = fileName.toLowerCase();
+    return name.endsWith('.png')
+        ? 'image/png'
+        : name.endsWith('.webp')
+        ? 'image/webp'
+        : 'image/jpeg';
   }
 
   Future<void> _addPhoto() async {
@@ -214,11 +265,28 @@ class _EditFormState extends ConsumerState<_EditForm> {
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: EdgeInsets.fromLTRB(gutter, 0, gutter, AppSpacing.xxxl),
         children: [
-          Semantics(
-            header: true,
-            child: Text('Sayfamı düzenle', style: AppTypography.display),
+          if (widget.embedded)
+            ...widget.header
+          else ...[
+            Semantics(
+              header: true,
+              child: Text('Sayfamı düzenle', style: AppTypography.display),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
+          Text('Profil fotoğrafı', style: AppTypography.title),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Yüzün ya da işletmenin logosu. Müşteriler seni bununla tanır.',
+            style: AppTypography.bodySm,
           ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.md),
+          _ProfilePhotoRow(
+            url: _profileImage,
+            busy: _profileBusy,
+            onPick: _changeProfilePhoto,
+          ),
+          const SizedBox(height: AppSpacing.xxl),
           Text('İş fotoğrafları', style: AppTypography.title),
           const SizedBox(height: AppSpacing.xs),
           Text(
@@ -317,6 +385,57 @@ class _EditFormState extends ConsumerState<_EditForm> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ProfilePhotoRow extends StatelessWidget {
+  const _ProfilePhotoRow({
+    required this.url,
+    required this.busy,
+    required this.onPick,
+  });
+
+  final String? url;
+  final bool busy;
+  final VoidCallback onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        ClipRRect(
+          borderRadius: AppRadius.borderLg,
+          child: SizedBox.square(
+            dimension: 88,
+            child: url == null
+                ? ColoredBox(
+                    color: AppColors.primarySoft,
+                    child: Center(
+                      child: UstaIcon(
+                        UstaIcons.user,
+                        size: 36,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  )
+                : AppNetworkImage(url: url!, width: 88, height: 88),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.lg),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: busy ? null : onPick,
+            icon: busy
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : UstaIcon(UstaIcons.photoCamera, size: 20),
+            label: Text(url == null ? 'Fotoğraf ekle' : 'Fotoğrafı değiştir'),
+          ),
+        ),
+      ],
     );
   }
 }

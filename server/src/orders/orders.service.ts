@@ -37,6 +37,8 @@ export class OrdersService {
   async create(dto: CreateServiceRequestDto): Promise<ServiceRequestView> {
     let providerName: string | null = null;
     if (dto.providerId) {
+      const own = await this.accounts.find(dto.userId);
+      if (own?.providerId === dto.providerId) throw new BadRequestException('Kendi sayfana talep gönderemezsin.');
       providerName = (await this.providers.get(dto.providerId)).businessName;
     }
     const located = isValidCoordinate(dto.lat, dto.lng);

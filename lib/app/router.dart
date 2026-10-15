@@ -10,7 +10,6 @@ import '../features/auth/login_screen.dart';
 import '../features/auth/provider_register_screen.dart';
 import '../features/auth/welcome_screen.dart';
 import '../features/chat/chat_screen.dart';
-import '../features/discovery/discovery_screen.dart';
 import '../features/notifications/notifications_screen.dart';
 import '../features/orders/requests_screen.dart';
 import '../features/profile/profile_edit_screen.dart';
@@ -23,6 +22,9 @@ import '../features/settings/profile_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/settings/support_screen.dart';
 import '../features/shell/app_shell.dart';
+import '../features/shell/home_tab.dart';
+import '../features/studio/promotion_screen.dart';
+import '../features/studio/provider_page_screen.dart';
 
 final _rootKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
@@ -42,6 +44,7 @@ String? _redirect(AuthState auth, GoRouterState state) {
           path == '/register/customer')) {
     return '/';
   }
+  if (!auth.isProvider && (path == '/page' || path == '/promote')) return '/';
   return null;
 }
 
@@ -70,15 +73,21 @@ GoRouter buildRouter({
         builder: (context, state, shell) => AppShell(navigationShell: shell),
         branches: [
           StatefulShellBranch(
-            routes: [
-              GoRoute(path: '/', builder: (_, _) => const DiscoveryScreen()),
-            ],
+            routes: [GoRoute(path: '/', builder: (_, _) => const HomeTab())],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/requests',
                 builder: (_, _) => const RequestsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/page',
+                builder: (_, _) => const ProviderPageScreen(),
               ),
             ],
           ),
@@ -130,6 +139,11 @@ GoRouter buildRouter({
             builder: (_, _) => const ProfileEditScreen(),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/promote',
+        parentNavigatorKey: _rootKey,
+        builder: (_, _) => const PromotionScreen(),
       ),
       GoRoute(
         path: '/notifications',

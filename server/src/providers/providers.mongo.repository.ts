@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, PipelineStage } from 'mongoose';
+import { Model, PipelineStage, Types } from 'mongoose';
 import { haversineKm, isValidCoordinate } from '../common/geo';
 import { Page, toPage } from '../common/pagination';
 import { ProviderDoc, ProviderDocument } from './provider.schema';
@@ -24,13 +24,20 @@ export class MongoProvidersRepository extends ProvidersRepository {
     if (query.mainType) match.mainType = { $regex: `^${escapeRegex(query.mainType)}$`, $options: 'i' };
     if (query.subType) match.subType = { $regex: `^${escapeRegex(query.subType)}$`, $options: 'i' };
     if (query.city) match.city = { $regex: `^${escapeRegex(query.city)}$`, $options: 'i' };
+    if (query.excludeId && /^[a-f\d]{24}$/i.test(query.excludeId)) match._id = { $ne: new Types.ObjectId(query.excludeId) };
     if (query.q) {
       const rx = { $regex: escapeRegex(query.q.trim()), $options: 'i' };
       match.$or = [{ businessName: rx }, { subType: rx }, { district: rx }, { city: rx }];
     }
 
     const pipeline: PipelineStage[] = [{ $match: match }];
-    const sort: Record<string, 1 | -1> = { isPremium: -1 };
+    // Paid placement first: the legacy flag or a promotion that has not ended yet.
+    pipeline.push({
+      $addFields: {
+        _featured: { $cond: [{ $or: [{ $eq: ['$isPremium', true] }, { $gt: ['$featuredUntil', new Date()] }] }, 1, 0] },
+      },
+    });
+    const sort: Record<string, 1 | -1> = { _featured: -1 };
 
     if (hasLocation) {
       const cosLat = Math.cos((query.userLat! * Math.PI) / 180);
@@ -101,6 +108,7 @@ export class MongoProvidersRepository extends ProvidersRepository {
     const doc = await this.model.create(<any>{
       ...data,
       aiVerified: data.isVerified,
+      featuredUntil: undefined,
       priceList: Object.fromEntries(
         data.priceList.map((p) => [p.serviceName, `${p.minPrice ?? ''}-${p.maxPrice ?? ''}`]),
       ),
@@ -116,6 +124,13 @@ export class MongoProvidersRepository extends ProvidersRepository {
     if (patch.serviceAreas !== undefined) set.serviceAreas = patch.serviceAreas;
     if (patch.phoneNumber !== undefined) set.phoneNumber = patch.phoneNumber;
     if (patch.portfolioImages !== undefined) set.portfolioImages = patch.portfolioImages;
+    if (patch.profileImage !== undefined) set.profileImage = patch.profileImage ?? '';
+    if (patch.businessName !== undefined) set.businessName = patch.businessName;
+    if (patch.city !== undefined) set.city = patch.city;
+    if (patch.district !== undefined) set.district = patch.district;
+    if (patch.lat !== undefined && patch.lat !== null) set.lat = patch.lat;
+    if (patch.lng !== undefined && patch.lng !== null) set.lng = patch.lng;
+    if (patch.featuredUntil !== undefined) set.featuredUntil = patch.featuredUntil ? new Date(patch.featuredUntil) : null;
     if (patch.priceList !== undefined) {
       // Same legacy shape as on create: { "service": "min-max" }.
       set.priceList = Object.fromEntries(patch.priceList.map((p) => [p.serviceName, `${p.minPrice ?? ''}-${p.maxPrice ?? ''}`]));

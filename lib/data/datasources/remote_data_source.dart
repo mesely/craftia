@@ -26,6 +26,21 @@ class RemoteDataSource {
     Map<String, dynamic> body,
   ) async => _asMap(await _api.post('/providers/$id/photos', body: body));
 
+  Future<Map<String, dynamic>> setProviderProfilePhoto(
+    String id,
+    Map<String, dynamic> body,
+  ) async =>
+      _asMap(await _api.post('/providers/$id/profile-photo', body: body));
+
+  Future<Map<String, dynamic>> getPromotionPlans() async =>
+      _asMap(await _api.get('/promotions/plans'));
+
+  Future<Map<String, dynamic>> buyPromotion(
+    String providerId,
+    Map<String, dynamic> body,
+  ) async =>
+      _asMap(await _api.post('/providers/$providerId/promotions', body: body));
+
   Future<Map<String, dynamic>> removeProviderPhoto(
     String id, {
     required String actorId,

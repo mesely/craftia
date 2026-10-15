@@ -11,6 +11,7 @@ import { DatabaseModule } from './config/database.module';
 import { loadConfig } from './config/env';
 import { NotificationsModule } from './notifications/notifications.module';
 import { OrdersModule } from './orders/orders.module';
+import { PromotionsModule } from './promotions/promotions.module';
 import { ProvidersModule } from './providers/providers.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { UsersModule } from './users/users.module';
@@ -36,6 +37,7 @@ class HealthController {
     ComplaintsModule,
     PrivacyModule,
     ProvidersModule.register(),
+    PromotionsModule,
     ReviewsModule.register(),
     OrdersModule.register(),
     NotificationsModule.register(),

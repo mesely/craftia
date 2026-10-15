@@ -76,12 +76,16 @@ class ProviderQuery extends Equatable {
     this.userLat,
     this.userLng,
     this.pageSize = 10,
+    this.excludeId,
   });
 
   final FilterState filters;
   final double? userLat;
   final double? userLng;
   final int pageSize;
+
+  /// An usta's own listing, which they never see among the results.
+  final String? excludeId;
 
   bool get hasLocation => userLat != null && userLng != null;
 
@@ -97,8 +101,9 @@ class ProviderQuery extends Equatable {
     if (hasLocation) 'userLat': userLat,
     if (hasLocation) 'userLng': userLng,
     if (filters.searching) 'q': filters.query.trim(),
+    if (excludeId != null) 'excludeId': excludeId,
   };
 
   @override
-  List<Object?> get props => [filters, userLat, userLng, pageSize];
+  List<Object?> get props => [filters, userLat, userLng, pageSize, excludeId];
 }

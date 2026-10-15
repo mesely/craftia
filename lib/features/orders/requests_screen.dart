@@ -21,6 +21,35 @@ import '../../data/models/service_request.dart';
 import '../auth/auth_controller.dart';
 import 'requests_controller.dart';
 
+enum RequestTab {
+  fresh('Yeni'),
+  active('Devam eden'),
+  closed('Biten');
+
+  const RequestTab(this.label);
+  final String label;
+
+  bool matches(ServiceRequest r) => switch (this) {
+    RequestTab.fresh => r.status == RequestStatus.pending,
+    RequestTab.active => r.status == RequestStatus.accepted,
+    RequestTab.closed =>
+      r.status == RequestStatus.completed ||
+          r.status == RequestStatus.cancelled,
+  };
+}
+
+class RequestTabController extends Notifier<RequestTab> {
+  @override
+  RequestTab build() => RequestTab.fresh;
+
+  void select(RequestTab tab) => state = tab;
+}
+
+/// Which group of requests an usta is looking at.
+final requestTabProvider = NotifierProvider<RequestTabController, RequestTab>(
+  RequestTabController.new,
+);
+
 /// Taleplerim (usta: Talepler). Each request is a card named after *what was asked*, with a
 /// plain-language status, the latest message and the two things people do next: write or call.
 class RequestsScreen extends ConsumerWidget {
@@ -32,6 +61,7 @@ class RequestsScreen extends ConsumerWidget {
     final requests = ref.watch(requestsProvider);
     final gutter = context.ui.gutter;
     final title = auth.isProvider ? 'Talepler' : 'Taleplerim';
+    final tab = ref.watch(requestTabProvider);
 
     return RefreshIndicator(
       onRefresh: () => ref.read(requestsProvider.notifier).refresh(),
@@ -52,6 +82,13 @@ class RequestsScreen extends ConsumerWidget {
               ),
             ),
           ),
+          if (auth.isProvider && (requests.value?.isNotEmpty ?? false))
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(gutter, 0, gutter, AppSpacing.lg),
+                child: _TabBar(all: requests.value!, selected: tab),
+              ),
+            ),
           if (!auth.signedIn)
             SliverToBoxAdapter(
               child: StateView(
@@ -72,42 +109,122 @@ class RequestsScreen extends ConsumerWidget {
                   onRetry: () => ref.invalidate(requestsProvider),
                 ),
               ),
-              data: (items) => items.isEmpty
-                  ? SliverToBoxAdapter(
-                      child: StateView(
-                        illustration: Illustrations.emptyRequests,
-                        title: auth.isProvider
-                            ? 'Henüz talep gelmedi'
-                            : 'Henüz talebin yok',
-                        message: auth.isProvider
-                            ? 'Müşteriler sana talep gönderdiğinde burada göreceksin.'
-                            : 'Bir ustanın sayfasında “Mesaj Gönder” dersen talebin burada görünür.',
-                        actionLabel: auth.isProvider ? null : 'Usta bul',
-                        onAction: auth.isProvider
-                            ? null
-                            : () => context.go('/'),
-                      ),
-                    )
-                  : SliverPadding(
-                      padding: EdgeInsets.fromLTRB(
-                        gutter,
-                        0,
-                        gutter,
-                        AppSpacing.xxl,
-                      ),
-                      sliver: SliverList.separated(
-                        itemCount: items.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: AppSpacing.md),
-                        itemBuilder: (context, i) => _RequestCard(
-                          request: items[i],
-                          viewerProviderId: auth.account?.providerId,
+              data: (all) {
+                final items = auth.isProvider && all.isNotEmpty
+                    ? all.where(tab.matches).toList()
+                    : all;
+                return items.isEmpty
+                    ? SliverToBoxAdapter(
+                        child: StateView(
+                          illustration: Illustrations.emptyRequests,
+                          title: auth.isProvider && all.isNotEmpty
+                              ? 'Bu grupta talep yok'
+                              : auth.isProvider
+                              ? 'Henüz talep gelmedi'
+                              : 'Henüz talebin yok',
+                          message: auth.isProvider
+                              ? 'Müşteriler sana talep gönderdiğinde burada göreceksin.'
+                              : 'Bir ustanın sayfasında “Mesaj Gönder” dersen talebin burada görünür.',
+                          actionLabel: auth.isProvider ? null : 'Usta bul',
+                          onAction: auth.isProvider
+                              ? null
+                              : () => context.go('/'),
                         ),
-                      ),
-                    ),
+                      )
+                    : SliverPadding(
+                        padding: EdgeInsets.fromLTRB(
+                          gutter,
+                          0,
+                          gutter,
+                          AppSpacing.xxl,
+                        ),
+                        sliver: SliverList.separated(
+                          itemCount: items.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: AppSpacing.md),
+                          itemBuilder: (context, i) => _RequestCard(
+                            request: items[i],
+                            viewerProviderId: auth.account?.providerId,
+                          ),
+                        ),
+                      );
+              },
             ),
         ],
       ),
+    );
+  }
+}
+
+/// Yeni / Devam eden / Biten, each with how many are inside: an usta reads their inbox by what needs doing.
+class _TabBar extends ConsumerWidget {
+  const _TabBar({required this.all, required this.selected});
+
+  final List<ServiceRequest> all;
+  final RequestTab selected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Row(
+      children: [
+        for (final t in RequestTab.values) ...[
+          if (t != RequestTab.values.first)
+            const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Semantics(
+              button: true,
+              selected: t == selected,
+              label: '${t.label}, ${all.where(t.matches).length} talep',
+              excludeSemantics: true,
+              child: Material(
+                color: t == selected
+                    ? AppColors.primarySoft
+                    : AppColors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppRadius.borderMd,
+                  side: t == selected
+                      ? AppBorders.selected
+                      : AppBorders.hairline,
+                ),
+                child: InkWell(
+                  borderRadius: AppRadius.borderMd,
+                  onTap: () => ref.read(requestTabProvider.notifier).select(t),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: context.ui.tapTarget + 8,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                        vertical: AppSpacing.sm,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '${all.where(t.matches).length}',
+                            style: AppTypography.title.copyWith(
+                              color: t == selected
+                                  ? AppColors.primary
+                                  : AppColors.ink,
+                            ),
+                          ),
+                          Text(
+                            t.label,
+                            style: AppTypography.caption,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -255,16 +372,46 @@ class _RequestCard extends ConsumerWidget {
                     style: AppTypography.bodySm,
                   ),
                 ],
-                const SizedBox(height: AppSpacing.lg),
+                if (inbox && request.status == RequestStatus.pending) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () => ref
+                              .read(requestsProvider.notifier)
+                              .changeStatus(request.id, RequestStatus.accepted),
+                          child: const Text('Kabul et'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => ref
+                              .read(requestsProvider.notifier)
+                              .changeStatus(
+                                request.id,
+                                RequestStatus.cancelled,
+                              ),
+                          child: const Text('Uygun değilim'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
                     Expanded(
                       flex: 5,
-                      child: FilledButton.icon(
-                        icon: const UstaIcon(UstaIcons.message, size: 20),
-                        label: const Text('Mesajlar'),
-                        onPressed: open,
-                      ),
+                      child:
+                          (inbox && request.status == RequestStatus.pending
+                          ? OutlinedButton.icon
+                          : FilledButton.icon)(
+                            icon: const UstaIcon(UstaIcons.message, size: 20),
+                            label: const Text('Mesajlar'),
+                            onPressed: open,
+                          ),
                     ),
                     if (phone.isNotEmpty) ...[
                       const SizedBox(width: AppSpacing.sm),

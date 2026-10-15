@@ -97,6 +97,7 @@ abstract final class UstaIcons {
   static const document = UstaIconData(
     'M6 3h8l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z M14 3v5h5 M8.500 13h7 M8.500 17h5',
   );
+  static const chart = UstaIconData('M5 20V11 M12 20V4 M19 20v-6 M3 20h18');
   static const textSize = UstaIconData(
     'M3 19L8 6l5 13 M4.800 14.500h6.400 M15.500 19l2.500-6.500l2.500 6.500 M16.300 17h3.400',
   );

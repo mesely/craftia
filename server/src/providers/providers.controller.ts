@@ -31,6 +31,11 @@ export class ProvidersController {
     return this.providers.addPhoto(id, body);
   }
 
+  @Post(':id/profile-photo')
+  setProfilePhoto(@Param('id') id: string, @Body() body: ProviderPhotoDto) {
+    return this.providers.setProfilePhoto(id, body);
+  }
+
   @Delete(':id/photos')
   removePhoto(@Param('id') id: string, @Query('actorId') actorId = '', @Query('path') path = '') {
     return this.providers.removePhoto(id, actorId, path);

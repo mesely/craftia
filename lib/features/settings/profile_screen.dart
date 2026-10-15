@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/accessibility/ui_scale.dart';
-import '../../core/config/app_config.dart';
 import '../../core/icons/usta_icon.dart';
 import '../../core/icons/usta_icons.dart';
 import '../../core/theme/app_borders.dart';
@@ -11,7 +10,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
-import '../../core/utils/contact_launcher.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/models/account.dart';
 import '../auth/auth_controller.dart';
@@ -159,7 +157,7 @@ class _ProviderPanel extends ConsumerWidget {
             icon: UstaIcons.pencil,
             title: 'Sayfamı düzenle',
             caption: 'Tanıtım, adres, fiyat listesi ve iş fotoğrafları',
-            onTap: () => context.push('/profile/edit'),
+            onTap: () => context.go('/page'),
           ),
         ],
         const SizedBox(height: AppSpacing.xxl),
@@ -227,14 +225,8 @@ class _FeaturedCard extends ConsumerWidget {
             ),
           const SizedBox(height: AppSpacing.sm),
           FilledButton(
-            onPressed: () => ref
-                .read(contactLauncherProvider)
-                .mail(
-                  AppConfig.supportEmail,
-                  subject: '[Usta] Öne çıkan usta olmak istiyorum',
-                  body: 'Merhaba, öne çıkan usta olmak hakkında bilgi almak istiyorum.',
-                ),
-            child: const Text('Bilgi al'),
+            onPressed: () => context.push('/promote'),
+            child: const Text('Planları gör'),
           ),
         ],
       ),

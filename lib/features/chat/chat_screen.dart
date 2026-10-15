@@ -359,8 +359,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               label: const Text('Ara'),
               onPressed: () async {
                 final ok = await ref.read(contactLauncherProvider).call(phone);
-                if (!ok && mounted)
+                if (!ok && mounted) {
                   _toast('Arama başlatılamadı. Numara: ${formatPhone(phone)}');
+                }
               },
             ),
           _Menu(info: info, request: request, phone: phone, onToast: _toast),
@@ -398,8 +399,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     onLongPress: () => _messageMenu(m, info, me),
                     onImageTap: (url) => openImageViewer(context, [url], 0),
                   );
-                  if (m.kind == MessageKind.system || m.isDeleted)
+                  if (m.kind == MessageKind.system || m.isDeleted) {
                     return bubble;
+                  }
                   return SwipeToReply(
                     onReply: () {
                       ref
@@ -660,8 +662,9 @@ class _NotOnAppNotice extends ConsumerWidget {
                     icon: const UstaIcon(UstaIcons.phone, size: 20),
                     label: const Text('Ara'),
                     onPressed: () async {
-                      if (!await launcher.call(phone))
+                      if (!await launcher.call(phone)) {
                         onToast('Arama başlatılamadı.');
+                      }
                     },
                   ),
                 ),
@@ -671,8 +674,9 @@ class _NotOnAppNotice extends ConsumerWidget {
                     icon: const UstaIcon(UstaIcons.message, size: 20),
                     label: const Text('WhatsApp'),
                     onPressed: () async {
-                      if (!await launcher.whatsapp(phone))
+                      if (!await launcher.whatsapp(phone)) {
                         onToast('WhatsApp açılamadı.');
+                      }
                     },
                   ),
                 ),

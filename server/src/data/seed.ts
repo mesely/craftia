@@ -138,6 +138,7 @@ function buildSeed() {
         rating: avg,
         reviewCount: providerReviews.length,
         isPremium,
+        featuredUntil: null,
         isVerified: rand() < 0.45,
         about: `${6 + seeds * 3} yıllık tecrübeyle ${district} ve çevresinde ${sub.subType.toLocaleLowerCase('tr-TR')} hizmeti veriyoruz. Keşif ücretsiz, fiyatlar işe başlamadan önce netleştirilir.`,
         profileImage: n % 5 === 0 ? `https://picsum.photos/seed/usta-logo${n}/200/200` : null,

@@ -8,6 +8,22 @@ import 'location_controller.dart';
 /// Turns coordinates into a name people recognise ("Karşıyaka, İzmir").
 abstract interface class PlaceNameService {
   Future<String?> nameFor(UserLocation location);
+
+  /// City, district and street address for the registration form. Null when unknown.
+  Future<PlaceDetails?> detailsFor(UserLocation location);
+}
+
+/// Where somebody is, split the way the registration form asks for it.
+class PlaceDetails {
+  const PlaceDetails({
+    required this.city,
+    required this.district,
+    this.address = '',
+  });
+
+  final String city;
+  final String district;
+  final String address;
 }
 
 class GeocodingPlaceNameService implements PlaceNameService {
@@ -28,6 +44,39 @@ class GeocodingPlaceNameService implements PlaceNameService {
     } catch (_) {
       return null; // Offline or unsupported: the caller falls back to a generic label.
     }
+  }
+
+  @override
+  Future<PlaceDetails?> detailsFor(UserLocation location) async {
+    try {
+      final marks = await Geocoding()
+          .placemarkFromCoordinates(
+            location.lat,
+            location.lng,
+            locale: const Locale('tr', 'TR'),
+          )
+          .timeout(const Duration(seconds: 8));
+      if (marks.isEmpty) return null;
+      return details(marks.first);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static PlaceDetails? details(Placemark p) {
+    String? clean(String? v) =>
+        (v == null || v.trim().isEmpty) ? null : v.trim();
+    final city = clean(p.administrativeArea);
+    final district = clean(p.subAdministrativeArea) ?? clean(p.locality);
+    if (city == null || district == null) return null;
+    final street = [
+      clean(p.subLocality),
+      clean(p.thoroughfare),
+      clean(p.subThoroughfare) == null
+          ? null
+          : 'No:${clean(p.subThoroughfare)}',
+    ].whereType<String>().join(' ');
+    return PlaceDetails(city: city, district: district, address: street);
   }
 
   /// "İlçe, İl" when both are known and different, otherwise whichever exists.

@@ -16,6 +16,8 @@ export class ProviderDoc {
   @Prop({ default: 0 }) rating: number;
   @Prop({ default: 0 }) reviewCount: number;
   @Prop({ default: false }) isPremium: boolean;
+  /** End of a paid "Öne çıkan" promotion. */
+  @Prop() featuredUntil: Date;
   /** Legacy name for "verified". */
   @Prop({ default: false }) aiVerified: boolean;
   @Prop({ default: '' }) about: string;

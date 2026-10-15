@@ -25,6 +25,17 @@ Flutter (Riverpod 3, go_router 18, Dio) --REST--> server/ (NestJS 12, Mongoose 9
 - [x] Bug fixes found by tests: top bar overflow at large text, price list row overflow at large text, light `borderStrong`/`danger`/`success` contrast raised to AA.
 - [x] README rewritten with screenshots (`docs/screenshots`).
 
+## Added in v2.1 (this session)
+- [x] New app icon (Gemini, "usta cebinde": pocket with wrench, flat blue/white, fills the square). Regenerated launcher icons + splash; adaptive bg `#1454A8`.
+- [x] Dark theme art: `ArtImage` (inverts luminance + hue 180° + deep-blue plate) used by tiles, service art, onboarding.
+- [x] Usta account has its own UI: tab 0 = `ProviderDashboardScreen` (Panel), Talepler with Yeni/Devam eden/Biten + Kabul et, Sayfam tab (`ProviderPageScreen` embedding `ProfileEditForm`, profile photo upload), `/promote`. Customers keep Ana Sayfa/Taleplerim/Ayarlar. Router has 4 branches (0 home, 1 requests, 2 page, 3 settings); customers redirected away from `/page`, `/promote`.
+- [x] An usta never sees own listing in results (`excludeId`), cannot create a request for own listing (server guard), own detail page shows owner bar (no Ara/Mesaj).
+- [x] Promotions: `server/src/promotions` (plans week 99 ₺ / month 249 ₺ / quarter 599 ₺, extends running promotion, `PAYMENTS_MODE=test|live`, `verifyReceipt()` is the only unimplemented piece); `Provider.featuredUntil` makes `isPremium` true while active; Mongo list sorts featured first.
+- [x] Admin registration takes city/district/address/lat/lng from device location (reverse geocoding); "Konumumu kullan" button in the usta wizard; fallback to Kadıköy only if location is unavailable. Demo admin account/provider deleted from Atlas.
+- [x] Atlas: Lütfi Yılmaz (`69936e7ca52d8737b15c08ec`) completed with `npm run db:seed-demo -- <id>` (subType elektrikçi, about, generated portrait + 4 work photos, 3 reviews, verified). Note: `aiVerified`, reviews and photos on that record are demo content.
+- [x] Store readiness: version 2.1.0+3, Android release signing via `android/key.properties` + R8, `docs/RELEASE.md`, `docs/store/listing-tr.md`.
+- [x] Tests: 107 Flutter, 28 server.
+
 ## Remaining
 - [ ] Real authentication (SMS/e-mail + JWT). Today the server trusts client ids (known limitation, README says so).
 - [ ] Push notifications (FCM/APNs); payments for "Öne çıkan" (currently info/mailto only).
@@ -50,9 +61,9 @@ Atlas `cs306cluster` / `usta_db`: providers 9 042 (+ a few demo/test), plus app 
 NEVER PUT CREDENTIALS OR SECRETS HERE.
 
 ## Validation (last run)
-- flutter analyze: only 8 pre-existing `curly_braces_in_flow_control_structures` infos
-- flutter test: 97 passed
-- server: `npm test` 23 passed, `npm run build` ok
+- flutter analyze: no issues
+- flutter test: 107 passed
+- server: `npm test` 28 passed, `npm run build` ok
 - Simulator (iPhone 16 Pro) verified: home, detail, contact sheet, chat, requests, notifications, settings, official page, welcome, dark theme live switch.
 
 ## Known Issues

@@ -11,6 +11,7 @@ import '../../core/theme/app_durations.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/art_image.dart';
 import 'auth_controller.dart';
 
 class _Page {
@@ -165,18 +166,13 @@ class _IntroPage extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: AppRadius.borderLg,
-                  child: Image.asset(
+                  child: ArtImage(
                     page.art,
                     width: art,
                     height: art,
                     cacheWidth: 640,
-                    excludeFromSemantics: true,
-                    // The drawing's white paper takes the page's colour; in dark mode it
-                    // stays a soft light plate so the blue lines remain readable.
-                    color: AppColors.isDark
-                        ? AppColors.artPlate
-                        : AppColors.background,
-                    colorBlendMode: BlendMode.multiply,
+                    // In the light theme the paper takes the page's colour.
+                    paper: AppColors.background,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),

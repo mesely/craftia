@@ -33,3 +33,8 @@ ios/Flutter/ephemeral/
 server/node_modules/
 server/dist/
 *.tsbuildinfo
+
+# Release signing
+android/key.properties
+*.jks
+*.keystore

@@ -18,6 +18,7 @@ export class ListProvidersDto {
   @Transform(emptyToUndefined) @Type(() => Number) @IsNumber() @Min(-90) @Max(90) @IsOptional() userLat?: number;
   @Transform(emptyToUndefined) @Type(() => Number) @IsNumber() @Min(-180) @Max(180) @IsOptional() userLng?: number;
   @Transform(emptyToUndefined) @IsString() @MaxLength(60) @IsOptional() q?: string;
+  @Transform(emptyToUndefined) @IsString() @MaxLength(64) @IsOptional() excludeId?: string;
 }
 
 export class LocationQueryDto {
@@ -41,6 +42,8 @@ export class CreateProviderDto {
   @IsString() @MinLength(2) district: string;
   @IsString() @MaxLength(200) @IsOptional() address?: string;
   @IsString() @MaxLength(500) @IsOptional() about?: string;
+  @Type(() => Number) @IsNumber() @Min(-90) @Max(90) @IsOptional() lat?: number;
+  @Type(() => Number) @IsNumber() @Min(-180) @Max(180) @IsOptional() lng?: number;
   @IsArray() @ArrayMaxSize(12) @IsString({ each: true }) @MaxLength(40, { each: true }) @IsOptional() serviceAreas?: string[];
   /** Test accounts created with the mock sign-in. Stored with `isDemo` so they are easy to clean up. */
   @IsBoolean() @IsOptional() demo?: boolean;
@@ -51,6 +54,11 @@ export class CreateProviderDto {
 /** An usta editing their own listing. [actorId] must be the account that manages it. */
 export class UpdateProviderDto {
   @IsString() @MaxLength(64) actorId: string;
+  @IsString() @MinLength(2) @MaxLength(80) @IsOptional() businessName?: string;
+  @IsString() @MinLength(2) @IsOptional() city?: string;
+  @IsString() @MinLength(2) @IsOptional() district?: string;
+  @Type(() => Number) @IsNumber() @Min(-90) @Max(90) @IsOptional() lat?: number;
+  @Type(() => Number) @IsNumber() @Min(-180) @Max(180) @IsOptional() lng?: number;
   @IsString() @MinLength(20, { message: 'Tanıtım en az 20 karakter olmalı.' }) @MaxLength(500) @IsOptional() about?: string;
   @IsString() @MaxLength(200) @IsOptional() address?: string;
   @IsArray() @ArrayMaxSize(12) @IsString({ each: true }) @MaxLength(40, { each: true }) @IsOptional() serviceAreas?: string[];

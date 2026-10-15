@@ -23,6 +23,7 @@ class Usta extends Equatable {
     this.rating = 0,
     this.reviewCount = 0,
     this.isPremium = false,
+    this.featuredUntil,
     this.isVerified = false,
     this.about = '',
     this.profileImage,
@@ -45,6 +46,9 @@ class Usta extends Equatable {
   final double rating;
   final int reviewCount;
   final bool isPremium;
+
+  /// When a paid "Öne çıkan" promotion ends (null when none is running).
+  final DateTime? featuredUntil;
   final bool isVerified;
   final String about;
   final String? profileImage;
@@ -107,6 +111,8 @@ class Usta extends Equatable {
       rating: (json['rating'] as num?)?.toDouble() ?? 0,
       reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
       isPremium: json['isPremium'] == true,
+      featuredUntil: DateTime.tryParse('${json['featuredUntil'] ?? ''}')
+          ?.toLocal(),
       isVerified: json['isVerified'] == true,
       about: (json['about'] ?? '').toString(),
       profileImage: (json['profileImage'] as String?)?.isNotEmpty == true
@@ -139,6 +145,10 @@ class Usta extends Equatable {
     rating,
     reviewCount,
     distanceKm,
+    isPremium,
+    featuredUntil,
+    profileImage,
+    about,
     priceList,
     portfolioImages,
     serviceAreas,

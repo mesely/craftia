@@ -85,8 +85,9 @@ class AuthStore {
     final t = raw.trim().toLowerCase();
     if (t.contains('@')) return t;
     final digits = t.replaceAll(RegExp(r'\D'), '');
-    if (digits.length == 12 && digits.startsWith('90'))
+    if (digits.length == 12 && digits.startsWith('90')) {
       return '0${digits.substring(2)}';
+    }
     if (digits.length == 10) return '0$digits';
     return digits.isEmpty ? t : digits;
   }

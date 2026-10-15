@@ -8,6 +8,7 @@ import 'datasources/remote_data_source.dart';
 import 'repositories/accounts_repository.dart';
 import 'repositories/chat_repository.dart';
 import 'repositories/complaints_repository.dart';
+import 'repositories/promotions_repository.dart';
 import 'repositories/requests_repository.dart';
 import 'repositories/reviews_repository.dart';
 import 'repositories/usta_repository.dart';
@@ -30,6 +31,9 @@ final chatRepositoryProvider = Provider<ChatRepository>(
 );
 final complaintsRepositoryProvider = Provider<ComplaintsRepository>(
   (ref) => ComplaintsRepository(ref.watch(remoteDataSourceProvider)),
+);
+final promotionsRepositoryProvider = Provider<PromotionsRepository>(
+  (ref) => PromotionsRepository(ref.watch(remoteDataSourceProvider)),
 );
 final requestsRepositoryProvider = Provider<RequestsRepository>(
   (ref) => RequestsRepository(ref.watch(remoteDataSourceProvider)),

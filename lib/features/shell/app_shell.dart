@@ -20,15 +20,28 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isProvider = ref.watch(authProvider.select((s) => s.isProvider));
     final unread = ref.watch(unreadCountProvider);
-    final destinations = <({String label, UstaIconData icon, int badge})>[
-      (label: 'Ana Sayfa', icon: UstaIcons.home, badge: 0),
-      (
-        label: isProvider ? 'Talepler' : 'Taleplerim',
-        icon: UstaIcons.requests,
-        badge: unread,
-      ),
-      (label: 'Ayarlar', icon: UstaIcons.settings, badge: 0),
-    ];
+    // Branch index of each destination: 0 home, 1 requests, 2 "Sayfam" (ustas only), 3 settings.
+    final destinations =
+        <({String label, UstaIconData icon, int badge, int branch})>[
+          (
+            label: isProvider ? 'Panel' : 'Ana Sayfa',
+            icon: isProvider ? UstaIcons.chart : UstaIcons.home,
+            badge: 0,
+            branch: 0,
+          ),
+          (
+            label: isProvider ? 'Talepler' : 'Taleplerim',
+            icon: UstaIcons.requests,
+            badge: unread,
+            branch: 1,
+          ),
+          if (isProvider)
+            (label: 'Sayfam', icon: UstaIcons.user, badge: 0, branch: 2),
+          (label: 'Ayarlar', icon: UstaIcons.settings, badge: 0, branch: 3),
+        ];
+    final selected = destinations.indexWhere(
+      (d) => d.branch == navigationShell.currentIndex,
+    );
 
     return Scaffold(
       body: Column(
@@ -49,11 +62,12 @@ class AppShell extends ConsumerWidget {
           border: Border(top: BorderSide(color: AppColors.border)),
         ),
         child: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
+          selectedIndex: selected < 0 ? 0 : selected,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           onDestinationSelected: (i) => navigationShell.goBranch(
-            i,
-            initialLocation: i == navigationShell.currentIndex,
+            destinations[i].branch,
+            initialLocation:
+                destinations[i].branch == navigationShell.currentIndex,
           ),
           destinations: [
             for (final d in destinations)

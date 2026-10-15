@@ -6,6 +6,7 @@ import '../../core/icons/usta_icon.dart';
 import '../../core/icons/usta_icons.dart';
 import '../../core/theme/app_borders.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/art_image.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -31,18 +32,13 @@ class ServiceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final art = horizontal ? 56.0 : 60.0;
-    // The drawings are made on white paper: in dark mode they sit on a soft light plate.
     final image = ClipRRect(
       borderRadius: AppRadius.borderSm,
-      child: Image.asset(
+      child: ArtImage(
         service.art,
         width: art,
         height: art,
         cacheWidth: (art * MediaQuery.devicePixelRatioOf(context)).round(),
-        excludeFromSemantics: true,
-        filterQuality: FilterQuality.medium,
-        color: AppColors.artPlate,
-        colorBlendMode: BlendMode.multiply,
       ),
     );
     final label = Text(

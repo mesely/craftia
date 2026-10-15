@@ -102,7 +102,7 @@ class AppPalette {
     successSoft: Color(0xFF16301F),
     danger: Color(0xFFF0675C),
     dangerSoft: Color(0xFF3A1B19),
-    artPlate: Color(0xFFF4F6FA),
+    artPlate: Color(0xFF16294A),
   );
 }
 

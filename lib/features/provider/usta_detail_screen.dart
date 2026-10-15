@@ -20,6 +20,7 @@ import '../../data/models/complaint.dart';
 import '../../data/models/review.dart';
 import '../../data/models/service_price.dart';
 import '../../data/models/usta.dart';
+import '../auth/auth_controller.dart';
 import '../auth/ensure_signed_in.dart';
 import '../discovery/discovery_providers.dart';
 import '../location/location_controller.dart';
@@ -84,10 +85,12 @@ class _DetailBody extends ConsumerWidget {
     );
     final distance = usta.distanceFrom(location);
     final gutter = context.ui.gutter;
+    final mine =
+        ref.watch(authProvider.select((s) => s.account?.providerId)) == usta.id;
 
     return Scaffold(
       appBar: AppBar(leading: const _BackButton()),
-      bottomNavigationBar: _ActionBar(usta: usta),
+      bottomNavigationBar: mine ? const _OwnerBar() : _ActionBar(usta: usta),
       body: ListView(
         padding: EdgeInsets.fromLTRB(gutter, 0, gutter, AppSpacing.xxxl),
         children: [
@@ -102,7 +105,7 @@ class _DetailBody extends ConsumerWidget {
           const _SectionTitle('Yapılan işler'),
           _Portfolio(images: usta.portfolioImages),
           _ReviewsSection(usta: usta),
-          _ReportLink(usta: usta),
+          if (!mine) _ReportLink(usta: usta),
         ],
       ),
     );
@@ -615,6 +618,62 @@ class _Where extends ConsumerWidget {
 }
 
 /// Pinned: one primary action (Ara) and one secondary (Mesaj Gönder → sheet).
+/// On their own page an usta gets no "Ara / Mesaj Gönder": they see what customers see, and edit.
+class _OwnerBar extends StatelessWidget {
+  const _OwnerBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            context.ui.gutter,
+            AppSpacing.md,
+            context.ui.gutter,
+            AppSpacing.md,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Bu senin sayfan. Müşteriler böyle görüyor.',
+                style: AppTypography.bodySm,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      icon: const UstaIcon(UstaIcons.pencil, size: 20),
+                      label: const Text('Sayfamı düzenle'),
+                      onPressed: () => context.go('/page'),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const UstaIcon(UstaIcons.crown, size: 20),
+                      label: const Text('Öne çık'),
+                      onPressed: () => context.push('/promote'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ActionBar extends ConsumerWidget {
   const _ActionBar({required this.usta});
 

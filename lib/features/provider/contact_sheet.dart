@@ -61,8 +61,9 @@ class _ContactSheet extends ConsumerWidget {
           )
           .firstOrNull;
       if (open != null) {
-        if (parentContext.mounted)
+        if (parentContext.mounted) {
           parentContext.push('/chat/${open.conversationId}');
+        }
         return;
       }
       if (!parentContext.mounted) return;
@@ -102,10 +103,11 @@ class _ContactSheet extends ConsumerWidget {
                       text:
                           'Merhaba, Usta uygulamasında ${usta.businessName} sayfanızı gördüm.',
                     );
-                    if (!ok)
+                    if (!ok) {
                       messenger.showSnackBar(
                         const SnackBar(content: Text('WhatsApp açılamadı.')),
                       );
+                    }
                   },
                 ),
                 const SizedBox(height: AppSpacing.sm),

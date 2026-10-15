@@ -14,6 +14,8 @@ class ProviderApplication {
     this.priceList = const [],
     this.serviceAreas = const [],
     this.demo = false,
+    this.lat,
+    this.lng,
   });
 
   final String businessName;
@@ -32,6 +34,10 @@ class ProviderApplication {
   /// Created through the mock sign-in; flagged so the record is easy to clean up.
   final bool demo;
 
+  /// Where the shop (or the usta's phone) is, when the device could tell.
+  final double? lat;
+  final double? lng;
+
   Map<String, dynamic> toJson() => {
     'businessName': businessName,
     'phoneNumber': phoneNumber,
@@ -43,6 +49,7 @@ class ProviderApplication {
     if (about.isNotEmpty) 'about': about,
     if (serviceAreas.isNotEmpty) 'serviceAreas': serviceAreas,
     if (demo) 'demo': true,
+    if (lat != null && lng != null) ...{'lat': lat, 'lng': lng},
     'priceList': [
       for (final p in priceList)
         {

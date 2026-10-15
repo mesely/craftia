@@ -3,7 +3,21 @@ import { ProviderEntity, ProviderQuery, ProviderView } from './provider.types';
 
 /** What an usta may change on their own listing. */
 export type ProviderProfilePatch = Partial<
-  Pick<ProviderEntity, 'about' | 'address' | 'serviceAreas' | 'phoneNumber' | 'portfolioImages' | 'priceList'>
+  Pick<
+    ProviderEntity,
+    | 'about'
+    | 'address'
+    | 'serviceAreas'
+    | 'phoneNumber'
+    | 'portfolioImages'
+    | 'priceList'
+    | 'profileImage'
+    | 'businessName'
+    | 'city'
+    | 'district'
+    | 'lat'
+    | 'lng'
+  > & { featuredUntil: string | null }
 >;
 
 export abstract class ProvidersRepository {

@@ -5,6 +5,7 @@ import '../../core/icons/usta_icon.dart';
 import '../../core/theme/app_borders.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
+import '../../core/widgets/art_image.dart';
 import 'category_icons.dart';
 
 /// The illustration for a service, one per kind of work (see assets/services).
@@ -58,15 +59,11 @@ class ServiceArt extends StatelessWidget {
                 color: AppColors.primary,
               ),
             )
-          : Image.asset(
+          : ArtImage(
               asset,
               // The whole drawing is always visible; only the empty margin meets the rounded frame.
               fit: BoxFit.contain,
               cacheWidth: (size * dpr).round(),
-              excludeFromSemantics: true,
-              filterQuality: FilterQuality.medium,
-              color: AppColors.artPlate,
-              colorBlendMode: BlendMode.multiply,
             ),
     );
   }

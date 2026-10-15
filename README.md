@@ -77,6 +77,31 @@ Usta bulmak çoğu insan için hâlâ "bir tanıdık sormak" demek. İlan sitele
 - Arayüz Boyutu, Görünüm (Açık / Koyu / Telefonu izle), hesap, **Verilerimi indir**, çıkış, hesabı sil.
 - Destek, uygulama rehberi, güvenli iletişim rehberi, **Şikayet ve resmi başvurular** (e-Devlet Tüketici Hakem Heyeti, Ticaret Bakanlığı, ALO 175, 155), Kullanıcı Sözleşmesi, KVKK Aydınlatma Metni, Sorumluluk Reddi.
 
+## Usta hesabı
+
+Usta olarak girince uygulama farklı bir yüz gösterir: müşteri araması yok, **iş paneli** var. Usta kendi sayfasını aramalarda görmez ve kendine talep gönderemez; kendi sayfasında "Ara / Mesaj Gönder" yerine "Sayfamı düzenle" ve "Öne çık" görür.
+
+| Sekme | Ne yapar |
+|---|---|
+| **Panel** | Yeni talep / yeni mesaj / puan özeti, yanıt bekleyen talepler (tek dokunuşla Kabul et), "Sayfanı tamamla" listesi, öne çıkma durumu |
+| **Talepler** | Yeni · Devam eden · Biten gruplarında gelen kutusu, kabul / uygun değilim, sohbet, müşteriyi ara |
+| **Sayfam** | Profil fotoğrafı, iş fotoğrafları, tanıtım, hizmet bölgesi / adres, fiyat listesi; tamamlanma yüzdesi ve "Müşteri gözüyle gör" |
+| **Ayarlar** | Arayüz boyutu, görünüm, hesap, yasal metinler |
+
+<p align="center"><img src="docs/screenshots/usta-overview.png" alt="Usta paneli, Sayfam, Öne çık, koyu tema"></p>
+
+### Öne çıkan (ücretli yerleşim)
+
+Ustalar süreye göre **Öne çıkan** olabilir: aramalarda en üstte ve etiketli görünürler, süre bitince normal sıraya dönerler. Süre uzadıkça günlük fiyat düşer:
+
+| Plan | Fiyat (KDV dahil) | Günlük |
+|---|---|---|
+| 1 hafta | 99 ₺ | 14,14 ₺ |
+| 1 ay | 249 ₺ | 8,30 ₺ |
+| 3 ay | 599 ₺ | 6,66 ₺ |
+
+Sunucu (`/promotions/plans`, `POST /providers/:id/promotions`) planları satar, sürenin üstüne ekler ve satın alımı kaydeder. `PAYMENTS_MODE=test` iken ücret alınmaz ve uygulama bunu açıkça söyler; mağaza satın alma doğrulaması yayın öncesi bağlanacaktır (bkz. [docs/RELEASE.md](docs/RELEASE.md)). Plan sonucu bir iş ya da müşteri sayısı garantisi vermez; metinlerde de öyle yazar.
+
 ## Ekranlar
 
 | Karşılama | Ana sayfa | Sonuçlar | Usta sayfası |
@@ -87,9 +112,9 @@ Usta bulmak çoğu insan için hâlâ "bir tanıdık sormak" demek. İlan sitele
 |:---:|:---:|:---:|:---:|
 | <img src="docs/screenshots/contact-options.png" width="190"> | <img src="docs/screenshots/chat.png" width="190"> | <img src="docs/screenshots/requests.png" width="190"> | <img src="docs/screenshots/register.png" width="190"> |
 
-| Ayarlar | Resmi başvurular | Koyu tema | Koyu ayarlar |
+| Ayarlar | Resmi başvurular | Koyu ana sayfa | Koyu sonuçlar |
 |:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/settings.png" width="190"> | <img src="docs/screenshots/official.png" width="190"> | <img src="docs/screenshots/home-dark.png" width="190"> | <img src="docs/screenshots/settings-dark.png" width="190"> |
+| <img src="docs/screenshots/settings.png" width="190"> | <img src="docs/screenshots/official.png" width="190"> | <img src="docs/screenshots/home-dark.png" width="190"> | <img src="docs/screenshots/results-dark.png" width="190"> |
 
 ## Tasarım ilkeleri (UI / UX)
 
@@ -100,7 +125,7 @@ Usta bulmak çoğu insan için hâlâ "bir tanıdık sormak" demek. İlan sitele
 | **Tanımak, hatırlamaktan iyidir** | Hizmetler kelimeyle birlikte özgün, tek stilde çizilmiş resimlerle gösterilir. Durumlar yalnızca renk değil, simge + cümle ile verilir. |
 | **Erişilebilirlik** | WCAG AA kontrast (testle doğrulanır, hem açık hem koyu palet), `Semantics` etiketleri, sistem yazı boyutu × Usta Arayüz Boyutu birlikte ölçeklenir, 320 dp genişlikte 1,5× yazıyla taşma yok. |
 | **Dürüst arayüz** | Uydurma fiyat, sahte "doğrulandı" rozeti yok. "Öne çıkan" ücretli yerleşimdir ve öyle yazılır. Yazışmaların kayıt altında olduğu sohbette hep görünür. |
-| **Özgün görsel dil** | Mavi tonlarda tek aile: birincil `#0F4C9A`, arka plan `#F4F6FA`. Yarıçaplar yalnızca 8 / 12 / 16 / 24 (hap şekilli etiket yok). Inter yazı tipi (pakete gömülü, çevrimdışı çalışır). Özel ikon ailesi, Gemini ile üretilmiş resimler. |
+| **Özgün görsel dil** | Mavi tonlarda tek aile: birincil `#0F4C9A`, arka plan `#F4F6FA`. Yarıçaplar yalnızca 8 / 12 / 16 / 24 (hap şekilli etiket yok). Inter yazı tipi (pakete gömülü, çevrimdışı çalışır). Özel ikon ailesi, Gemini ile üretilmiş resimler; koyu temada çizimler derin mavi zemin üzerinde açık mavi çizgilerle yeniden renklendirilir. |
 | **Kademeli ifşa** | Tanıtım 3 sayfa; kayıt 3 adım; hata mesajları ne olduğunu ve ne yapılacağını söyler. |
 | **Dil** | Sade, sıcak, doğru Türkçe ("sen" dili, cümle düzeni ve ek uyumu gözden geçirildi). |
 
@@ -142,9 +167,9 @@ Usta bulmak çoğu insan için hâlâ "bir tanıdık sormak" demek. İlan sitele
 
 | Katman | Kapsam | Sonuç |
 |---|---|---|
-| Flutter birim + widget + duman testleri | 97 test: doğrulayıcılar, mesafe, hizmet eşleştirme, fiyat kuralları, modeller, auth ve admin geçişi, sohbet denetleyicisi, keşif akışı, 3 sekme (Harita yok), Arayüz Boyutu, **koyu tema canlı geçişi**, tanıtım akışı, usta sayfası bölüm sırası (adres → fiyat), iletişim seçenekleri | ✅ |
+| Flutter birim + widget + duman testleri | 107 test (usta paneli, öne çıkma planları, kendi sayfa kuralları, admin kaydında konum, büyük yazıda usta ekranları dahil): doğrulayıcılar, mesafe, hizmet eşleştirme, fiyat kuralları, modeller, auth ve admin geçişi, sohbet denetleyicisi, keşif akışı, 3 sekme (Harita yok), Arayüz Boyutu, **koyu tema canlı geçişi**, tanıtım akışı, usta sayfası bölüm sırası (adres → fiyat), iletişim seçenekleri | ✅ |
 | Erişilebilirlik | Açık ve koyu paletin WCAG AA kontrast testi; 320 dp × 1,5× sistem yazısı × Büyük / Çok büyük için taşma testleri | ✅ |
-| Sunucu | 23 Jest testi: sohbet (düzenle / sil / yanıtla / okundu), durum geçişleri, depo soyutlaması | ✅ |
+| Sunucu | 28 Jest testi: sohbet (düzenle / sil / yanıtla / okundu), durum geçişleri, depo soyutlaması, öne çıkma planları ve süre uzatma, kendi sayfanı sonuçlardan çıkarma | ✅ |
 | Gerçek veritabanı | Atlas'ta uçtan uca duman testi (usta listesi, filtre, detay, talep, sohbet) ve gerçek hata yakalama (geo anahtarı) | ✅ |
 | Cihaz | iPhone 16 Pro simülatörü ve gerçek iPhone | ✅ |
 
@@ -193,11 +218,12 @@ cd server && npm run db:cleanup-test simtest-    # belirtilen önekle başlayan 
 
 | Alan | Uç noktalar |
 |---|---|
-| Ustalar | `GET /providers` (filtre, arama, sıralama, konum) · `GET /providers/:id` · `POST /providers` · `PATCH /providers/:id` · `POST/DELETE /providers/:id/photos` |
+| Ustalar | `GET /providers` (filtre, arama, sıralama, konum) · `GET /providers/:id` · `POST /providers` · `PATCH /providers/:id` · `POST/DELETE /providers/:id/photos` · `POST /providers/:id/profile-photo` |
 | Yorumlar | `GET/POST /providers/:providerId/reviews` |
 | Talepler | `POST/GET /service-requests` · `PATCH /service-requests/:id/status` |
 | Sohbet | `GET /conversations/:id` · `GET/POST /conversations/:id/messages` · `POST /conversations/:id/read` · `POST /conversations/:id/attachments` · `PATCH/DELETE /messages/:id` · `GET /attachments/:id` |
 | Hesap | `PUT /accounts` · `GET /accounts/:id` · `GET /privacy/export` · `DELETE /privacy/account` |
+| Öne çıkma | `GET /promotions/plans` · `POST /providers/:id/promotions` |
 | Şikayet | `POST/GET /complaints` |
 | Diğer | `GET /categories` · `GET /notifications` · `GET /users/:id` · `GET /health` |
 
@@ -219,7 +245,7 @@ docs/screenshots/
 ## Bilinen sınırlar ve yol haritası
 
 - **Kimlik doğrulama gerçek değil (mock).** Sunucu istemcinin gönderdiği kimliğe güvenir; yayından önce SMS/e-posta doğrulaması ve sunucu tarafı oturum (JWT) gerekir.
-- **Ödeme yok.** "Öne çıkan" plan şimdilik bilgi ve e-posta yönlendirmesidir.
+- **Ödeme test modunda.** "Öne çıkan" planları çalışır ama ücret alınmaz; App Store / Google Play satın alma doğrulaması bağlanmalıdır ([docs/RELEASE.md](docs/RELEASE.md)).
 - **Anlık bildirim yok.** Sohbet ve talepler yoklama ile yenilenir (3 sn / 15 sn); FCM/APNs sonraki adım.
 - **Veri kalitesi.** Atlas verisinde bazı konumlar şehirle uyuşmaz, çoğu kayıtta fotoğraf ve fiyat yoktur; arayüz bunu uydurmadan "Fiyat için arayın" ile gösterir.
 - **Hukuki metinler taslaktır** ve avukat incelemesi bekler.

@@ -10,7 +10,8 @@
     "start:prod": "node dist/main.js",
     "test": "jest",
     "db:check": "node scripts/db-check.js",
-    "db:cleanup-test": "node scripts/cleanup-test-data.js"
+    "db:cleanup-test": "node scripts/cleanup-test-data.js",
+    "db:seed-demo": "node scripts/seed-demo-provider.js"
   },
   "jest": {
     "moduleFileExtensions": [

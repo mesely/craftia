@@ -26,6 +26,7 @@ export function runProviderQuery(all: ProviderEntity[], query: ProviderQuery): P
   }));
 
   views = views.filter((p) => {
+    if (query.excludeId && p.id === query.excludeId) return false;
     if (query.mainType && norm(p.mainType) !== norm(query.mainType)) return false;
     if (query.subType && norm(p.subType) !== norm(query.subType)) return false;
     if (query.city && norm(p.city) !== norm(query.city)) return false;

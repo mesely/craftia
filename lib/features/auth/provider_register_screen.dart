@@ -16,7 +16,11 @@ import '../../core/utils/validators.dart';
 import '../../core/widgets/choice_tile.dart';
 import '../../core/widgets/city_picker.dart';
 import '../../data/models/provider_application.dart';
+import '../../core/constants/cities.dart';
 import '../discovery/service_tile.dart';
+import '../location/location_controller.dart';
+import '../location/location_service.dart';
+import '../location/place_name.dart';
 import 'auth_controller.dart';
 import 'widgets/consent_checkbox.dart';
 import 'widgets/price_list_editor.dart';
@@ -55,6 +59,9 @@ class _ProviderRegisterScreenState
   ServiceOption? _service;
   String? _city;
   bool? _hasShop;
+  double? _lat;
+  double? _lng;
+  bool _locating = false;
   bool _consent = false;
   bool _showErrors = false;
   bool _hidden = true;
@@ -130,11 +137,79 @@ class _ProviderRegisterScreenState
     }
   }
 
+  /// The province in the list of cities, whichever way the phone spells it ("Izmir", "İzmir").
+  static String? _matchCity(String name) {
+    String fold(String v) => v
+        .toLowerCase()
+        .replaceAll('ı', 'i')
+        .replaceAll('İ', 'i')
+        .replaceAll('ş', 's')
+        .replaceAll('ğ', 'g')
+        .replaceAll('ü', 'u')
+        .replaceAll('ö', 'o')
+        .replaceAll('ç', 'c');
+    for (final c in kTurkishCities) {
+      if (fold(c) == fold(name)) return c;
+    }
+    return null;
+  }
+
+  /// Fills province, district and address from where the phone is, and remembers the coordinates
+  /// so customers nearby can find this usta. Returns false when the phone could not say.
+  Future<bool> _fillFromLocation({required bool fillAddress}) async {
+    final found = await ref
+        .read(locationServiceProvider)
+        .getCurrentLocation(requestPermission: true);
+    if (found is! LocationFound) return false;
+    final place = await ref
+        .read(placeNameServiceProvider)
+        .detailsFor(found.location);
+    if (!mounted) return false;
+    setState(() {
+      _lat = found.location.lat;
+      _lng = found.location.lng;
+      if (place != null) {
+        _city = _matchCity(place.city) ?? _city;
+        _district.text = place.district;
+        if (fillAddress && place.address.isNotEmpty) {
+          _address.text = place.address;
+        }
+      }
+    });
+    return place != null;
+  }
+
+  Future<void> _useMyLocation() async {
+    setState(() => _locating = true);
+    final ok = await _fillFromLocation(fillAddress: _hasShop != false);
+    if (!mounted) return;
+    setState(() => _locating = false);
+    if (!ok) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Konumunu alamadık. Konum iznini açıp tekrar dene ya da elle yaz.',
+            ),
+          ),
+        );
+    }
+  }
+
   bool get _detailsComplete =>
       _service != null && _city != null && _hasShop != null;
 
   Future<void> _submit() async {
     final admin = _admin;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    // The demo sign-in takes its place from the phone, not from a made-up address.
+    if (admin && _lat == null) {
+      await _fillFromLocation(fillAddress: _address.text.trim().isEmpty);
+    }
     final service = _service ?? kServices.first;
     final shop = _hasShop ?? true;
     final city = _city ?? 'İstanbul';
@@ -168,11 +243,9 @@ class _ProviderRegisterScreenState
                 .toList(),
       priceList: _admin ? const [] : collectPrices(_prices),
       demo: admin,
+      lat: _lat,
+      lng: _lng,
     );
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
     try {
       final auth = ref.read(authProvider.notifier);
       if (_upgrade) {
@@ -205,8 +278,9 @@ class _ProviderRegisterScreenState
 
   @override
   Widget build(BuildContext context) {
-    if (_step == 3)
+    if (_step == 3) {
       return _Done(providerId: ref.read(authProvider).account?.providerId);
+    }
     final gutter = context.ui.gutter;
     final stepCount = _upgrade ? 2 : 3;
     final shown = _step - _firstStep + 1;
@@ -382,6 +456,20 @@ class _ProviderRegisterScreenState
         const SizedBox(height: AppSpacing.xl),
         Text('Nerede çalışıyorsun?', style: AppTypography.titleSm),
         const SizedBox(height: AppSpacing.sm),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _locating ? null : _useMyLocation,
+            icon: _locating
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : UstaIcon(UstaIcons.locate, size: 20),
+            label: const Text('Konumumu kullan'),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
         _PickerRow(
           label: 'İl',
           value: _city,

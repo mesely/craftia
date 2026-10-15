@@ -12,6 +12,9 @@ import 'package:usta/data/models/service_request.dart';
 import 'package:usta/data/models/user_location.dart';
 import 'package:usta/data/models/usta.dart';
 import 'package:usta/data/providers.dart';
+import 'package:usta/data/models/promotion.dart';
+import 'package:usta/data/models/provider_application.dart';
+import 'package:usta/data/repositories/promotions_repository.dart';
 import 'package:usta/data/repositories/requests_repository.dart';
 import 'package:usta/data/repositories/reviews_repository.dart';
 import 'package:usta/data/repositories/usta_repository.dart';
@@ -68,6 +71,7 @@ class FakeUstaRepository extends UstaRepository {
   /// When set, `fetchPage` waits for it (to observe the loading state).
   final Completer<void>? gate;
   final List<ProviderQuery> queries = [];
+  final List<ProviderApplication> applications = [];
 
   @override
   Future<Paged<Usta>> fetchPage(ProviderQuery query, int page) async {
@@ -81,6 +85,12 @@ class FakeUstaRepository extends UstaRepository {
       page: page,
       hasMore: page < pages.length,
     );
+  }
+
+  @override
+  Future<Usta> apply(ProviderApplication application) async {
+    applications.add(application);
+    return fakeUsta(9);
   }
 
   @override
@@ -124,6 +134,40 @@ class FakeRequestsRepository extends RequestsRepository {
   }) async => const [];
 }
 
+class FakePromotionsRepository extends PromotionsRepository {
+  FakePromotionsRepository() : super(MockRemoteDataSource());
+
+  final bought = <String>[];
+
+  @override
+  Future<PromotionCatalog> plans() async => const PromotionCatalog(
+    testMode: true,
+    plans: [
+      PromotionPlan(id: 'week', days: 7, priceTry: 99),
+      PromotionPlan(
+        id: 'month',
+        days: 30,
+        priceTry: 249,
+        badge: 'En çok tercih edilen',
+      ),
+      PromotionPlan(id: 'quarter', days: 90, priceTry: 599),
+    ],
+  );
+
+  @override
+  Future<PromotionReceipt> buy(
+    String providerId, {
+    required String actorId,
+    required String planId,
+  }) async {
+    bought.add(planId);
+    return PromotionReceipt(
+      featuredUntil: DateTime.now().add(const Duration(days: 30)),
+      testMode: true,
+    );
+  }
+}
+
 class FakeLocationService implements LocationService {
   FakeLocationService([this.result = const LocationPermissionDenied()]);
 
@@ -148,6 +192,14 @@ class FakeLocationService implements LocationService {
 class FakePlaceNameService implements PlaceNameService {
   @override
   Future<String?> nameFor(UserLocation location) async => 'Karşıyaka, İzmir';
+
+  @override
+  Future<PlaceDetails?> detailsFor(UserLocation location) async =>
+      const PlaceDetails(
+        city: 'İzmir',
+        district: 'Karşıyaka',
+        address: 'Bostanlı Mah. Cemal Gürsel Cd. No:12',
+      );
 }
 
 const testCustomer = Account(
@@ -173,6 +225,7 @@ List<Override> testOverrides({
   FakeLocationService? location,
   Account? account,
   bool onboardingSeen = true,
+  FakePromotionsRepository? promotions,
 }) => [
   ustaRepositoryProvider.overrideWithValue(
     usta ??
@@ -184,6 +237,9 @@ List<Override> testOverrides({
   ),
   reviewsRepositoryProvider.overrideWithValue(FakeReviewsRepository()),
   requestsRepositoryProvider.overrideWithValue(FakeRequestsRepository()),
+  promotionsRepositoryProvider.overrideWithValue(
+    promotions ?? FakePromotionsRepository(),
+  ),
   locationServiceProvider.overrideWithValue(location ?? FakeLocationService()),
   placeNameServiceProvider.overrideWithValue(FakePlaceNameService()),
   initialAuthProvider.overrideWithValue(

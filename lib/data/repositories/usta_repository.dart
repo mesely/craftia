@@ -42,6 +42,7 @@ class UstaRepository {
     String? address,
     List<String>? serviceAreas,
     String? phoneNumber,
+    String? businessName,
     List<ServicePrice>? priceList,
   }) => guarded(
     () async => Usta.fromJson(
@@ -51,6 +52,7 @@ class UstaRepository {
         'address': ?address,
         'serviceAreas': ?serviceAreas,
         'phoneNumber': ?phoneNumber,
+        'businessName': ?businessName,
         if (priceList != null)
           'priceList': [
             for (final p in priceList)
@@ -72,6 +74,21 @@ class UstaRepository {
   }) => guarded(
     () async => Usta.fromJson(
       await _remote.addProviderPhoto(id, {
+        'actorId': actorId,
+        'contentType': contentType,
+        'data': base64Data,
+      }),
+    ),
+  );
+
+  Future<Usta> setProfilePhoto(
+    String id, {
+    required String actorId,
+    required String contentType,
+    required String base64Data,
+  }) => guarded(
+    () async => Usta.fromJson(
+      await _remote.setProviderProfilePhoto(id, {
         'actorId': actorId,
         'contentType': contentType,
         'data': base64Data,

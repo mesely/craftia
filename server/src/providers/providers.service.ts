@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { AccountsService } from '../accounts/accounts.service';
 import { AttachmentsService } from '../attachments/attachments.service';
+import { isValidCoordinate } from '../common/geo';
 import { isPriceRangeValid } from '../common/price';
 import { CATEGORIES } from '../categories/categories';
 import { CreateProviderDto, ListProvidersDto, ProviderPhotoDto, UpdateProviderDto } from './providers.dto';
@@ -43,11 +44,12 @@ export class ProvidersService {
       city: dto.city.trim(),
       district: dto.district.trim(),
       address: dto.address?.trim() ?? '',
-      lat: null,
-      lng: null,
+      lat: isValidCoordinate(dto.lat, dto.lng) ? dto.lat! : null,
+      lng: isValidCoordinate(dto.lat, dto.lng) ? dto.lng! : null,
       rating: 0,
       reviewCount: 0,
       isPremium: false,
+      featuredUntil: null,
       isVerified: false,
       about: dto.about?.trim() ?? '',
       profileImage: null,
@@ -78,6 +80,10 @@ export class ProvidersService {
     }
     const updated = await this.repo.update(id, {
       ...(dto.about !== undefined ? { about: dto.about.trim() } : {}),
+      ...(dto.businessName !== undefined ? { businessName: dto.businessName.trim() } : {}),
+      ...(dto.city !== undefined ? { city: dto.city.trim() } : {}),
+      ...(dto.district !== undefined ? { district: dto.district.trim() } : {}),
+      ...(isValidCoordinate(dto.lat, dto.lng) ? { lat: dto.lat!, lng: dto.lng! } : {}),
       ...(dto.address !== undefined ? { address: dto.address.trim() } : {}),
       ...(dto.serviceAreas !== undefined ? { serviceAreas: dto.serviceAreas.map((a) => a.trim()).filter(Boolean) } : {}),
       ...(dto.phoneNumber !== undefined ? { phoneNumber: dto.phoneNumber.replace(/[^\d+]/g, '') } : {}),
@@ -96,6 +102,22 @@ export class ProvidersService {
     if (current.portfolioImages.length >= 12) throw new BadRequestException('En fazla 12 fotoğraf ekleyebilirsin.');
     const photoId = await this.attachments.save({ ownerId: dto.actorId, conversationId: null, contentType: dto.contentType, data: dto.data });
     return (await this.repo.update(id, { portfolioImages: [...current.portfolioImages, `/attachments/${photoId}`] }))!;
+  }
+
+  /** The face of the listing (profile photo). Replaces the previous one. */
+  async setProfilePhoto(id: string, dto: ProviderPhotoDto) {
+    await this.assertOwner(id, dto.actorId);
+    const current = await this.get(id);
+    const photoId = await this.attachments.save({ ownerId: dto.actorId, conversationId: null, contentType: dto.contentType, data: dto.data });
+    const updated = (await this.repo.update(id, { profileImage: `/attachments/${photoId}` }))!;
+    const old = /^\/attachments\/([a-f\d]{24})$/i.exec(current.profileImage ?? '');
+    if (old) await this.attachments.remove(old[1]);
+    return updated;
+  }
+
+  /** Runs a paid promotion until [until]; used by the promotions module after a purchase. */
+  setFeaturedUntil(id: string, until: Date) {
+    return this.repo.update(id, { featuredUntil: until.toISOString() });
   }
 
   async removePhoto(id: string, actorId: string, path: string) {
